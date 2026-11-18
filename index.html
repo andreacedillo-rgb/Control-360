@@ -591,6 +591,7 @@ const provById=id=>S.provs.find(p=>p.id===id);
 const mask=c=>c?'****'+String(c).slice(-4):'';
 const canCreateProv=()=>S.role==='compras'||S.role==='administracion';
 const canEditProv=p=>canCreateProv()&&p.depto===S.role;
+const canDelProv=p=>S.role==='compras';
 const snapProv=p=>({razon:p.razon,alias:p.alias,rfc:p.rfc,titular:p.titular,banco:p.banco,clabe:p.clabe,depto:p.depto});
 function ph(p,txt,tipo){(p.hist=p.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt,tipo:tipo||'evento'});}
 function sortProvs(){S.provs.sort((a,b)=>String(a.alias||a.razon).localeCompare(String(b.alias||b.razon),'es'));}
@@ -756,7 +757,7 @@ function provExp(p){
    '<div class="kv"><div><span>Titular de la cuenta</span><b>'+esc(p.titular)+'</b></div><div><span>Institución</span><b>'+esc(p.banco)+'</b></div><div><span>CLABE</span><b class="mono">'+esc(p.clabe)+'</b></div></div>'+
    '<div class="kv"><div><span>Registrado por</span><b>'+esc(ROLES[p.depto]||p.depto)+' · '+esc(nm(p.uid))+'</b></div><div><span>Fecha de creación</span><b>'+fstamp(p.creado)+'</b></div></div>'+
    '<div class="card" style="padding:10px 12px"><b>Expediente digital</b><div style="margin-top:6px">Constancia de Situación Fiscal: '+(p.csf?fileLink(p.csf):'<span class="muted">sin archivo</span>')+'</div><div>Documento bancario: '+(p.bdoc?fileLink(p.bdoc):'<span class="muted">sin archivo</span>')+'</div></div>';
-  h+='<div class="row">'+(canEditProv(p)?'<button class="btn primary" data-act="provedit" data-id="'+p.id+'">Editar proveedor</button>':'<span class="muted" style="font-size:13px">Solo consulta: este proveedor lo registró '+esc(ROLES[p.depto]||'')+(S.role==='direccion'?'.':', por lo que solo ese departamento puede editarlo.')+'</span>')+'</div>';
+  h+='<div class="row">'+(canDelProv(p)?'<button class="btn danger" data-act="provdel" data-id="'+p.id+'">Eliminar proveedor</button>':'')+(canEditProv(p)?'<button class="btn primary" data-act="provedit" data-id="'+p.id+'">Editar proveedor</button>':'<span class="muted" style="font-size:13px">Solo consulta: este proveedor lo registró '+esc(ROLES[p.depto]||'')+(S.role==='direccion'?'.':', por lo que solo ese departamento puede editarlo.')+'</span>')+'</div>';
   h+='<h2 class="sec" style="margin:4px 0">Requisiciones, OC y pagos vinculados</h2>';
   if(!ln.length)h+='<p class="muted" style="margin:0">Aún no hay partidas vinculadas a este proveedor.</p>';
   else h+='<div class="tw"><table><thead><tr><th>Requisición</th><th>Obra</th><th>Concepto</th><th>OC</th><th>Pago</th><th class="num">Importe</th><th class="num">Pagado</th></tr></thead><tbody>'+ln.map(x=>'<tr><td class="mono"><a href="#" data-act="provopen" data-id="'+x.r.id+'">'+esc(x.r.folio)+'</a></td><td>'+esc(x.r.obra||'')+'</td><td>'+esc(x.l.concepto)+'</td><td class="mono">'+esc(x.l.oc&&x.l.oc!=='NA'?x.l.oc.folio:(x.l.oc==='NA'?'No aplica':'—'))+'</td><td>'+esc(pagoTxt(x.l))+'</td><td class="num">'+money(x.l.total)+'</td><td class="num">'+money(x.l.pago==='pagado'?x.l.total:abonado(x.l))+'</td></tr>').join('')+'</tbody><tfoot><tr><td colspan="5"><b>Total ('+ln.length+' partida'+(ln.length===1?'':'s')+')</b></td><td class="num"><b>'+money(tot)+'</b></td><td class="num"><b>'+money(pag)+'</b></td></tr></tfoot></table></div>';
@@ -1071,7 +1072,7 @@ const APP_URL='https://claude.ai/artifact/1GC995gxqRDHSkft5HcWhA';
 const PERFILES={direccion:'Dirección',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
 const PERFIL_ORDER=['direccion','compras','administracion','residente','sistemas'];
 const PERFIL_ACC={direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
-const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso'};
+const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado'};
 S.auth='loading';S.users=[];S.bit=[];S.rec=null;S.me=null;S.isOwner=false;S.usersLoaded=false;S.usersFull=false;S.accessSig='';S.myEmail='';S.myName='';S.uq='';S.uEst='';S.bq='';S.bA='';
 S.ownerRole=S.role;
 const isSelf=u=>!!u&&((u.uid&&u.uid===myId)||(S.myEmail&&String(u.email).toLowerCase()===S.myEmail));
@@ -1656,7 +1657,7 @@ function buildReport(k,from,to){
   out.sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
   return csvOf(['Fecha','Tipo','Requisición','Obra','Clave','Concepto','Proveedor','OC','Importe','Comprobante','Estatus'],out);
 }
-function fileHref(f){return f&&f.id?'/_blob/'+f.id:(f&&f.url)||'';}
+function fileHref(f){if(!f)return '';if(window.C360&&f.url)return f.url;return f.id?'/_blob/'+f.id:(f.url||'');}
 function fileLink(f){
   if(!f)return '';
   const h=fileHref(f);
@@ -1751,9 +1752,16 @@ const A={
     const img=/\.(png|jpe?g|gif|webp)$/i.test(n),pdf=/\.pdf$/i.test(n);
     let body='';
     if(img)body='<img src="'+esc(u)+'" alt="'+esc(n)+'" style="max-width:100%;border-radius:8px">';
-    else if(pdf)body='<iframe src="'+esc(u)+'" title="'+esc(n)+'" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:8px"></iframe>';
+    else if(pdf)body='<iframe id="pdf-fr" '+(window.C360?'':'src="'+esc(u)+'" ')+'title="'+esc(n)+'" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:8px"></iframe>';
     else body='<p class="muted" style="margin:0">Este tipo de archivo no tiene vista previa.</p>';
     modal({title:n,html:body+'<div class="row"><button class="btn primary" data-act="dlfile" data-u="'+esc(u)+'" data-n="'+esc(n)+'">Descargar archivo</button><a href="'+esc(u)+'" target="_blank" rel="noopener" style="font-size:13px">Abrir en otra pestaña</a></div>',ok:'Cerrar',noCancel:true,noFocus:true});
+    if(pdf&&window.C360){
+      fetch(u).then(r=>{if(!r.ok)throw new Error('archivo no encontrado');return r.blob();}).then(b=>{
+        const bu=URL.createObjectURL(new Blob([b],{type:'application/pdf'}));
+        const fr=$('pdf-fr');if(fr)fr.src=bu;
+        const lk=document.querySelector('#modal a[target=_blank]');if(lk)lk.href=bu;
+      }).catch(er=>{const fr=$('pdf-fr');if(fr)fr.outerHTML='<p class="muted" style="margin:0">No se pudo cargar la vista previa ('+esc((er&&er.message)||er)+'). Use «Descargar archivo».</p>';});
+    }
   },
   async dlfile(el){
     const err=$('m-err');err.textContent='';
@@ -2070,6 +2078,18 @@ const A={
   provnew(){if(!canCreateProv())return;modal({title:'Nuevo proveedor',html:provFormHtml(null),ok:'Guardar proveedor',wide:true,noFocus:true,onOk:root=>provSubmit(root,null)});},
   provver(el){const pv=provById(el.dataset.id);if(!pv)return;modal({title:'Expediente · '+pv.alias,html:provExp(pv),ok:'Cerrar',noCancel:true,noFocus:true,wide:true});},
   provedit(el){const pv=provById(el.dataset.id);if(!pv||!canEditProv(pv))return;closeModal();modal({title:'Editar proveedor',html:provFormHtml(pv),ok:'Guardar cambios',wide:true,noFocus:true,onOk:root=>provSubmit(root,pv)});},
+  provdel(el){
+    const pv=provById(el.dataset.id);if(!pv||!canDelProv(pv))return;
+    const ln=provLinks(pv);
+    if(ln.length){closeModal();setTimeout(()=>toast('No se puede eliminar a «'+(pv.alias||pv.razon)+'»: tiene '+ln.length+' partida(s) vinculada(s) a requisiciones, OC o pagos. Para dejar de usarlo, edítelo y márquelo como Inactivo; así se conserva el historial.'),60);return;}
+    closeModal();
+    setTimeout(()=>modal({title:'Eliminar proveedor',html:'<p style="margin:0">Se eliminará de forma <b>permanente</b> a <b>'+esc(pv.alias||pv.razon)+'</b> (RFC '+esc(pv.rfc||'—')+') junto con su expediente. No tiene requisiciones ni pagos vinculados. Esta acción no se puede deshacer.</p>',ok:'Eliminar definitivamente',onOk:async()=>{
+      const i=S.provs.findIndex(x=>x.id===pv.id);
+      if(provColl){try{await provColl.doc(pv.id).delete();}catch(er){return 'No se pudo eliminar: '+((er&&(er.message||er.code))||String(er));}}
+      if(i>=0)S.provs.splice(i,1);
+      bitWrite({accion:'proveedor_baja',usuarioId:'',userNom:pv.alias||pv.razon,txt:'Eliminó al proveedor '+(pv.alias||pv.razon)+' (RFC '+(pv.rfc||'—')+')'});
+      S.open=null;render();return true;}}),60);
+  },
   provopen(el,e){if(e&&e.preventDefault)e.preventDefault();closeModal();S.open=el.dataset.id;render();},
   excseg(el){S.excSeg=el.dataset.k;render();},
   excaut(el){
