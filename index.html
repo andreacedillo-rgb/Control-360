@@ -272,7 +272,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 
 const ROLES={residente:'Residente',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
-  sistemas:[['usuarios','Usuarios y permisos'],['bitacora','Bitácora de seguridad']],
+  sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['bitacora','Bitácora de seguridad']],
   residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['nom','Nómina'],['cal','Calendario'],['rep','Reportes']],
   compras:[['revisar','Por revisar'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes']],
   direccion:[['autorizar','Por autorizar'],['excep','Excepciones'],['nomaut','Nómina'],['resueltas','Resueltas'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes']],
@@ -358,7 +358,9 @@ const nm=id=>S.names[id]||'Usuario';
 
 /* elegibilidad de partidas por rol */
 const elegCompras=l=>l.auth==='autorizada'&&!l.oc&&excOk(l);
-const elegRecep=l=>l.auth==='autorizada'&&!l.adm&&l.oc&&!l.recibido&&excOk(l);
+const recQ=l=>l.recibido?Number(l.recibido.cant)||0:0;
+const recFalta=l=>Math.max(0,r2(Number(l.cant)-recQ(l)));
+const elegRecep=l=>l.auth==='autorizada'&&!l.adm&&l.oc&&recFalta(l)>1e-9&&excOk(l);
 const elegPagar=l=>l.auth==='autorizada'&&l.oc&&l.pago==='pendiente'&&excOk(l);
 const elegCred=l=>l.pago==='credito';
 function eligibleFor(l){
@@ -375,7 +377,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas']],['Nómina',['nom','nomina','emps','nomaut']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','bitacora']]];
+const NAV_GROUPS=[['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas']],['Nómina',['nom','nomina','emps','nomaut']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=TABS[S.role].filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -463,7 +465,7 @@ function addDays(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+
 function viewHtml(){
   const R=S.role,k=S.tab;
   if(!TABS[R]||!TABS[R].some(t=>t[0]===k))return '';
-  if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():'');
+  if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
   if(k==='nueva')return formHtml();
   if(k==='rep')return repHtml();
   if(k==='prov'&&R!=='residente')return provHtml();
@@ -533,7 +535,7 @@ function lineChips(l,compact){
     if(l.oc==='NA'){if(!l.adm)h+=' '+pill('No aplica OC','mute');}
     else if(l.oc)h+=' '+pill(l.oc.folio,'info');
     else h+=' '+pill('Sin OC','mute');
-    if(l.recibido)h+=' '+pill(Number(l.recibido.cant)<Number(l.cant)?'Recibida parcial':'Recibida','ok');
+    if(l.recibido)h+=' '+(recFalta(l)>1e-9?pill('Recibido '+recQ(l)+' de '+l.cant+' · faltan '+recFalta(l),'warn'):pill('Recibida','ok'));
     if(l.pago==='pagado')h+=' '+pill('Pagado','ok');
     else if(l.pago==='credito')h+=' '+pill(l.abonos&&l.abonos.length?'Crédito · saldo '+money(saldo(l)):'Crédito','warn');
     else h+=' '+pill('Pendiente de pago','warn');
@@ -1072,7 +1074,7 @@ const APP_URL='https://claude.ai/artifact/1GC995gxqRDHSkft5HcWhA';
 const PERFILES={direccion:'Dirección',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
 const PERFIL_ORDER=['direccion','compras','administracion','residente','sistemas'];
 const PERFIL_ACC={direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
-const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado'};
+const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros'};
 S.auth='loading';S.users=[];S.bit=[];S.rec=null;S.me=null;S.isOwner=false;S.usersLoaded=false;S.usersFull=false;S.accessSig='';S.myEmail='';S.myName='';S.uq='';S.uEst='';S.bq='';S.bA='';
 S.ownerRole=S.role;
 const isSelf=u=>!!u&&((u.uid&&u.uid===myId)||(S.myEmail&&String(u.email).toLowerCase()===S.myEmail));
@@ -1092,7 +1094,7 @@ function startData(R){
   if(coll)sub(own(coll),sn=>{clearTimeout(t);if(sn){S.reqs=rows(sn);sortReqs();}S.ready=true;safeRender();});
   if(auditColl)sub(auditColl,sn=>{if(sn)S.audit=rows(sn);const b=$('rc-audit');if(b)b.innerHTML=auditHtml();});
   if(provColl)sub(provColl,sn=>{if(sn){S.provs=rows(sn);sortProvs();}safeRender();});
-  if(empColl&&(R==='administracion'||R==='residente'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
+  if(empColl&&(R==='administracion'||R==='residente'||R==='sistemas'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
   if(nomColl&&R!=='compras')sub(own(nomColl),sn=>{if(sn)S.noms=rows(sn);safeRender();});
 }
 function subUsers(full){
@@ -1130,7 +1132,7 @@ function applyAccess(force){
     if(role&&ROLES[role]){S.role=role;S.tab=TABS[role][0][0];}
     S.open=null;S.nd=null;S.nv=null;S.draft=null;S.sel.clear();S.navG=undefined;S.navTab=undefined;
     S.me={nombre:rec?rec.nombre:S.myName,email:rec?rec.email:S.myEmail};
-    if((auth==='ok'||auth==='owner')&&role!=='sistemas')startData(role);else S.ready=true;
+    if(auth==='ok'||auth==='owner')startData(role);else S.ready=true;
     if(auth==='ok'&&rec)registerAccess(rec);
     render();
   }else safeRender();
@@ -1203,6 +1205,64 @@ function bitBody(){
   return '<div class="muted" style="font-size:13px;margin:4px 2px">'+list.length+' registro(s)</div><div class="tw"><table><thead><tr><th>Fecha y hora</th><th>Acción</th><th>Usuario</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>'+list.map(b=>'<tr><td style="white-space:nowrap">'+new Date(b.t).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</td><td>'+esc(BIT_LBL[b.accion]||b.accion)+'</td><td>'+esc(b.userNom||'')+'</td><td>'+esc(b.txt||'')+'</td><td>'+esc(b.accion==='acceso'?(b.userNom||''):(b.actorNom||''))+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const canSis=()=>S.role==='sistemas';
+
+
+/* ───────── eliminar registros (Sistemas) ───────── */
+const DEP_TIPOS=[['req','Requisiciones'],['oc','Órdenes de compra'],['prov','Proveedores'],['nom','Nóminas'],['emp','Empleados'],['aud','Reportes de auditoría']];
+S.dep={tipo:'req',q:'',sel:new Set()};
+function depItems(){
+  const t=S.dep.tipo,q=normQ(S.dep.q||'').trim();let out=[];
+  if(t==='req')out=S.reqs.map(r=>({id:r.id,a:r.folio||'',b:r.obra||'—',c:fdate(r.fechaSol),d:(statusOf(r)||[''])[0]+' · '+money(sum(L(r).map(l=>Number(l.total)||0)))}));
+  else if(t==='oc'){const m={};S.reqs.forEach(r=>L(r).forEach(l=>{if(l.oc&&l.oc!=='NA'&&l.oc.folio){const o=m[l.oc.folio]=m[l.oc.folio]||{id:l.oc.folio,a:l.oc.folio,b:new Set(),c:fdate(l.oc.fecha),n:0,pag:0};o.b.add(r.obra||'—');o.n++;if(l.pago==='pagado'||(l.abonos&&l.abonos.length)||l.pago==='credito')o.pag++;}}));
+    out=Object.values(m).map(o=>({id:o.id,a:o.a,b:[...o.b].join(', '),c:o.c,d:o.n+' partida(s)'+(o.pag?' · con pagos':'')}));}
+  else if(t==='prov')out=S.provs.map(p=>({id:p.id,a:p.alias||p.razon||'',b:p.rfc||'',c:ROLES[p.depto]||'',d:p.activo?'Activo':'Inactivo'}));
+  else if(t==='nom')out=S.noms.map(n=>({id:n.id,a:n.folio||'',b:n.obra||'—',c:fdate(n.desde)+' – '+fdate(n.hasta),d:n.estado||''}));
+  else if(t==='emp')out=S.emps.map(e=>({id:e.id,a:e.nombre||'',b:e.puesto||'',c:e.obra||'',d:e.activo===false?'Inactivo':'Activo'}));
+  else if(t==='aud')out=S.audit.map(e=>({id:e.id,a:e.reporte||'Reporte',b:e.formato||'',c:fstamp(e.t),d:(e.n||0)+' registro(s)'}));
+  if(q)out=out.filter(x=>q.split(/\s+/).every(w=>normQ([x.a,x.b,x.c,x.d].join(' ')).indexOf(w)>=0));
+  return out;
+}
+function depHtml(){
+  return '<div class="card"><p style="margin:0 0 10px" class="muted">Elimine registros de forma <b>permanente</b>. Cada eliminación queda registrada en la bitácora de seguridad. Úselo con cuidado: no se puede deshacer.</p>'+
+   '<div class="row" id="dep-tabs" style="flex-wrap:wrap;gap:6px">'+DEP_TIPOS.map(t=>'<button class="btn'+(S.dep.tipo===t[0]?' primary':'')+'" data-act="deptipo" data-k="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>'+
+   '<div class="f" style="margin-top:10px"><label for="dep-q">Buscar</label><input id="dep-q" type="search" placeholder="Folio, obra, proveedor, nombre…" value="'+esc(S.dep.q)+'"></div></div><div id="dep-body">'+depBody()+'</div>';
+}
+function depBody(){
+  const items=depItems(),ids=new Set(items.map(x=>x.id));
+  [...S.dep.sel].forEach(k=>{if(!ids.has(k))S.dep.sel.delete(k);});
+  const all=items.length&&items.every(x=>S.dep.sel.has(x.id));
+  if(!items.length)return '<div class="empty"><b>No hay registros</b><p>No se encontraron registros de este tipo.</p></div>';
+  return '<div class="row" style="margin:10px 0"><button class="btn danger" data-act="depdel"'+(S.dep.sel.size?'':' disabled')+'>Eliminar seleccionados ('+S.dep.sel.size+')</button><span class="muted" style="font-size:13px">'+items.length+' registro(s)</span></div>'+
+   '<div class="tw"><table><thead><tr><th><input type="checkbox" id="dep-all" aria-label="Seleccionar todos"'+(all?' checked':'')+'></th><th>Registro</th><th>Detalle</th><th>Fecha / periodo</th><th>Estatus</th></tr></thead><tbody>'+
+   items.map(x=>'<tr><td><input type="checkbox" data-act="depsel" data-k="'+esc(x.id)+'" aria-label="Seleccionar '+esc(x.a)+'"'+(S.dep.sel.has(x.id)?' checked':'')+'></td><td class="mono">'+esc(x.a)+'</td><td>'+esc(x.b)+'</td><td>'+esc(x.c)+'</td><td>'+esc(x.d)+'</td></tr>').join('')+'</tbody></table></div>';
+}
+async function depRun(ids){
+  const t=S.dep.tipo,items=depItems().filter(x=>ids.indexOf(x.id)>=0),errs=[];let ok=0,skip=[];
+  const cm={req:[coll,'reqs'],prov:[provColl,'provs'],nom:[nomColl,'noms'],emp:[empColl,'emps'],aud:[auditColl,'audit']};
+  for(const it of items){
+    try{
+      if(t==='oc'){
+        const touched=[];let bloqueada=false;
+        S.reqs.forEach(r=>L(r).forEach(l=>{if(l.oc&&l.oc!=='NA'&&l.oc.folio===it.id&&(l.pago==='pagado'||l.pago==='credito'||(l.abonos&&l.abonos.length)))bloqueada=true;}));
+        if(bloqueada){skip.push(it.a);continue;}
+        S.reqs.forEach(r=>{let ch=false;L(r).forEach(l=>{if(l.oc&&l.oc!=='NA'&&l.oc.folio===it.id){l.oc=null;delete l.recibido;delete l.recs;lh(l,'OC '+it.id+' eliminada por Sistemas');ch=true;}});if(ch){hist(r,'Sistemas eliminó la OC '+it.id);touched.push(r);}});
+        for(const r of touched)await save(r);
+      }else{
+        const c=cm[t][0];
+        if(S.mode==='cloud'&&c){await c.doc(it.id).delete();}
+        S[cm[t][1]]=S[cm[t][1]].filter(x=>x.id!==it.id);
+      }
+      ok++;
+      bitWrite({accion:'eliminar',usuarioId:'',userNom:it.a,txt:'Eliminó '+(DEP_TIPOS.find(x=>x[0]===t)||[])[1]+': '+it.a+(it.b?' · '+it.b:'')});
+    }catch(e){errs.push(it.a+': '+((e&&(e.message||e.code))||e));}
+  }
+  items.forEach(x=>S.dep.sel.delete(x.id));
+  render();
+  const m=[];if(ok)m.push(ok+' registro(s) eliminado(s).');
+  if(skip.length)m.push('No se eliminaron por tener pagos o créditos registrados: '+skip.join(', ')+'. Para quitarlas elimine la requisición completa.');
+  if(errs.length)m.push('Errores: '+errs.join(' | '));
+  setTimeout(()=>toast(m.join(' ')||'Sin cambios.'),80);
+}
 
 /* ───────── calendario ───────── */
 function ocEvents(){
@@ -1341,7 +1401,7 @@ function statusLine(l,r){
   if(l.auth==='pendiente')return statusOf(r)[0];
   if(l.pago==='pagado')return 'Pagada';
   if(l.pago==='credito')return 'A crédito';
-  if(l.recibido)return 'Recibida';
+  if(l.recibido)return recFalta(l)>1e-9?'Recibida parcial':'Recibida';
   if(l.oc&&l.oc!=='NA')return 'Con OC';
   return 'Autorizada';
 }
@@ -1884,14 +1944,17 @@ const A={
 
   recepcion(){
     const picks=selectedPicks(elegRecep);if(!picks.length)return;
-    const rowsH=picks.map(x=>'<div class="f"><label for="rc-'+x.l.id+'">'+esc(x.r.folio)+' · '+esc(x.l.clave)+' '+esc(x.l.concepto)+' <span class="muted">(comprado '+x.l.cant+' '+esc(x.l.unidad||'')+')</span></label><input id="rc-'+x.l.id+'" type="number" min="0" max="'+x.l.cant+'" step="any" inputmode="decimal" data-rec="'+key(x.r,x.l)+'" value="'+x.l.cant+'"></div>').join('');
-    modal({title:'Registrar recepción',html:'<p style="margin:0" class="muted">Escriba la cantidad realmente recibida de cada partida.</p>'+rowsH+'<div class="f"><label for="m-fecha">Fecha de recepción</label><input id="m-fecha" type="date" value="'+todayISO()+'"></div>',ok:'Registrar recepción',noFocus:true,onOk:async root=>{
+    const rowsH=picks.map(x=>{const f=recFalta(x.l);return '<div class="f"><label for="rc-'+x.l.id+'">'+esc(x.r.folio)+' · '+esc(x.l.clave)+' '+esc(x.l.concepto)+'</label><div class="muted" style="font-size:13px;margin-bottom:4px">Comprado <b>'+x.l.cant+'</b> '+esc(x.l.unidad||'')+' · Ya recibido <b>'+recQ(x.l)+'</b> · Faltan <b>'+f+'</b></div><input id="rc-'+x.l.id+'" type="number" min="0" max="'+f+'" step="any" inputmode="decimal" data-rec="'+key(x.r,x.l)+'" value="'+f+'" aria-label="Cantidad recibida ahora"></div>';}).join('');
+    modal({title:'Registrar recepción',html:'<p style="margin:0" class="muted">Escriba la cantidad que recibe <b>ahora</b>. Si recibe menos de lo comprado, la partida seguirá en «Por recibir» con lo que falta. Con 0 no se registra recepción.</p>'+rowsH+'<div class="f"><label for="m-fecha">Fecha de recepción</label><input id="m-fecha" type="date" value="'+todayISO()+'"></div>',ok:'Registrar recepción',noFocus:true,onOk:async root=>{
       const fecha=root.querySelector('#m-fecha').value||todayISO();let err='';
-      const vals=[...root.querySelectorAll('input[data-rec]')].map(i=>{const pk=picks.find(x=>key(x.r,x.l)===i.dataset.rec),v=Number(i.value);if(i.value===''||isNaN(v)||v<0||v>Number(pk.l.cant)+1e-9)err='La cantidad recibida de '+pk.l.clave+' debe estar entre 0 y '+pk.l.cant+'.';return{p:pk,v:v};});
+      const vals=[...root.querySelectorAll('input[data-rec]')].map(i=>{const pk=picks.find(x=>key(x.r,x.l)===i.dataset.rec),v=Number(i.value),f=recFalta(pk.l);if(i.value===''||isNaN(v)||v<0||v>f+1e-9)err='La cantidad recibida de '+pk.l.clave+' debe estar entre 0 y '+f+' (lo que falta por recibir).';return{p:pk,v:v};});
       if(err)return err;
-      vals.forEach(a=>{a.p.l.recibido={fecha:fecha,cant:a.v,uid:myId};lh(a.p.l,'Recepción: '+a.v+' de '+a.p.l.cant+' '+(a.p.l.unidad||'')+' el '+fdate(fecha));});
-      [...new Set(vals.map(a=>a.p.r))].forEach(r=>hist(r,'registró la recepción de '+vals.filter(a=>a.p.r===r).length+' partida(s)'));
-      vals.forEach(a=>S.sel.delete(key(a.p.r,a.p.l)));await saveMany(vals.map(a=>a.p));return true;}});
+      const hechos=vals.filter(a=>a.v>0);
+      if(!hechos.length)return 'Capture una cantidad mayor a 0 en al menos una partida.';
+      hechos.forEach(a=>{const l=a.p.l,tot=r2(recQ(l)+a.v);(l.recs=l.recs||[]).push({fecha:fecha,cant:a.v,uid:myId});l.recibido={fecha:fecha,cant:tot,uid:myId};
+        lh(l,'Recepción: +'+a.v+' '+(l.unidad||'')+' el '+fdate(fecha)+' · acumulado '+tot+' de '+l.cant+(tot<Number(l.cant)?' · faltan '+r2(Number(l.cant)-tot):' · completa'));});
+      [...new Set(hechos.map(a=>a.p.r))].forEach(r=>hist(r,'registró la recepción de '+hechos.filter(a=>a.p.r===r).length+' partida(s)'));
+      hechos.forEach(a=>S.sel.delete(key(a.p.r,a.p.l)));await saveMany(hechos.map(a=>a.p));return true;}});
   },
 
   /* reporte por concepto */
@@ -1963,6 +2026,16 @@ const A={
       }else if(prevExc){lh(l,'Excepción de proveedor retirada; proveedor: '+(l.proveedor||'—'));}
       lh(l,'Editada'+(cantAntes!==l.cant?': cantidad de '+cantAntes+' a '+l.cant:'')+(antesPu!==l.pu?'; precio unitario de '+money(antesPu)+' a '+money(l.pu):'')+(antesProv!==l.proveedor?'; proveedor de '+(antesProv||'-')+' a '+(l.proveedor||'-'):'')+'; importe '+money(l.total));
       hist(r,'editó la partida '+l.clave+(cantAntes!==l.cant?' (cantidad de '+cantAntes+' a '+l.cant+')':'')+(antes!==l.total?' (importe de '+money(antes)+' a '+money(l.total)+')':''));await save(r);return true;}});
+  },
+
+  /* eliminar registros (Sistemas) */
+  deptipo(el){if(!canSis())return;S.dep.tipo=el.dataset.k;S.dep.sel=new Set();S.dep.q='';render();},
+  depdel(){
+    if(!canSis()||!S.dep.sel.size)return;
+    const ids=[...S.dep.sel],tn=(DEP_TIPOS.find(x=>x[0]===S.dep.tipo)||[])[1];
+    modal({title:'Eliminar '+ids.length+' registro(s)',html:'<p style="margin:0">Se eliminarán de forma <b>permanente</b> '+ids.length+' registro(s) de <b>'+esc(tn)+'</b>'+(S.dep.tipo==='req'?', junto con sus partidas, órdenes de compra, recepciones y pagos':'')+(S.dep.tipo==='oc'?'. Las partidas regresarán a «Por generar OC»':'')+'. <b>No se puede deshacer.</b></p><div class="f"><label for="dep-conf">Para confirmar escriba ELIMINAR</label><input id="dep-conf" autocomplete="off"></div>',ok:'Eliminar definitivamente',onOk:async root=>{
+      if(root.querySelector('#dep-conf').value.trim()!=='ELIMINAR')return 'Escriba ELIMINAR para confirmar.';
+      await depRun(ids);return true;}});
   },
 
   /* usuarios y permisos (Sistemas) */
@@ -2186,6 +2259,8 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='role-sel'){if(!(S.mode==='local'||S.auth==='owner'))return;S.role=el.value;S.ownerRole=el.value;try{localStorage.setItem('gp_role',S.role);}catch(x){}if(S.mode==='cloud'){applyAccess(true);return;}S.tab=TABS[S.role][0][0];S.open=null;S.sel.clear();render();return;}
+  if(el.id==='dep-all'){const its=depItems();if(el.checked)its.forEach(x=>S.dep.sel.add(x.id));else S.dep.sel.clear();const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
+  if(el.dataset&&el.dataset.act==='depsel'){if(el.checked)S.dep.sel.add(el.dataset.k);else S.dep.sel.delete(el.dataset.k);const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.dataset&&el.dataset.uf){S.uEst=el.value;const b=$('u-body');if(b)b.innerHTML=usersBody();return;}
   if(el.dataset&&el.dataset.bita){S.bA=el.value;const b=$('bit-body');if(b)b.innerHTML=bitBody();return;}
   if(el.id==='rp-q'){return;}
@@ -2210,6 +2285,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='rp-q'){S.rpQ=el.value;refreshReport();return;}
+  if(el.id==='dep-q'){S.dep.q=el.value;const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.id==='u-q'){S.uq=el.value;const b=$('u-body');if(b)b.innerHTML=usersBody();return;}
   if(el.id==='bit-q'){S.bq=el.value;const b=$('bit-body');if(b)b.innerHTML=bitBody();return;}
   if(el.id==='emp-q'){S.empQ=el.value;const b=$('emp-body');if(b)b.innerHTML=empBody();return;}
