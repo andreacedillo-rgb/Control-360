@@ -77,7 +77,10 @@ create policy docs_bit_ins on public.docs for insert to authenticated
 create policy docs_update on public.docs for update to authenticated
   using ( public.c360_can_write(coll, data) )
   with check ( public.c360_can_write(coll, data) );
--- No hay política DELETE: nada se borra (el historial se conserva).
+-- DELETE: solo Compras puede eliminar proveedores. Nada más se borra (el historial se conserva).
+drop policy if exists docs_delete on public.docs;
+create policy docs_delete on public.docs for delete to authenticated
+  using ( coll='proveedores' and public.c360_perfil()='compras' );
 
 -- Protección de la tabla de usuarios
 create or replace function public.c360_guard_usuarios() returns trigger

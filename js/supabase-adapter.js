@@ -127,6 +127,11 @@
             var i=await sb.from('docs').insert({coll:n,id:id,data:data});
             if(i.error)throw i.error;
           },
+          delete:async function(){
+            var d=await sb.from('docs').delete().eq('coll',n).eq('id',id).select('id');
+            if(d.error)throw d.error;
+            if(!d.data||!d.data.length)throw new Error('Sin permiso para eliminar este documento');
+          },
           update:async function(patch){
             var g=await sb.from('docs').select('data').eq('coll',n).eq('id',id).maybeSingle();
             if(g.error)throw g.error;
@@ -181,6 +186,13 @@
     crypto.getRandomValues(b);for(var i=0;i<12;i++)o+=a[b[i]%a.length];
     return o+'7';
   }
+  /* descargas (PDF / Excel / CSV / comprobantes) */
+  var downloadsApi={save:async function(o){
+    var blob=o.data instanceof Blob?o.data:new Blob([o.data]);
+    var u=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=u;a.download=o.filename||'archivo';document.body.appendChild(a);a.click();
+    setTimeout(function(){a.remove();URL.revokeObjectURL(u);},4000);
+  }};
   window.C360={
     tempPwd:tempPwd,
     crear:function(email,nombre,pwd){return gestionar('crear',email,nombre,pwd);},
@@ -191,6 +203,7 @@
     if(name==='db')return dbApi;
     if(name==='user')return userApi;
     if(name==='assets')return assetsApi;
+    if(name==='downloads')return downloadsApi;
     return null;
   }};
 })();
