@@ -111,3 +111,7 @@ Nuevo flujo para requisiciones dirigidas a **Compras**: Residente → **Auditor*
 ## Observaciones del Auditor por partida
 
 El Auditor puede dejar una **observación** en cualquier partida pendiente («Observar») sin rechazarla. Al devolver la requisición, el residente ve la justificación general y, en el aviso y en cada partida, las observaciones y los motivos de rechazo de Auditoría. Se limpian al reenviar (quedan en el historial).
+
+## Centro de reportes (PDF y Excel)
+
+En la pestaña **Reportes** de cada perfil: elija el tipo (Requisiciones, Partidas, Órdenes de compra, Pagos y crédito, Nóminas, Nómina por empleado, Reposiciones, Proveedores, Empleados), busque o filtre por fechas, marque registros específicos o use «todo lo mostrado», y descargue PDF o Excel. «Todo completo» genera un Excel con una hoja por tipo, o un PDF con todo. Requisiciones y OC también tienen «documento completo» (una hoja por documento). Cada perfil solo obtiene lo que ya puede consultar (Residente: lo suyo y sin importes de nómina; Proveedores solo Compras/Administración/Dirección; Empleados solo Administración; Nómina solo Residente/Administración/Dirección). Cada descarga queda en el registro de reportes. No requiere migración.
