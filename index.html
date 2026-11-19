@@ -221,6 +221,24 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
   .brand b{font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* drawer: info superior compacta y tabla de partidas grande */
+.dr-body>*{flex-shrink:0}
+.dr-body{gap:10px;padding:12px 24px 48px}
+.dr-body .kv{padding:6px 12px;gap:4px 14px;border-radius:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.dr-body .kv div span{font-size:11px;line-height:1.2}
+.dr-body .kv div b{font-size:13px;font-weight:600}
+.dr-body .kv small{font-size:11px}
+.dr-body>.card{padding:10px 14px}
+.dr-body .tw{max-height:none;border-radius:12px}
+.dr-head{padding:8px 18px}.dr-head h3{font-size:20px}
+.dr-body .tw table{font-size:18px}
+.dr-body .tw th{font-size:14px;padding:16px 16px}
+.dr-body .tw td{padding:20px 16px;vertical-align:middle}
+.dr-body .tw td .sub{font-size:15px;max-width:70ch;margin-top:4px}
+.dr-body .tw td:nth-child(3),.dr-body .tw td:nth-child(2){min-width:220px}
+.dr-body .tw .btn{font-size:16px;padding:12px 20px;min-height:46px}
+.dr-body .tw .pill{font-size:14px;padding:6px 12px}
+.dr-body .tw .num{font-size:19px;font-weight:600}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
