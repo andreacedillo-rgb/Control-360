@@ -38,6 +38,8 @@ begin
     when 'nominas'            then p in ('direccion','administracion','sistemas') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente','sistemas')
     when 'empleados'          then p in ('direccion','administracion','residente','sistemas')
+    when 'altas_trabajadores' then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
+    when 'expedientes_trabajadores' then p in ('direccion','administracion')
     when 'auditoria_reportes' then p in ('direccion','administracion','compras','sistemas')
     -- Documentos adjuntos: Dirección, Administración y Compras ven todos; el residente solo los de sus requisiciones; Sistemas ninguno
     when 'documentos'         then p in ('direccion','administracion','compras','auditor') or (p='residente' and d->>'creatorReqId' = me)
@@ -75,6 +77,8 @@ begin
     when 'nominas'            then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente')
     when 'empleados'          then p in ('direccion','administracion')
+    when 'altas_trabajadores' then p = 'administracion' or (p='residente' and d->>'creatorId' = me and d->>'estado' <> 'aceptada')
+    when 'expedientes_trabajadores' then p = 'administracion'
     when 'auditoria_reportes' then p in ('direccion','administracion','compras')
     -- Adjuntan Compras, Administración y el residente (solo en sus requisiciones). Dirección solo consulta.
     when 'documentos'         then p in ('administracion','compras') or (p='residente' and d->>'creatorReqId' = me)
@@ -174,8 +178,9 @@ create policy c360_files_ins on storage.objects for insert to authenticated
                and (storage.foldername(name))[1] = auth.uid()::text );
 create policy c360_files_sel on storage.objects for select to authenticated
   using ( bucket_id='comprobantes' and (
-            public.c360_perfil() in ('direccion','administracion','compras','auditor')
-            or (storage.foldername(name))[1] = auth.uid()::text ) );
+            (storage.foldername(name))[1] = auth.uid()::text
+            or (public.c360_perfil() in ('direccion','administracion'))
+            or (public.c360_perfil() in ('compras','auditor') and coalesce((storage.foldername(name))[2],'') <> 'rh') ) );
 
 -- ============================================================
 -- PRIMER USUARIO (SISTEMAS). CAMBIE EL CORREO por el suyo antes de ejecutar.

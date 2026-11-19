@@ -298,11 +298,11 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const ROLES={residente:'Residente',auditor:'Auditor',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['bitacora','Bitácora de seguridad'],['notif','Notificaciones']],
-  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
+  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
   auditor:[['revisar','Por auditar'],['todas','Todas'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
-  direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
-  administracion:[['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
+  direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
+  administracion:[['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
 };
 
 /* ───────── estado ───────── */
@@ -409,7 +409,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']],['Avisos',['notif']]];
+const NAV_GROUPS=[['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']],['Avisos',['notif']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=TABS[S.role].filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -457,6 +457,7 @@ function tabCount(k){
   const R=S.role;
   if(k==='repos'){try{return Vp().filter(repAtender).length;}catch(e){return 0;}}
   if(k==='notif'){try{return nAll().filter(n=>!nRead(n)).length;}catch(e){return 0;}}
+  if(k==='altas'){try{if(R==='administracion')return S.altas.filter(a=>a.estado==='pendiente').length;if(R==='residente')return S.altas.filter(a=>a.creatorId===myId&&(a.estado==='devuelta'||a.estado==='rechazada')).length;}catch(e){}return 0;}
   if(R==='residente'&&k==='mis')return V().filter(r=>r.estado==='devuelta'&&isMine(r)).length;
   if(R==='auditor'&&k==='revisar')return V().filter(r=>r.estado==='auditoria').length;
   if(R==='compras'){
@@ -507,6 +508,7 @@ function viewHtml(){
   if(k==='notif')return notifHtml();
   if(k==='repos')return repView();
   if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
+  if(k==='altas'&&(R==='residente'||R==='administracion'||R==='direccion'))return altasHtml();
   if(k==='nueva')return formHtml();
   if(k==='rep')return repHtml()+repRepCard();
   if(k==='prov'&&R!=='residente')return provHtml();
@@ -845,7 +847,7 @@ function excHtml(){
 /* ───────── nómina ───────── */
 let empColl=null,nomColl=null;
 S.emps=[];S.noms=[];S.nv=null;S.nd=null;S.empQ='';S.nomF='';
-const NOMTABS=['nom','nomina','emps','nomaut'];
+const NOMTABS=['nom','nomina','emps','nomaut','altas'];
 const NOM_ST={elaboracion:['En elaboración','mute'],enviada:['Enviada a Administración','info'],revision:['En revisión administrativa','info'],direccion:['Pendiente de autorización de Dirección','warn'],autorizada:['Autorizada','ok'],rechazada:['Rechazada','bad']};
 const nomSt=n=>(n.estado==='elaboracion'&&n.devolucion)?['En elaboración (devuelta)','warn']:NOM_ST[n.estado];
 const DIA_ST={T:'Trabajó',D:'Descanso',V:'Vacaciones',F:'Falta'};
@@ -1129,14 +1131,14 @@ const APP_URL='https://claude.ai/artifact/1GC995gxqRDHSkft5HcWhA';
 const PERFILES={direccion:'Dirección',auditor:'Auditor',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
 const PERFIL_ORDER=['direccion','auditor','compras','administracion','residente','sistemas'];
 const PERFIL_ACC={auditor:'Valida conceptos, cantidades y justificación de las requisiciones antes de Compras; puede rechazar partidas o devolver al residente. No cotiza.',direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
-const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros'};
+const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros',expediente:'Consulta de expedientes laborales'};
 S.auth='loading';S.users=[];S.bit=[];S.rec=null;S.me=null;S.isOwner=false;S.usersLoaded=false;S.usersFull=false;S.accessSig='';S.myEmail='';S.myName='';S.uq='';S.uEst='';S.bq='';S.bA='';
 S.ownerRole=S.role;
 const isSelf=u=>!!u&&((u.uid&&u.uid===myId)||(S.myEmail&&String(u.email).toLowerCase()===S.myEmail));
 function stopData(){
   dataEpoch++;
   unsubs.forEach(u=>{try{if(typeof u==='function')u();}catch(e){}});unsubs=[];
-  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.reps=[];
+  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.reps=[];S.altas=[];S.exps=[];
 }
 function sub(q,fn){
   const ep=dataEpoch;
@@ -1149,7 +1151,9 @@ function startData(R){
   if(coll)sub(own(coll),sn=>{clearTimeout(t);if(sn){S.reqs=rows(sn);sortReqs();snapAll('r',S.reqs);}S.ready=true;safeRender();});
   if(auditColl)sub(auditColl,sn=>{if(sn)S.audit=rows(sn);const b=$('rc-audit');if(b)b.innerHTML=auditHtml();});
   if(provColl)sub(provColl,sn=>{if(sn){S.provs=rows(sn);sortProvs();}safeRender();});
-  if(empColl&&(R==='administracion'||R==='residente'||R==='sistemas'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
+  if(altasColl&&(R==='administracion'||R==='residente'||R==='direccion'))sub(own(altasColl),sn=>{if(sn){S.altas=rows(sn);S.altas.sort((a,b)=>(b.creado||0)-(a.creado||0));}safeRender();});
+  if(expColl&&(R==='administracion'||R==='direccion'))sub(expColl,sn=>{if(sn)S.exps=rows(sn);safeRender();});
+  if(empColl&&(R==='administracion'||R==='residente'||R==='sistemas'||R==='direccion'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
   if(nomColl&&R!=='compras')sub(own(nomColl),sn=>{if(sn){S.noms=rows(sn);snapAll('n',S.noms);}safeRender();});
   if(repColl)sub(own(repColl),sn=>{if(sn){S.reps=rows(sn);S.reps.sort((a,b)=>(b.creado||0)-(a.creado||0));snapAll('p',S.reps);}safeRender();});
   if(docsColl&&R!=='sistemas'){let q=docsColl;if(R==='residente'){try{q=docsColl.where('creatorReqId','==',myId);}catch(e){q=docsColl;}}sub(q,sn=>{if(sn)S.docs=rows(sn);safeRender();});}
@@ -1871,6 +1875,7 @@ function nGo(n){
   if(rf.k==='req'){const r=V().find(x=>x.id===rf.id);if(!r)return nope();S.open=r.id;render();return;}
   if(rf.k==='nom'){const x=nomById(rf.id);if(!x||!Vn().some(y=>y.id===x.id))return nope();const tb={residente:'nom',administracion:'nomina',direccion:'nomaut'}[S.role];if(!tb)return nope();S.tab=tb;S.nv={id:x.id};S.nd=null;S.open=null;render();return;}
   if(rf.k==='rep'){const x=repById(rf.id);if(!x||!Vp().some(y=>y.id===x.id))return nope();S.tab='repos';S.rv={id:x.id};S.open=null;S.nv=null;S.nd=null;render();return;}
+  if(rf.k==='altas'){if(!['residente','administracion','direccion'].includes(S.role))return nope();const x=altaById(rf.id);if(!x||(S.role==='residente'&&x.creatorId!==myId))return nope();S.tab='altas';S.al.open=x.id;S.al.exp=null;S.open=null;S.nv=null;S.nd=null;render();return;}
   if(rf.k==='usr'){if(S.role==='sistemas'){S.tab='usuarios';S.open=null;render();}return;}
   if(rf.k==='tab'){if(TABS[S.role].some(t=>t[0]===rf.tab)){S.tab=rf.tab;S.open=null;S.nv=null;S.nd=null;render();}return;}
 }
@@ -2130,12 +2135,14 @@ async function logReport(formato,rs){
 function refreshReport(){const b=$('rc-body');if(b)b.innerHTML=rcBody();const p=$('pdf-body');if(p)p.innerHTML=pdfBody();}
 /* ───────── centro de reportes (todos los perfiles; cada uno obtiene lo que ya puede ver) ───────── */
 S.cr={tipo:'req',q:'',from:'',to:'',sel:{}};
-const CR_TIPOS=[['req','Requisiciones'],['par','Partidas (detalle)'],['oc','Órdenes de compra'],['pag','Pagos y crédito'],['nom','Nóminas'],['nomd','Nómina por empleado'],['repo','Reposiciones'],['prov','Proveedores'],['emp','Empleados']];
+const CR_TIPOS=[['req','Requisiciones'],['par','Partidas (detalle)'],['oc','Órdenes de compra'],['pag','Pagos y crédito'],['nom','Nóminas'],['nomd','Nómina por empleado'],['repo','Reposiciones'],['prov','Proveedores'],['emp','Empleados'],['alt','Solicitudes de alta'],['trab','Trabajadores (situación laboral)']];
 function crAvail(t){
   const R=S.role;
   if(R==='sistemas')return false;
   if(t==='nom'||t==='nomd')return R==='residente'||R==='administracion'||R==='direccion';
   if(t==='emp')return R==='administracion';
+  if(t==='alt')return R==='residente'||R==='administracion'||R==='direccion';
+  if(t==='trab')return R==='administracion'||R==='direccion';
   if(t==='prov')return R==='compras'||R==='administracion'||R==='direccion';
   return true;
 }
@@ -2166,6 +2173,15 @@ function crData(t){
     cols=[C('Folio'),C('Requisición'),C('Fecha del gasto'),C('Colaborador'),C('Beneficiario'),C('Obra'),C('Concepto'),C('Departamento'),C('Solicitado',1),C('Autorizado',1),C('Fecha autorización'),C('Fecha de pago'),C('Estatus')];tot=8;
     loadNames(Vp().map(r=>r.creatorId));
     Vp().forEach(r=>{const x=repFlat(r);rows.push({k:r.id,fecha:x.fGasto||'',cells:[x.folio,x.req,x.fGasto,x.col,x.ben,x.obra,x.concepto,x.dest,x.imp,x.impAut===''?0:Number(x.impAut),x.fAut,x.fPago,x.est]});});
+  }else if(t==='alt'){
+    cols=[C('Folio'),C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de solicitud'),C('Estatus de aprobación'),C('Revisó'),C('Fecha de decisión'),C('Justificación'),C('Situación laboral'),C('Documentos cargados')];
+    loadNames(altaMias().map(a=>a.dec&&a.dec.uid));
+    altaMias().filter(a=>a.estado!=='borrador'||S.role==='residente').forEach(a=>{const e=empById(a.empId);rows.push({k:a.id,fecha:a.fechaSol||'',cells:[a.folio,a.nombre,a.obra||'',a.solicitante||'',a.fechaSol||'',ALTA_EST[a.estado][0],a.dec?(nm(a.dec.uid)||'Administración'):'',a.dec?isoOf(a.dec.t):'',a.dec&&a.dec.txt||'',a.estado==='aceptada'?(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0]:'',ALTA_DOCS.filter(d=>a.docs&&a.docs[d[0]]).length+' de 6']});});
+  }else if(t==='trab'){
+    cols=[C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de aceptación'),C('Autorizó'),C('Situación laboral'),C('Fecha ALTA IMSS'),C('Fecha BAJA'),C('Documentos de alta')];
+    loadNames(S.exps.map(x=>x.aceptadoPor));
+    S.emps.forEach(e=>{const x=expById(e.id)||{docs:{},laborales:[]};const lf=tp=>(x.laborales||[]).filter(m=>m.tipo===tp).map(m=>m.fMov).sort().pop()||'';
+      rows.push({k:e.id,fecha:x.fAcept?isoOf(x.fAcept):'',cells:[e.nombre||'',e.obra||'',x.solicitadoNom||nm(x.solicitadoPor)||'',x.fAcept?isoOf(x.fAcept):'',nm(x.aceptadoPor)||'',(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0],lf('ALTA'),lf('BAJA'),x.docs?ALTA_DOCS.filter(d=>x.docs[d[0]]).length+' de 6':'']});});
   }else if(t==='prov'){
     cols=[C('Razón social'),C('Alias'),C('RFC'),C('Departamento'),C('Estatus'),C('Titular de la cuenta'),C('Banco'),C('CLABE')];
     S.provs.forEach(p=>rows.push({k:p.id,fecha:p.creado?isoOf(p.creado):'',cells:[p.razon||'',p.alias||'',p.rfc||'',p.depto||'',p.activo===false?'Inactivo':'Activo',p.titular||'',p.banco||'',p.clabe||'']}));
@@ -2532,9 +2548,9 @@ async function modalOk(){
 }
 
 /* archivos */
-async function uploadFile(file){
+async function uploadFile(file,opts){
   if(!file)return null;
-  if(assets){try{const u=await assets.upload(file);return{name:file.name,id:u.id,url:u.url};}catch(e){}}
+  if(assets){try{const u=await assets.upload(file,opts);return{name:file.name,id:u.id,url:u.url};}catch(e){}}
   return{name:file.name,url:null};
 }
 
@@ -2561,7 +2577,7 @@ function draftToReq(d,estado){
 const A={
   navg(el){const g=el.dataset.g;S.navG=(S.navG===g)?'':g;render();},
   menu(){const sd=$('side'),ov=$('side-ov');const on=!sd.classList.contains('open');sd.classList.toggle('open',on);ov.classList.toggle('on',on);},
-  tab(el){if(!TABS[S.role].some(t=>t[0]===el.dataset.k))return;S.nv=null;S.nd=null;$('side').classList.remove('open');$('side-ov').classList.remove('on');S.tab=el.dataset.k;S.open=null;S.rv=null;if(S.tab==='nueva'&&!S.draft)S.draft=newDraft();render();},
+  tab(el){if(!TABS[S.role].some(t=>t[0]===el.dataset.k))return;S.al.open=null;S.al.exp=null;S.nv=null;S.nd=null;$('side').classList.remove('open');$('side-ov').classList.remove('on');S.tab=el.dataset.k;S.open=null;S.rv=null;if(S.tab==='nueva'&&!S.draft)S.draft=newDraft();render();},
   open(el,e){if(e)e.preventDefault();if(S.open!==el.dataset.id)S.showHist=false;S.open=el.dataset.id;render();},
   viewfile(el,e){
     if(e)e.preventDefault();
@@ -3218,6 +3234,242 @@ Object.assign(A,{
   }
 });
 
+/* ───────── altas y bajas de trabajadores ───────── */
+let altasColl=null,expColl=null;
+S.altas=[];S.exps=[];S.al={sub:'pend',q:'',est:'',open:null,exp:null};
+const ALTA_DOCS=[['csf','Constancia de Situación Fiscal'],['nss','Documento oficial con Número de Seguridad Social (NSS)'],['ine','Identificación oficial INE vigente'],['curp','CURP'],['dom','Comprobante de domicilio'],['acta','Acta de nacimiento']];
+const ALTA_EST={borrador:['Borrador','mute'],pendiente:['Pendiente de revisión por Administración','info'],devuelta:['Devuelta para corrección','warn'],rechazada:['Rechazada','bad'],aceptada:['Aceptada','ok']};
+const SIT_LAB={pend_imss:['Pendiente de alta ante IMSS','warn'],activo:['Activo','ok'],baja:['Baja registrada','bad']};
+const altaById=id=>S.altas.find(x=>x.id===id);
+const expById=id=>S.exps.find(x=>x.id===id);
+const rhAdm=()=>S.role==='administracion';
+const rhView=()=>S.role==='administracion'||S.role==='direccion';
+const altaMias=()=>S.role==='residente'?S.altas.filter(a=>a.creatorId===myId):S.altas;
+const sitOf=e=>e?(e.situacion||''):'';
+const sitPill=e=>{const s=SIT_LAB[sitOf(e)];return s?pill(s[0],s[1]):pill('Sin expediente digital','mute');};
+const ah=(a,txt)=>{(a.hist=a.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt});};
+const xh=(x,txt)=>{(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt});};
+async function persistRH(coll,arr,sortFn,o){
+  const copy=clone(o);const i=arr.findIndex(x=>x.id===o.id);if(i>=0)arr[i]=copy;else arr.push(copy);if(sortFn)arr.sort(sortFn);render();
+  if(coll){const ref=coll.doc(o.id);let err=null;try{await ref.set(copy);}catch(e1){err=e1;try{await ref.update(copy);err=null;}catch(e2){err=e2;}}
+    if(err)setTimeout(()=>toast('No se pudo guardar en la base compartida: '+((err&&(err.message||err.code))||String(err))),50);}
+}
+const saveAlta=a=>{a.upd=Date.now();return persistRH(altasColl,S.altas,(x,y)=>(y.creado||0)-(x.creado||0),a);};
+const saveExp=x=>{x.upd=Date.now();return persistRH(expColl,S.exps,null,x);};
+function rhLog(txt){try{bitWrite({accion:'expediente',txt:txt});}catch(e){}}
+function rhLink(f,tag){
+  if(!f)return '<span class="muted">—</span>';
+  const h=fileHref(f);if(!h)return esc(f.name)+' <span class="muted">(solo nombre)</span>';
+  return '<a href="#" data-act="rhfile" data-u="'+esc(h)+'" data-n="'+esc(f.name)+'" data-t="'+esc(tag||'')+'">'+esc(f.name)+'</a>';
+}
+async function rhUpload(f){
+  const u=await uploadFile(f,{rh:true});
+  if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))throw new Error('No se pudo subir '+f.name+' al almacenamiento.');
+  return u;
+}
+const nomPers=uid=>(uid&&nm(uid))||'';
+function altaNotify(a,ev,titulo,prio,toAdmin,motivo){
+  const x={ev:ev,prio:prio,mod:'Nómina',titulo:titulo+': '+a.nombre,desc:a.folio+' · '+fdate(isoOf(Date.now()))+' · '+ALTA_EST[a.estado][0]+(motivo?' · '+motivo:''),folio:a.folio,ref:{k:'altas',id:a.id}};
+  if(toAdmin)x.roles=['administracion'];else{x.uid=a.creatorId;x.rt='residente';}
+  nPush([x]);
+}
+/* ── formulario de solicitud / alta directa ── */
+function altaFormHtml(a,directa){
+  const v=a||{nombre:'',obra:'',docs:{}};
+  let h='<p class="muted" style="margin:0;font-size:13px">Los seis documentos son obligatorios para '+(directa?'registrar el alta':'enviar la solicitud')+'. Se conservan en el expediente del trabajador. Formatos: PDF, imágenes u Office; máximo 20 MB por archivo.</p>'+
+   '<div class="grid"><div class="f"><label for="al-n">Nombre completo del trabajador <i>*</i></label><input id="al-n" value="'+esc(v.nombre)+'" autocomplete="off"></div>'+
+   '<div class="f"><label for="al-o">Obra o proyecto asignado <i>*</i></label><input id="al-o" value="'+esc(v.obra)+'" list="obras" autocomplete="off"></div>'+
+   (directa?'<div class="f"><label for="al-s">Sueldo base diario <i>*</i></label><input id="al-s" type="number" min="0" step="any" inputmode="decimal"></div>':'')+'</div>';
+  h+='<div class="tw"><table><thead><tr><th>Documento</th><th>Archivo cargado</th><th>Cargar / sustituir</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(v.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b> <i style="color:var(--bad,#b42318)">*</i></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td><input type="file" id="al-f-'+d[0]+'" accept="'+DOC_ACCEPT+'" aria-label="'+esc(d[1])+'"></td></tr>';}).join('')+'</tbody></table></div>';
+  return h;
+}
+async function altaCollect(root,a,exigir){
+  const nombre=root.querySelector('#al-n').value.trim(),obra=root.querySelector('#al-o').value.trim();
+  if(!nombre)return {err:'Capture el nombre completo del trabajador.'};
+  if(exigir&&!obra)return {err:'Indique la obra o proyecto asignado.'};
+  const nf={};
+  for(const d of ALTA_DOCS){const inp=root.querySelector('#al-f-'+d[0]);const f=inp&&inp.files&&inp.files[0];if(f){const ck=docFilesCheck([f]);if(ck)return {err:d[1]+': '+ck};nf[d[0]]=f;}}
+  if(exigir){const falta=ALTA_DOCS.filter(d=>!nf[d[0]]&&!(a.docs&&a.docs[d[0]]));if(falta.length)return {err:'Faltan documentos obligatorios: '+falta.map(d=>d[1]).join('; ')+'.'};}
+  return {nombre:nombre,obra:obra,nf:nf};
+}
+async function altaApplyFiles(a,nf){
+  for(const k in nf){const lbl=ALTA_DOCS.find(d=>d[0]===k)[1];let up;try{up=await rhUpload(nf[k]);}catch(e){return (e&&e.message)||'No se pudo subir el archivo.';}
+    const prev=a.docs&&a.docs[k];a.docs=a.docs||{};a.docs[k]={file:up,t:Date.now(),uid:myId};ah(a,(prev?'Sustituyó':'Cargó')+' '+lbl+': '+nf[k].name);}
+  return '';
+}
+function altaForm(a){
+  const nueva=!a;
+  modal({title:nueva?'Solicitar alta de trabajador':'Corregir solicitud '+a.folio,wide:true,html:altaFormHtml(a,false),ok:'ENVIAR SOLICITUD DE ALTA',noFocus:false,
+   onOk:async root=>{
+    const c=await altaCollect(root,a||{docs:{}},true);if(c.err)return c.err;
+    const x=a?clone(a):{id:rid(),folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
+    if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada')||(x.creatorId!==myId))return 'Esta solicitud ya no admite cambios.';
+    const er=await altaApplyFiles(x,c.nf);if(er)return er;
+    const re=x.estado==='devuelta'||x.estado==='rechazada';
+    x.nombre=c.nombre;x.obra=c.obra;x.estado='pendiente';x.enviado=Date.now();x.fechaSol=x.fechaSol||todayISO();x.solicitante=(S.me&&S.me.nombre)||S.myName||'';
+    ah(x,re?'Reenvió la solicitud corregida a Administración':'Envió la solicitud de alta a Administración');
+    await saveAlta(x);altaNotify(x,'alta_env',re?'Solicitud de alta corregida y reenviada':'Nueva solicitud de alta',re?'media':'alta',true);
+    return true;},
+   extra:null});
+  const mb=document.querySelector('#modal .mb-f');
+  if(mb&&!document.getElementById('al-draft')){const b=document.createElement('button');b.className='btn';b.id='al-draft';b.type='button';b.textContent='Guardar borrador';b.setAttribute('data-act','aldraft');b.dataset.id=a?a.id:'';mb.insertBefore(b,mb.firstChild);}
+}
+function altaDirecta(){
+  modal({title:'Registrar alta directa de trabajador',wide:true,html:altaFormHtml(null,true),ok:'REGISTRAR ALTA',
+   onOk:async root=>{
+    const c=await altaCollect(root,{docs:{}},true);if(c.err)return c.err;
+    const sueldo=Number(root.querySelector('#al-s').value);if(!(sueldo>0))return 'Capture el sueldo base diario (mayor a cero).';
+    const dup=S.emps.find(e=>normQ(e.nombre)===normQ(c.nombre)&&e.situacion!=='baja'&&e.activo!==false&&normQ(e.obra||'')===normQ(c.obra));
+    if(dup)return 'ALERTA DE DUPLICADO: ya existe un trabajador activo con ese nombre en la misma obra.';
+    const x={id:rid(),folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'aceptada',docs:{},hist:[],origen:'administracion',fechaSol:todayISO(),solicitante:'Administración (alta directa)'};
+    const er=await altaApplyFiles(x,c.nf);if(er)return er;
+    x.nombre=c.nombre;x.obra=c.obra;x.enviado=Date.now();ah(x,'Registró el alta directamente (sin solicitud del residente)');
+    x.dec={uid:myId,t:Date.now(),res:'aceptada',txt:'Alta directa por Administración'};
+    await altaAceptarCore(x,sueldo,'');return true;}});
+}
+async function altaAceptarCore(a,sueldo,linkId){
+  let e=linkId?empById(linkId):null;
+  if(e){e=clone(e);if(sueldo>0&&Number(e.sueldo)!==sueldo){nh(e,'Sueldo base diario '+money(e.sueldo)+' → '+money(sueldo)+' (solicitud '+a.folio+')');e.sueldo=sueldo;}
+    if(a.obra&&(e.obra||'')!==a.obra){nh(e,'Obra “'+(e.obra||'—')+'” → “'+a.obra+'” (solicitud '+a.folio+')');e.obra=a.obra;}
+    nh(e,'Solicitud de alta '+a.folio+' vinculada al expediente existente');}
+  else{e={id:rid(),creado:Date.now(),uid:myId,hist:[],nombre:a.nombre,obra:a.obra,sueldo:sueldo,factor:2,vacDias:12,aguiDias:15,horasDia:8,diasLab:DIAS_ALL.slice(),activo:true};nh(e,'Creó el expediente desde la solicitud '+a.folio+' (sueldo base diario '+money(sueldo)+')');}
+  if(e.situacion!=='activo')e.situacion='pend_imss';e.activo=true;e.altaId=a.id;
+  await saveEmp(e);
+  let x=expById(e.id);x=x?clone(x):{id:e.id,creado:Date.now(),laborales:[],hist:[],altas:[]};
+  x.nombre=e.nombre;x.obra=e.obra;x.docs=clone(a.docs||{});x.fAcept=Date.now();x.aceptadoPor=myId;x.solicitadoPor=a.creatorId;x.solicitadoNom=a.solicitante||'';x.folioAlta=a.folio;x.altas=(x.altas||[]);if(x.altas.indexOf(a.id)<0)x.altas.push(a.id);
+  xh(x,'Alta aceptada internamente (solicitud '+a.folio+'). Pendiente de alta formal ante el IMSS.');
+  await saveExp(x);
+  a.empId=e.id;a.estado='aceptada';ah(a,'Solicitud aceptada; expediente del trabajador '+(linkId?'vinculado':'creado'));
+  await saveAlta(a);
+}
+/* ── decisiones de Administración ── */
+function altaDecision(a,tipo){
+  const cfg={aceptar:['Aceptar solicitud','Aceptar'],devolver:['Devolver para corrección','Devolver'],rechazar:['Rechazar solicitud','Rechazar']}[tipo];
+  const dups=tipo==='aceptar'?S.emps.filter(e=>normQ(e.nombre)===normQ(a.nombre)):[];
+  let html='<p style="margin:0">Trabajador: <b>'+esc(a.nombre)+'</b> · '+esc(a.obra)+'</p>';
+  if(tipo==='aceptar'){
+    html+='<p class="muted" style="margin:0;font-size:13px">La aceptación es interna y crea el perfil del trabajador en Nómina; <b>no equivale al alta ante el IMSS</b>, que se registra después con su acuse.</p>'+
+     '<div class="f"><label for="ad-s">Sueldo base diario <i>*</i></label><input id="ad-s" type="number" min="0" step="any" inputmode="decimal"></div>'+
+     (dups.length?'<div class="f"><label for="ad-l">Ya existe un expediente con ese nombre</label><select id="ad-l"><option value="">Crear un expediente nuevo</option>'+dups.map(e=>'<option value="'+esc(e.id)+'" selected>Vincular a: '+esc(e.nombre)+' · '+esc(e.obra||'sin obra')+' ('+esc((SIT_LAB[sitOf(e)]||['sin expediente digital'])[0])+')</option>').join('')+'</select></div>':'');
+  }else html+='<div class="f"><label for="ad-t">Justificación <i>*</i></label><textarea id="ad-t" maxlength="800"></textarea></div>'+(tipo==='rechazar'?'<p class="muted" style="margin:0;font-size:13px">El residente recibirá el motivo y podrá corregir la información o sustituir documentos para reenviarla.</p>':'');
+  modal({title:cfg[0]+' · '+a.folio,html:html,ok:cfg[1],onOk:async root=>{
+    const x=altaById(a.id);if(!x||x.estado!=='pendiente'||!rhAdm())return 'Esta solicitud ya no está pendiente.';
+    const c=clone(x);
+    if(tipo==='aceptar'){
+      const s=Number(root.querySelector('#ad-s').value);if(!(s>0))return 'Capture el sueldo base diario (mayor a cero).';
+      const l=root.querySelector('#ad-l');const miss=ALTA_DOCS.filter(d=>!(c.docs&&c.docs[d[0]]));if(miss.length)return 'La solicitud no tiene los seis documentos.';
+      c.dec={uid:myId,t:Date.now(),res:'aceptada',txt:''};await altaAceptarCore(c,s,l?l.value:'');altaNotify(c,'alta_res','Solicitud de alta aceptada','media',false);return true;}
+    const t=root.querySelector('#ad-t').value.trim();if(!t)return 'Escriba la justificación (obligatoria).';
+    c.estado=tipo==='devolver'?'devuelta':'rechazada';c.dec={uid:myId,t:Date.now(),res:c.estado,txt:t};
+    ah(c,(tipo==='devolver'?'Devolvió para corrección: ':'Rechazó la solicitud: ')+t);
+    await saveAlta(c);altaNotify(c,'alta_res',tipo==='devolver'?'Solicitud de alta devuelta para corrección':'Solicitud de alta rechazada','alta',false,t);return true;}});
+}
+/* ── documentos laborales (IMSS) y bajas ── */
+function laboralModal(e,tipo){
+  const alta=tipo==='ALTA';
+  modal({title:(alta?'Cargar ALTA ante IMSS':'Registrar BAJA')+' · '+e.nombre,html:
+   '<p class="muted" style="margin:0;font-size:13px">'+(alta?'Acuse o documento oficial del alta del trabajador ante el IMSS. El trabajador pasará a «Activo».':'Documento o acuse oficial de la baja ante el IMSS. El trabajador pasará a «Baja registrada»; su expediente se conserva completo.')+'</p>'+
+   '<div class="f"><label for="lb-f">Fecha del movimiento <i>*</i></label><input id="lb-f" type="date" value="'+todayISO()+'"></div>'+
+   '<div class="f"><label for="lb-a">Documento oficial <i>*</i></label><input id="lb-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f"><label for="lb-n">Observaciones (opcional)</label><textarea id="lb-n" maxlength="500"></textarea></div>',ok:alta?'Registrar alta':'Registrar baja',noFocus:true,
+   onOk:async root=>{
+    if(!rhAdm())return 'Solo Administración puede registrar este movimiento.';
+    const em=empById(e.id);if(!em)return 'El trabajador ya no existe.';
+    if(alta&&em.situacion==='activo')return 'El trabajador ya está activo.';if(!alta&&em.situacion==='baja')return 'La baja ya fue registrada.';
+    const fm=root.querySelector('#lb-f').value;if(!fm)return 'Indique la fecha del movimiento.';
+    const f=root.querySelector('#lb-a').files[0];if(!f)return 'Cargue el documento oficial.';
+    const ck=docFilesCheck([f]);if(ck)return ck;
+    let up;try{up=await rhUpload(f);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}
+    const n=root.querySelector('#lb-n').value.trim();
+    let x=expById(e.id);x=x?clone(x):{id:e.id,creado:Date.now(),nombre:em.nombre,obra:em.obra,docs:{},laborales:[],hist:[],altas:[]};
+    (x.laborales=x.laborales||[]).push({id:rid(),tipo:tipo,fMov:fm,fCarga:Date.now(),uid:myId,file:up,obs:n});
+    xh(x,(alta?'Alta ante IMSS registrada':'Baja registrada')+' · movimiento '+fdate(fm)+' · '+f.name+(n?' · '+n:''));
+    const ne=clone(em);ne.situacion=alta?'activo':'baja';ne.activo=alta;nh(ne,(alta?'Alta ante IMSS (':'Baja (')+fdate(fm)+')');
+    await saveExp(x);await saveEmp(ne);return true;}});
+}
+/* ── vistas ── */
+function altaRows(){
+  const q=normQ(S.al.q||'').trim();
+  return altaMias().filter(a=>(!S.al.est||a.estado===S.al.est)&&(!q||q.split(/\s+/).every(w=>normQ([a.folio,a.nombre,a.obra,a.solicitante,nm(a.creatorId),ALTA_EST[a.estado][0],(SIT_LAB[sitOf(empById(a.empId))]||[''])[0]].join(' ')).indexOf(w)>=0)));
+}
+function altasHtml(){
+  if(S.al.open){const a=altaById(S.al.open);if(a&&(S.role!=='residente'||a.creatorId===myId))return altaDetail(a);S.al.open=null;}
+  if(S.al.exp&&rhView()){const e=empById(S.al.exp);if(e)return expDetail(e);S.al.exp=null;}
+  const R=S.role,sub=R==='residente'?'todas':S.al.sub;
+  const pend=altaMias().filter(a=>a.estado==='pendiente').length;
+  const seg=(k,t)=>'<button class="btn'+(sub===k?' primary':'')+'" data-act="alsub" data-k="'+k+'">'+t+'</button>';
+  let h='<div class="row" style="margin-bottom:12px">'+(R==='residente'?'<button class="btn primary" data-act="alnew">SOLICITAR ALTA DE TRABAJADOR</button>':'')+(R==='administracion'?'<button class="btn primary" data-act="aldir">Registrar alta directa</button>':'')+
+   (R!=='residente'?seg('pend','Solicitudes de alta pendientes ('+pend+')')+seg('todas','Todas las solicitudes')+seg('trab','Trabajadores y expedientes'):'')+'</div>';
+  if(sub==='trab')return h+trabHtml();
+  const rows=altaRows().filter(a=>sub==='pend'?a.estado==='pendiente':true);
+  loadNames(rows.map(a=>a.creatorId));
+  h+='<div class="card" style="margin-bottom:12px"><div class="grid" style="align-items:end"><div class="f" style="grid-column:span 2"><label for="al-q">Buscar</label><input id="al-q" type="search" value="'+esc(S.al.q)+'" placeholder="Trabajador, obra, residente, folio, estatus…" autocomplete="off"></div>'+
+   (sub==='pend'?'':'<div class="f"><label for="al-e">Estado de la solicitud</label><select id="al-e"><option value="">Todos</option>'+Object.keys(ALTA_EST).filter(k=>R!=='administracion'&&R!=='direccion'||k!=='borrador').map(k=>'<option value="'+k+'"'+(S.al.est===k?' selected':'')+'>'+esc(ALTA_EST[k][0])+'</option>').join('')+'</select></div>')+'</div></div>';
+  if(!rows.length)return h+'<div class="empty"><b>'+(sub==='pend'?'No hay solicitudes de alta pendientes':'Aún no hay solicitudes')+'</b><p>'+(R==='residente'?'Use «SOLICITAR ALTA DE TRABAJADOR» para registrar a un nuevo trabajador con sus seis documentos.':'Las solicitudes de los residentes llegan aquí con su documentación.')+'</p></div>';
+  return h+'<div class="tw"><table><thead><tr><th>Folio</th><th>Trabajador</th><th>Obra</th><th>Residente</th><th>Fecha de solicitud</th><th>Estado de la solicitud</th><th>Situación laboral</th><th></th></tr></thead><tbody>'+rows.map(a=>{
+    const e=empById(a.empId),st=ALTA_EST[a.estado];
+    return '<tr><td class="mono">'+esc(a.folio)+'</td><td><b>'+esc(a.nombre)+'</b></td><td>'+esc(a.obra||'—')+'</td><td>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</td><td>'+fdate(a.fechaSol||isoOf(a.creado))+'</td><td>'+pill(st[0],st[1])+'</td><td>'+(a.estado==='aceptada'?sitPill(e):'<span class="muted">—</span>')+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">'+(a.estado==='pendiente'&&rhAdm()?'Revisar':'Abrir')+'</button></td></tr>';}).join('')+'</tbody></table></div>';
+}
+function altaDetail(a){
+  const R=S.role,st=ALTA_EST[a.estado],e=empById(a.empId);loadNames([a.creatorId].concat((a.hist||[]).map(x=>x.uid)));
+  let h='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="alback">← Volver</button><h2 class="sec" style="margin:0 auto 0 8px">'+esc(a.nombre)+' · <span class="mono">'+esc(a.folio)+'</span></h2>'+pill(st[0],st[1])+'</div>';
+  h+='<div class="card"><div class="grid"><div><span class="muted">Obra o proyecto</span><br><b>'+esc(a.obra||'—')+'</b></div><div><span class="muted">Residente que solicita</span><br><b>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</b></div><div><span class="muted">Fecha de solicitud</span><br><b>'+fdate(a.fechaSol||isoOf(a.creado))+'</b></div>'+(a.estado==='aceptada'?'<div><span class="muted">Situación laboral</span><br>'+sitPill(e)+'</div>':'')+'</div>'+
+   (a.dec&&(a.estado!=='pendiente')?'<div class="note '+(a.dec.res==='aceptada'?'':'warn')+'" style="margin-top:10px"><b>'+(a.dec.res==='aceptada'?'Aceptada':a.dec.res==='rechazada'?'Rechazada':'Devuelta para corrección')+' por '+esc(nm(a.dec.uid)||'Administración')+'</b> · '+fstamp(a.dec.t)+(a.dec.txt?'<br>'+esc(a.dec.txt):'')+'</div>':'')+'</div>';
+  const mine=R==='residente'&&a.creatorId===myId&&(a.estado==='borrador'||a.estado==='devuelta'||a.estado==='rechazada');
+  h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+
+   (rhAdm()&&a.estado==='pendiente'?'<button class="btn primary" data-act="aldec" data-k="aceptar" data-id="'+a.id+'">Aceptar solicitud</button><button class="btn" data-act="aldec" data-k="devolver" data-id="'+a.id+'">Devolver para corrección</button><button class="btn danger" data-act="aldec" data-k="rechazar" data-id="'+a.id+'">Rechazar solicitud</button>':'')+
+   (rhView()&&a.estado==='aceptada'&&a.empId?'<button class="btn" data-act="alexp" data-id="'+a.empId+'">Ver expediente del trabajador</button>':'')+'</div>';
+  h+='<h2 class="sec" style="margin:4px 0">Documentos de la solicitud</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(a.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td>'+(x?fstamp(x.t)+'<div class="sub">'+esc(nm(x.uid)||'')+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<h2 class="sec" style="margin:12px 0 4px">Historial</h2><ul class="hist">'+(a.hist||[]).slice().reverse().map(m=>'<li><time>'+fstamp(m.t)+'</time><div><b>'+esc(nm(m.uid)||m.rol||'')+'</b> · '+esc(m.txt)+'</div></li>').join('')+'</ul>';
+  return h;
+}
+function trabHtml(){
+  const q=normQ(S.al.q||'').trim();
+  const list=S.emps.filter(e=>!q||q.split(/\s+/).every(w=>normQ([e.nombre,e.obra,(SIT_LAB[sitOf(e)]||['sin expediente'])[0]].join(' ')).indexOf(w)>=0));
+  let h='<div class="card" style="margin-bottom:12px"><div class="f"><label for="al-q">Buscar trabajador</label><input id="al-q" type="search" value="'+esc(S.al.q)+'" placeholder="Nombre, obra o situación laboral" autocomplete="off"></div></div>';
+  if(!list.length)return h+'<div class="empty"><b>No hay trabajadores</b><p>Aparecen aquí al aceptar una solicitud de alta o al registrarlos en Empleados.</p></div>';
+  return h+'<div class="tw"><table><thead><tr><th>Trabajador</th><th>Obra</th><th>Situación laboral</th><th>Aceptación interna</th><th>Documentos de alta</th><th></th></tr></thead><tbody>'+list.map(e=>{
+    const x=expById(e.id),nd=x?ALTA_DOCS.filter(d=>x.docs&&x.docs[d[0]]).length:0;
+    return '<tr><td><b>'+esc(e.nombre)+'</b></td><td>'+esc(e.obra||'—')+'</td><td>'+sitPill(e)+'</td><td>'+(x&&x.fAcept?fdate(isoOf(x.fAcept)):'—')+'</td><td>'+(x?nd+' de 6':'—')+'</td><td><button class="btn sm" data-act="alexp" data-id="'+e.id+'">Expediente</button></td></tr>';}).join('')+'</tbody></table></div>';
+}
+function expDetail(e){
+  const x=expById(e.id)||{docs:{},laborales:[],hist:[],altas:[]},s=empStats(e);loadNames([x.aceptadoPor,x.solicitadoPor].concat((x.hist||[]).map(m=>m.uid)).concat((x.laborales||[]).map(m=>m.uid)));
+  const al=(x.altas||[]).map(altaById).filter(Boolean);
+  let h='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="alback">← Volver</button><h2 class="sec" style="margin:0 auto 0 8px">Expediente · '+esc(e.nombre)+'</h2>'+sitPill(e)+'</div>';
+  h+='<div class="card"><div class="grid"><div><span class="muted">Obra asignada</span><br><b>'+esc(e.obra||'—')+'</b></div><div><span class="muted">Sueldo base diario</span><br><b>'+money(e.sueldo)+'</b></div><div><span class="muted">Fecha de aceptación interna</span><br><b>'+(x.fAcept?fstamp(x.fAcept):'—')+'</b></div><div><span class="muted">Residente que solicitó</span><br><b>'+esc(x.solicitadoNom||nm(x.solicitadoPor)||'—')+'</b></div><div><span class="muted">Administrador que autorizó</span><br><b>'+esc(nm(x.aceptadoPor)||'—')+'</b></div><div><span class="muted">Folio de solicitud</span><br><b class="mono">'+esc(x.folioAlta||'—')+'</b></div></div>'+
+   '<p class="muted" style="margin:10px 0 0;font-size:13px">La aceptación interna no equivale al alta formal ante el IMSS: la situación laboral cambia a «Activo» hasta cargar el acuse oficial de alta.</p></div>';
+  h+='<div class="row" style="margin:12px 0">'+(rhAdm()?(sitOf(e)!=='activo'&&sitOf(e)!=='baja'?'<button class="btn primary" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar ALTA ante IMSS</button>':'')+(sitOf(e)!=='baja'?'<button class="btn danger" data-act="allab" data-k="BAJA" data-id="'+e.id+'">Registrar BAJA</button>':'<button class="btn" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar nueva ALTA ante IMSS</button>'):'')+'</div>';
+  h+='<h2 class="sec" style="margin:4px 0">Documentos del expediente</h2><div class="tw"><table><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1]):'<span class="muted">Sin documento (expediente anterior al módulo)</span>')+'</td><td>'+(y?fstamp(y.t):'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<h2 class="sec" style="margin:12px 0 4px">DOCUMENTOS LABORALES (IMSS)</h2>'+((x.laborales||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha del movimiento</th><th>Fecha de carga</th><th>Usuario responsable</th><th>Archivo</th></tr></thead><tbody>'+x.laborales.map(m=>'<tr><td>'+pill(m.tipo,m.tipo==='ALTA'?'ok':'bad')+'</td><td>'+fdate(m.fMov)+'</td><td>'+fstamp(m.fCarga)+'</td><td>'+esc(nm(m.uid)||'')+'</td><td>'+rhLink(m.file,'Documento '+m.tipo)+(m.obs?'<div class="sub">'+esc(m.obs)+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay documentos de alta o baja ante el IMSS.</p>');
+  h+='<h2 class="sec" style="margin:12px 0 4px">Solicitudes de alta</h2>'+(al.length?'<div class="tw"><table><tbody>'+al.map(a=>'<tr><td class="mono">'+esc(a.folio)+'</td><td>'+fdate(a.fechaSol)+'</td><td>'+pill(ALTA_EST[a.estado][0],ALTA_EST[a.estado][1])+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">Abrir</button></td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Sin solicitudes registradas.</p>');
+  h+='<h2 class="sec" style="margin:12px 0 4px">Nómina</h2><div class="card"><div class="grid"><div><span class="muted">Días laborados</span><br><b>'+s.dias+'</b></div><div><span class="muted">Horas extra</span><br><b>'+s.he+'</b></div><div><span class="muted">Vacaciones tomadas</span><br><b>'+s.vac+' de '+(Number(e.vacDias)||0)+'</b></div><div><span class="muted">Aguinaldo (días pagados)</span><br><b>'+s.agui+' de '+(Number(e.aguiDias)||0)+'</b></div><div><span class="muted">Inasistencias</span><br><b>'+s.faltas+'</b></div><div><span class="muted">Pagado en nóminas</span><br><b>'+money(s.pagado)+'</b></div></div></div>';
+  const mv=(x.hist||[]).concat(e.hist||[]).sort((a,b)=>b.t-a.t);
+  h+='<h2 class="sec" style="margin:12px 0 4px">Historial de movimientos</h2><ul class="hist">'+mv.map(m=>'<li><time>'+fstamp(m.t)+'</time><div><b>'+esc(nm(m.uid)||m.rol||'')+'</b> · '+esc(m.txt)+'</div></li>').join('')+'</ul>';
+  return h;
+}
+Object.assign(A,{
+  alnew(){if(S.role==='residente')altaForm(null);},
+  aldir(){if(rhAdm())altaDirecta();},
+  alfix(el){const a=altaById(el.dataset.id);if(a&&a.creatorId===myId)altaForm(a);},
+  aldraft(el){
+    const root=document.querySelector('#modal');const id=el.dataset.id;const a=id?altaById(id):null;
+    (async()=>{const c=await altaCollect(root,a||{docs:{}},false);const err=$('m-err');if(c.err){if(err)err.textContent=c.err;return;}
+      const x=a?clone(a):{id:rid(),folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
+      if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada'))return;
+      const er=await altaApplyFiles(x,c.nf);if(er){if(err)err.textContent=er;return;}
+      x.nombre=c.nombre;x.obra=c.obra;x.solicitante=(S.me&&S.me.nombre)||S.myName||'';if(!a)ah(x,'Creó el borrador de la solicitud');else ah(x,'Guardó cambios en el borrador');
+      await saveAlta(x);closeModal();toast('Borrador guardado.');})();
+  },
+  alsub(el){S.al.sub=el.dataset.k;S.al.open=null;S.al.exp=null;render();},
+  alopen(el){S.al.open=el.dataset.id;S.al.exp=null;render();},
+  alback(){S.al.open=null;S.al.exp=null;render();},
+  alexp(el){if(!rhView())return;S.al.exp=el.dataset.id;S.al.open=null;rhLog('Consultó un expediente laboral');render();},
+  aldec(el){const a=altaById(el.dataset.id);if(a&&rhAdm())altaDecision(a,el.dataset.k);},
+  allab(el){const e=empById(el.dataset.id);if(e&&rhAdm())laboralModal(e,el.dataset.k);},
+  rhfile(el,e){rhLog('Consultó documento laboral'+(el.dataset.t?' ('+el.dataset.t+')':''));return A.viewfile(el,e);}
+});
+function altasMod(){return '';}
+
 /* ───────── eventos ───────── */
 document.addEventListener('click',e=>{
   if(S.nOpen&&!e.target.closest('#npop')&&!e.target.closest('#bell')){S.nOpen=false;bellRender();}
@@ -3229,12 +3481,13 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.id==='al-e'){S.al.est=el.value;render();return;}
   if(el.dataset&&el.dataset.repf){S.rF=el.value;render();return;}
   if(el.dataset&&el.dataset.rrf){S.rpt[el.dataset.rrf]=el.value;const b=$('rr-body');if(b)b.innerHTML=repRepBody();return;}
   if(el.id==='rp-req'){const c=$('rp-lines');if(c)c.innerHTML=el.value?repLinesHtml(el.value,null):'';return;}
   if(el.dataset&&el.dataset.nf){S.nf[el.dataset.nf]=el.value;const b=$('nbody');if(b)b.innerHTML=notifBody();return;}
   if(el.id==='d-tipo'){const f=$('d-otrof');if(f)f.style.display=el.value==='Otro documento'?'':'none';return;}
-  if(el.id==='role-sel'){if(!(S.mode==='local'||S.auth==='owner'))return;S.role=el.value;S.ownerRole=el.value;try{localStorage.setItem('gp_role',S.role);}catch(x){}if(S.mode==='cloud'){applyAccess(true);return;}S.tab=TABS[S.role][0][0];S.open=null;S.sel.clear();render();return;}
+  if(el.id==='role-sel'){if(!(S.mode==='local'||S.auth==='owner'))return;S.role=el.value;S.ownerRole=el.value;try{localStorage.setItem('gp_role',S.role);}catch(x){}if(S.mode==='cloud'){applyAccess(true);return;}S.tab=TABS[S.role][0][0];S.open=null;S.al.open=null;S.al.exp=null;S.sel.clear();render();return;}
   if(el.id==='dep-all'){const its=depItems();if(el.checked)its.forEach(x=>S.dep.sel.add(x.id));else S.dep.sel.clear();const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.dataset&&el.dataset.act==='depsel'){if(el.checked)S.dep.sel.add(el.dataset.k);else S.dep.sel.delete(el.dataset.k);const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.dataset&&el.dataset.uf){S.uEst=el.value;const b=$('u-body');if(b)b.innerHTML=usersBody();return;}
@@ -3268,6 +3521,7 @@ document.addEventListener('input',e=>{
   if(el.id==='u-q'){S.uq=el.value;const b=$('u-body');if(b)b.innerHTML=usersBody();return;}
   if(el.id==='bit-q'){S.bq=el.value;const b=$('bit-body');if(b)b.innerHTML=bitBody();return;}
   if(el.id==='cr-q'||el.id==='cr-from'||el.id==='cr-to'){const c=S.cr;if(el.id==='cr-q')c.q=el.value;else if(el.id==='cr-from')c.from=el.value;else c.to=el.value;const b=$('cr-body');if(b)b.innerHTML=crBody();return;}
+  if(el.id==='al-q'){S.al.q=el.value;render();const n=$('al-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='emp-q'){S.empQ=el.value;const b=$('emp-body');if(b)b.innerHTML=empBody();return;}
   if(el.dataset&&(el.dataset.nh||el.dataset.nf)){nomInput(el);return;}
   if(el.id==='pv-q'){S.pvQ=el.value;S.pvq=el.value;const b=$('pv-body');if(b)b.innerHTML=provBody();return;}
@@ -3312,6 +3566,7 @@ async function boot(){
     try{provColl=db.collection('proveedores');}catch(e){provColl=null;}
     try{empColl=db.collection('empleados');}catch(e){empColl=null;}
     try{nomColl=db.collection('nominas');}catch(e){nomColl=null;}
+    try{altasColl=db.collection('altas_trabajadores');expColl=db.collection('expedientes_trabajadores');}catch(e){altasColl=null;expColl=null;}
     try{repColl=db.collection('reposiciones');}catch(e){repColl=null;}
     try{docsColl=db.collection('documentos');notifColl=db.collection('notificaciones');lecColl=db.collection('notif_lecturas');}catch(e){docsColl=null;notifColl=null;lecColl=null;}
     try{usersColl=db.collection('usuarios');bitColl=db.collection('bitacora_seguridad');}catch(e){usersColl=null;bitColl=null;}

@@ -161,9 +161,9 @@
   };
 
   /* ── archivos ── */
-  var assetsApi={upload:async function(file){
+  var assetsApi={upload:async function(file,opts){
     var safe=String(file.name||'archivo').replace(/[^\w.\-]+/g,'_');
-    var path=session.user.id+'/'+Date.now()+'-'+safe;
+    var path=session.user.id+'/'+(opts&&opts.rh?'rh/':'')+Date.now()+'-'+safe;
     var up=await sb.storage.from('comprobantes').upload(path,file,{contentType:file.type||'application/octet-stream'});
     if(up.error)throw up.error;
     var s=await sb.storage.from('comprobantes').createSignedUrl(path,60*60*24*365);
