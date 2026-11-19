@@ -115,3 +115,7 @@ El Auditor puede dejar una **observación** en cualquier partida pendiente («Ob
 ## Centro de reportes (PDF y Excel)
 
 En la pestaña **Reportes** de cada perfil: elija el tipo (Requisiciones, Partidas, Órdenes de compra, Pagos y crédito, Nóminas, Nómina por empleado, Reposiciones, Proveedores, Empleados), busque o filtre por fechas, marque registros específicos o use «todo lo mostrado», y descargue PDF o Excel. «Todo completo» genera un Excel con una hoja por tipo, o un PDF con todo. Requisiciones y OC también tienen «documento completo» (una hoja por documento). Cada perfil solo obtiene lo que ya puede consultar (Residente: lo suyo y sin importes de nómina; Proveedores solo Compras/Administración/Dirección; Empleados solo Administración; Nómina solo Residente/Administración/Dirección). Cada descarga queda en el registro de reportes. No requiere migración.
+
+## Excepciones de proveedor: las libera Compras o Administración
+
+Ya no las autoriza Dirección. La excepción («PROVEEDOR CON EXCEPCIÓN») la autoriza o rechaza **Compras** (gastos dirigidos a Compras) o **Administración** (gastos dirigidos a Administración), en la partida o en su pestaña «Excepciones», una vez que la requisición llega a su bandeja (después de Auditoría). Mientras esté pendiente no se puede liberar a Dirección. Si la rechazan, la requisición regresa al residente. Dirección ya no tiene la pestaña ni los botones de excepción. No requiere migración.

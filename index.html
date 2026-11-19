@@ -300,9 +300,9 @@ const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['bitacora','Bitácora de seguridad'],['notif','Notificaciones']],
   residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
   auditor:[['revisar','Por auditar'],['todas','Todas'],['rep','Reportes'],['notif','Notificaciones']],
-  compras:[['revisar','Por revisar'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
-  direccion:[['autorizar','Por autorizar'],['excep','Excepciones'],['nomaut','Nómina'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
-  administracion:[['revisar','Por revisar'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
+  compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
+  direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
+  administracion:[['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
 };
 
 /* ───────── estado ───────── */
@@ -358,7 +358,7 @@ function statusOf(r){
   const ls=L(r);
   if(r.estado==='elaboracion')return['En elaboración','mute'];
   if(r.estado==='auditoria')return['En revisión de Auditoría','info'];
-  if(r.estado!=='devuelta'&&L(r).some(l=>l.provExc&&l.provExc.estado==='pendiente'))return['Pendiente de autorización de excepción por Dirección','warn'];
+  if(r.estado!=='devuelta'&&L(r).some(l=>l.provExc&&l.provExc.estado==='pendiente'))return['Pendiente de autorización de excepción por '+excWho(r),'warn'];
   if(r.estado==='compras')return['Enviada a Compras','info'];
   if(r.estado==='administracion')return['En revisión por Administración','info'];
   if(r.estado==='devuelta')return['Devuelta al residente','warn'];
@@ -467,7 +467,7 @@ function tabCount(k){
   if(R==='residente'&&k==='nom')return Vn().filter(n=>n.estado==='elaboracion'&&n.devolucion).length;
   if(R==='administracion'&&k==='nomina')return Vn().filter(n=>n.estado==='enviada'||n.estado==='revision').length;
   if(R==='direccion'&&k==='nomaut')return Vn().filter(n=>n.estado==='direccion').length;
-  if(R==='direccion'&&k==='excep')return excRows().filter(excIsPend).length;
+  if(k==='excep'&&(R==='compras'||R==='administracion'))return excRows().filter(x=>excIsPend(x)&&x.r.estado!=='auditoria').length;
   if(R==='direccion'&&k==='autorizar')return V().filter(r=>(r.estado==='direccion'||r.estado==='resuelta')&&L(r).some(l=>l.auth==='pendiente')).length;
   if(R==='administracion'){
     if(k==='revisar')return V().filter(r=>r.estado==='administracion').length;
@@ -514,7 +514,7 @@ function viewHtml(){
   if(k==='nomina'&&R==='administracion')return nomView();
   if(k==='nomaut'&&R==='direccion')return nomView();
   if(k==='emps'&&R==='administracion')return empHtml();
-  if(R==='direccion'&&k==='excep')return excHtml();
+  if((R==='compras'||R==='administracion')&&k==='excep')return excHtml();
   if(k==='cal'||(R==='compras'&&k==='ocs'))return calHtml(R==='compras');
   if(R==='residente'&&k==='mis')return reqList(V().filter(isMine),'Aún no tiene requisiciones','Cree su primera requisición para enviarla a Compras.',true);
   if(R==='administracion'&&k==='revisar')return reqList(V().filter(r=>r.estado==='administracion'),'Nada por revisar','Los gastos que los residentes dirigen a Administración aparecen aquí. Después de revisarlos, usted los libera directo a Dirección.');
@@ -673,7 +673,7 @@ function provDetail(l,scope,i){
   if(l.bodega)return '<div class="pcard"><b>Material en bodega</b><p class="muted" style="margin:4px 0 0">Se surtirá de las existencias de bodega. No requiere proveedor, orden de compra ni pago; Dirección lo autoriza como cualquier otra partida.</p></div>';
   if(l.provExc){
     const e=l.provExc;
-    let h='<div class="pcard"><b>Proveedor con excepción</b><p class="muted" style="margin:4px 0 8px">Se enviará a Dirección. La requisición quedará “Pendiente de autorización de excepción por Dirección” y no podrá avanzar a OC ni a pago hasta que se autorice.</p>';
+    let h='<div class="pcard"><b>Proveedor con excepción</b><p class="muted" style="margin:4px 0 8px">La excepción la autoriza Compras (o Administración, si el gasto va a Administración) al revisar la requisición. No podrá avanzar a Dirección, OC ni pago hasta que se autorice.</p>';
     if(e.estado==='rechazada')h+='<div class="note warn" style="margin-bottom:8px"><b>Excepción rechazada por Dirección.</b> '+esc(e.obs||'')+' Elija un proveedor del catálogo o ajuste el nombre y la justificación.</div>';
     h+='<div class="f"><label>Nombre del proveedor <i>*</i></label><input '+a+' data-f="excNombre" value="'+esc(e.nombre)+'" autocomplete="off"></div>'+
       '<div class="f" style="margin-top:8px"><label>Justificación: por qué se requiere un proveedor no registrado o inactivo <i>*</i></label><textarea '+a+' data-f="excJust">'+esc(e.just)+'</textarea></div></div>';
@@ -710,6 +710,9 @@ function provErr(l,i,legacyOk){
   return n+'seleccione un proveedor activo del catálogo o PROVEEDOR CON EXCEPCIÓN.';
 }
 const excOk=l=>!l.provExc||l.provExc.estado==='autorizada';
+const excRole=r=>destOf(r)==='administracion'?'administracion':'compras';
+const excWho=r=>ROLES[excRole(r)];
+const excCan=(r,l)=>S.role===excRole(r)&&!!l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion'&&r.estado!=='auditoria';
 const excPend=r=>L(r).filter(l=>!excOk(l));
 function provCell(l){
   let h=esc(l.proveedor||'—');
@@ -817,24 +820,24 @@ function provExp(p){
   h+='<h2 class="sec" style="margin:4px 0">Historial y auditoría</h2><ul class="hist">'+hs.map(m=>'<li><time>'+fstamp(m.t)+'</time><div><span class="who">'+esc(m.rol)+' · '+esc(nm(m.uid))+'</span> '+(m.tipo==='banco'?'<b>':'')+esc(m.txt)+(m.tipo==='banco'?'</b>':'')+'</div></li>').join('')+'</ul>';
   return h;
 }
-/* excepciones (Dirección) */
+/* excepciones (las resuelve Compras o Administración según el destino de la requisición) */
 function excRows(){
   const o=[];
-  V().forEach(r=>{if(r.estado==='elaboracion')return;L(r).forEach(l=>{if(l.provExc&&l.provExc.solT)o.push({r:r,l:l});});});
+  V().forEach(r=>{if(r.estado==='elaboracion'||excRole(r)!==S.role)return;L(r).forEach(l=>{if(l.provExc&&l.provExc.solT)o.push({r:r,l:l});});});
   return o;
 }
-const excIsPend=x=>x.l.provExc.estado==='pendiente'&&x.r.estado!=='devuelta';
+const excIsPend=x=>x.l.provExc.estado==='pendiente'&&x.r.estado!=='devuelta'&&x.r.estado!=='auditoria';
 function excHtml(){
   const all=excRows(),pend=all.filter(excIsPend),res=all.filter(x=>x.l.provExc.estado!=='pendiente');
   const seg=(k,t,n)=>'<button class="btn'+(S.excSeg===k?' primary':'')+'" data-act="excseg" data-k="'+k+'">'+t+' ('+n+')</button>';
   const list=S.excSeg==='res'?res:pend;
   let h='<div class="row" style="margin-bottom:10px">'+seg('pend','Pendientes',pend.length)+seg('res','Resueltas',res.length)+'</div>';
-  if(!list.length)return h+'<div class="empty"><b>'+(S.excSeg==='res'?'Aún no hay excepciones resueltas':'No hay excepciones por autorizar')+'</b><p>Las requisiciones con “PROVEEDOR CON EXCEPCIÓN” llegan aquí. La autorización aplica solo a esa partida y no activa al proveedor en el catálogo.</p></div>';
+  if(!list.length)return h+'<div class="empty"><b>'+(S.excSeg==='res'?'Aún no hay excepciones resueltas':'No hay excepciones por autorizar')+'</b><p>Las requisiciones con “PROVEEDOR CON EXCEPCIÓN” dirigidas a su área llegan aquí una vez validadas por Auditoría. La autorización aplica solo a esa partida y no activa al proveedor en el catálogo.</p></div>';
   loadNames(list.map(x=>x.l.provExc.solUid).concat(list.map(x=>x.l.provExc.decUid)));
   return h+'<div class="tw"><table><thead><tr><th>Requisición</th><th>Obra · Solicita</th><th>Partida</th><th>Proveedor solicitado</th><th>Justificación</th><th class="num">Importe</th><th>Estado</th><th></th></tr></thead><tbody>'+list.map(x=>{
     const e=x.l.provExc;
     const est=e.estado==='pendiente'?pill('Pendiente','warn'):(e.estado==='autorizada'?pill('Autorizada','ok'):pill('Rechazada','bad'))+'<div class="sub">'+esc(nm(e.decUid))+' · '+(e.decT?fstamp(e.decT):'')+(e.obs?'<br>'+esc(e.obs):'')+'</div>';
-    return '<tr><td class="mono"><a href="#" data-act="open" data-id="'+x.r.id+'">'+esc(x.r.folio)+'</a><div class="sub">'+esc(DEST[destOf(x.r)])+' · '+fdate(x.r.fechaSol)+'</div></td><td>'+esc(x.r.obra||'—')+'<div class="sub">'+esc(x.r.solicitante||'')+'</div></td><td>'+esc(x.l.clave?x.l.clave+' · ':'')+esc(x.l.concepto)+'</td><td><b>'+esc(e.nombre)+'</b></td><td>'+esc(e.just)+'</td><td class="num">'+money(x.l.total)+'</td><td>'+est+'</td><td>'+(e.estado==='pendiente'&&x.r.estado!=='devuelta'?'<div class="row" style="flex-wrap:nowrap"><button class="btn sm ok" data-act="excaut" data-id="'+x.r.id+'" data-l="'+x.l.id+'">Autorizar</button><button class="btn sm danger" data-act="excrech" data-id="'+x.r.id+'" data-l="'+x.l.id+'">Rechazar</button></div>':'')+'</td></tr>';
+    return '<tr><td class="mono"><a href="#" data-act="open" data-id="'+x.r.id+'">'+esc(x.r.folio)+'</a><div class="sub">'+esc(DEST[destOf(x.r)])+' · '+fdate(x.r.fechaSol)+'</div></td><td>'+esc(x.r.obra||'—')+'<div class="sub">'+esc(x.r.solicitante||'')+'</div></td><td>'+esc(x.l.clave?x.l.clave+' · ':'')+esc(x.l.concepto)+'</td><td><b>'+esc(e.nombre)+'</b></td><td>'+esc(e.just)+'</td><td class="num">'+money(x.l.total)+'</td><td>'+est+'</td><td>'+(excCan(x.r,x.l)?'<div class="row" style="flex-wrap:nowrap"><button class="btn sm ok" data-act="excaut" data-id="'+x.r.id+'" data-l="'+x.l.id+'">Autorizar</button><button class="btn sm danger" data-act="excrech" data-id="'+x.r.id+'" data-l="'+x.l.id+'">Rechazar</button></div>':'')+'</td></tr>';
   }).join('')+'</tbody></table></div>';
 }
 
@@ -1734,10 +1737,10 @@ function ndiffReq(o,n){
     E({ev:'req_res',prio:pr,titulo:t,desc:dsc,uid:cre});
     E({ev:'req_res',prio:pr,titulo:t,desc:dsc,roles:[adm?'administracion':'compras']});
   }
-  if(exP)E({ev:'exc_sol',prio:'alta',mod:'Proveedores',titulo:'Solicitud de proveedor con excepción',desc:dsc,roles:['direccion']});
+  const exTrans=oe==='auditoria'&&n.estado==='compras'&&L(n).some(l=>l.provExc&&l.provExc.estado==='pendiente');
+  if((exP&&n.estado!=='auditoria')||exTrans)E({ev:'exc_sol',prio:'alta',mod:'Proveedores',titulo:'Proveedor con excepción por autorizar',desc:dsc,roles:[excRole(n)]});
   if(exA||exR){
     const t=exA?'Excepción de proveedor autorizada':'Excepción de proveedor rechazada',pr=exA?'media':'alta';
-    E({ev:'exc_res',prio:pr,mod:'Proveedores',titulo:t,desc:dsc,roles:['compras']});
     E({ev:'exc_res',prio:pr,mod:'Proveedores',titulo:t,desc:dsc,uid:cre});
   }
   let pq=0;L(n).forEach(l=>{const p=ol[l.id];if(p&&paqM(p)!==paqM(l)&&p.auth==='autorizada'&&l.auth==='autorizada')pq++;});
@@ -1948,7 +1951,7 @@ function topActions(r){
   if(R==='residente'&&r.estado==='devuelta'&&isMine(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Corrija las partidas y reenvíe</b><button class="btn primary" data-act="reenviar" data-id="'+r.id+'">Reenviar a '+DEST[destOf(r)]+'</button></div></div>';
   if(R==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')&&L(r).some(l=>l.auth==='pendiente'))h='<div class="card"><div class="row"><b style="margin-right:auto">Decisión de Dirección</b><button class="btn danger" data-act="rechall" data-id="'+r.id+'">Rechazar todo lo pendiente</button><button class="btn ok" data-act="autall" data-id="'+r.id+'">Autorizar todo lo pendiente</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Autorice o rechace partida por partida. Lo que no decida queda como Pendiente por autorizar en esta misma requisición.</p></div>';
   if(okAudit(r)){const pn=L(r).filter(l=>l.auth==='pendiente').length;h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de Auditoría</b><button class="btn danger" data-act="audrechall" data-id="'+r.id+'">Rechazar toda la requisición</button><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="audliberar" data-id="'+r.id+'"'+(pn?'':' disabled')+'>Liberar a Compras</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Valide conceptos, cantidades y justificación. Puede rechazar partidas específicas en la tabla, rechazar toda la requisición o devolverla al residente para que corrija. No cotiza ni edita.</p></div>';}
-  if(okReview(r)&&!okAudit(r)&&excPend(r).length){h=h.replace('<button class="btn primary" data-act="liberar"','<button class="btn primary" disabled title="Hay una excepción de proveedor sin autorizar" data-act="liberar"')+'<div class="note warn"><b>No puede liberarse todavía.</b> Hay '+excPend(r).length+' partida(s) con proveedor con excepción sin autorización de Dirección.</div>';}
+  if(okReview(r)&&!okAudit(r)&&excPend(r).length){h=h.replace('<button class="btn primary" data-act="liberar"','<button class="btn primary" disabled title="Hay una excepción de proveedor sin autorizar" data-act="liberar"')+'<div class="note warn"><b>No puede liberarse todavía.</b> Hay '+excPend(r).length+' partida(s) con proveedor con excepción sin autorizar: autorícela o recházela en la partida antes de liberar.</div>';}
   return h;
 }
 function drawerLines(r){
@@ -2476,7 +2479,7 @@ function fileLink(f){
 }
 function lineActions(r,l){
   let h='';
-  if(S.role==='direccion'&&l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion')h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
+  if(excCan(r,l))h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
   if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm" data-act="audobs" data-id="'+r.id+'" data-l="'+l.id+'">'+(l.obs?'Editar observación':'Observar')+'</button><button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
   if(paqOk(r,l))h+='<button class="btn sm" data-act="paqedit" data-id="'+r.id+'" data-l="'+l.id+'">Paquetería</button>';
   if(canEdit(r,l))h+='<button class="btn sm" data-act="editlinea" data-id="'+r.id+'" data-l="'+l.id+'">Editar</button>';
@@ -2651,7 +2654,7 @@ const A={
     const r=draftToReq(d,adm?'administracion':'auditoria');
     hist(r,'envió la solicitud a '+(adm?DEST[d.destino]:'Auditoría (para Compras)')+' (obra: '+(r.obra||'sin obra')+')');
     r.lineas.forEach(l=>lh(l,'Solicitada: '+l.cant+' '+(l.unidad||'')+' a '+money(l.pu)+' c/u ('+money(l.total)+'); enviada a '+(adm?DEST[d.destino]:'Auditoría')));
-    r.lineas.forEach(l=>{if(l.provExc){l.provExc.estado='pendiente';l.provExc.solT=Date.now();l.provExc.solUid=myId;lh(l,'Proveedor con excepción solicitado a Dirección: '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}});
+    r.lineas.forEach(l=>{if(l.provExc){l.provExc.estado='pendiente';l.provExc.solT=Date.now();l.provExc.solUid=myId;lh(l,'Proveedor con excepción solicitado a '+excWho(r)+': '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}});
     S.draft=null;S.tab='mis';S.open=r.id;save(r);
   },
   borrador(){
@@ -2724,7 +2727,7 @@ const A={
       r.estado='resuelta';mark(r,'auditor');hist(r,'rechazó toda la requisición ('+p.length+' partida(s)) en Auditoría: '+t);await save(r);return true;}});
   },
   audundo(el){const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!okAudit(r)||l.rechPor!=='auditor')return;l.auth='pendiente';l.motivo='';delete l.rechPor;lh(l,'Rechazo de Auditoría deshecho');hist(r,'deshizo el rechazo de la partida '+l.clave);save(r);},
-  liberar(el){const r=reqById(el.dataset.id);if(!okReview(r))return;if(excPend(r).length){toast('No puede liberarse: hay proveedor con excepción sin autorización de Dirección.');return;}r.estado='direccion';mark(r,S.role);hist(r,'revisó y liberó la solicitud a Dirección');lhAll(r,'Revisada y liberada a Dirección');save(r);},
+  liberar(el){const r=reqById(el.dataset.id);if(!okReview(r))return;if(excPend(r).length){toast('No puede liberarse: hay proveedor con excepción sin autorización. Autorícela o recházela primero (partida con proveedor con excepción).');return;}r.estado='direccion';mark(r,S.role);hist(r,'revisó y liberó la solicitud a Dirección');lhAll(r,'Revisada y liberada a Dirección');save(r);},
   genoc(){
     const picks=selectedPicks(elegCompras);if(!picks.length)return;
     const provs=[...new Set(picks.map(x=>x.l.proveedor||'Sin proveedor'))];
@@ -2823,7 +2826,7 @@ const A={
       Object.assign(l,t,{total:lt(t),orig:l.orig,h:l.h});
       if(l.provExc){
         const same=prevExc&&prevExc.nombre===l.provExc.nombre&&prevExc.just===l.provExc.just;
-        if(same)l.provExc=prevExc;else{l.provExc={nombre:l.provExc.nombre,just:l.provExc.just,estado:'pendiente',solT:Date.now(),solUid:myId};lh(l,'Proveedor con excepción solicitado a Dirección: '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}
+        if(same)l.provExc=prevExc;else{l.provExc={nombre:l.provExc.nombre,just:l.provExc.just,estado:'pendiente',solT:Date.now(),solUid:myId};lh(l,'Proveedor con excepción solicitado a '+excWho(r)+': '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}
       }else if(prevExc){lh(l,'Excepción de proveedor retirada; proveedor: '+(l.proveedor||'—'));}
       if(paqM(t)!==paqPrev)lh(l,'Paquetería ESTIMADO: de '+money(paqPrev)+' a '+money(paqM(t)));
       lh(l,'Editada'+(cantAntes!==l.cant?': cantidad de '+cantAntes+' a '+l.cant:'')+(antesPu!==l.pu?'; precio unitario de '+money(antesPu)+' a '+money(l.pu):'')+(antesProv!==l.proveedor?'; proveedor de '+(antesProv||'-')+' a '+(l.proveedor||'-'):'')+'; importe '+money(l.total));
@@ -2968,18 +2971,18 @@ const A={
   provopen(el,e){if(e&&e.preventDefault)e.preventDefault();closeModal();S.open=el.dataset.id;render();},
   excseg(el){S.excSeg=el.dataset.k;render();},
   excaut(el){
-    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!l.provExc||l.provExc.estado!=='pendiente')return;
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!excCan(r,l))return;
     modal({title:'Autorizar excepción de proveedor',html:'<p style="margin:0">Proveedor: <b>'+esc(l.provExc.nombre)+'</b><br><span class="muted">'+esc(l.provExc.just)+'</span></p><p class="muted" style="margin:0;font-size:13px">Aplica únicamente a esta partida de la requisición '+esc(r.folio)+'. No activa al proveedor en el catálogo.</p><div class="f"><label for="m-txt">Observaciones (opcional)</label><textarea id="m-txt"></textarea></div>',ok:'Autorizar excepción',onOk:async root=>{
       const o=root.querySelector('#m-txt').value.trim();Object.assign(l.provExc,{estado:'autorizada',decT:Date.now(),decUid:myId,obs:o});
-      lh(l,'Excepción de proveedor autorizada ('+l.provExc.nombre+')'+(o?': '+o:''));hist(r,'autorizó la excepción del proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')'+(o?': '+o:''));await save(r);return true;}});
+      lh(l,'Excepción de proveedor autorizada ('+l.provExc.nombre+')'+(o?': '+o:''));hist(r,'autorizó la excepción del proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')'+(o?': '+o:''));mark(r,S.role);await save(r);return true;}});
   },
   excrech(el){
-    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!l.provExc||l.provExc.estado!=='pendiente')return;
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!excCan(r,l))return;
     modal({title:'Rechazar excepción de proveedor',html:'<p style="margin:0">Proveedor: <b>'+esc(l.provExc.nombre)+'</b><br><span class="muted">'+esc(l.provExc.just)+'</span></p><p class="muted" style="margin:0;font-size:13px">La requisición regresa al residente para que elija otro proveedor o ajuste la justificación.</p><div class="f"><label for="m-txt">Observaciones <i>*</i></label><textarea id="m-txt"></textarea></div>',ok:'Rechazar excepción',onOk:async root=>{
       const o=root.querySelector('#m-txt').value.trim();if(!o)return 'Escriba las observaciones del rechazo.';
       Object.assign(l.provExc,{estado:'rechazada',decT:Date.now(),decUid:myId,obs:o});
       lh(l,'Excepción de proveedor rechazada ('+l.provExc.nombre+'): '+o);hist(r,'rechazó la excepción del proveedor “'+l.provExc.nombre+'” (partida '+l.clave+'): '+o);
-      if(r.estado==='compras'||r.estado==='administracion'||r.estado==='direccion'){r.estado='devuelta';r.devolucion='Excepción de proveedor rechazada por Dirección ('+l.provExc.nombre+'): '+o;r.devPor='Dirección';}
+      if(r.estado==='compras'||r.estado==='administracion'||r.estado==='direccion'){r.estado='devuelta';r.devolucion='Excepción de proveedor rechazada por '+ROLES[S.role]+' ('+l.provExc.nombre+'): '+o;r.devPor=ROLES[S.role];}
       await save(r);return true;}});
   },
 
