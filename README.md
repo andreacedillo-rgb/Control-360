@@ -78,3 +78,36 @@ Cada `git push` a `main` publica automáticamente.
 - Vinculación con requisición: las partidas seleccionadas quedan “cubiertas por el colaborador” y salen de Por pagar al proveedor; si la reposición se rechaza, el vínculo se libera. Alertas de posible duplicado (folio de comprobante, importe/fecha/proveedor, concepto/obra, pagos existentes al proveedor).
 - El residente solo ve sus reposiciones (política de base de datos). Notificaciones integradas. Reportes PDF/Excel en **Reportes → Reporte de reposiciones**, con exactamente los registros filtrados; cada descarga queda en el registro de descargas.
 - Limitación: la detección de duplicados compara contra lo que el usuario puede ver (un residente solo detecta contra sus propias reposiciones; Compras/Administración/Dirección, contra las de su alcance).
+
+## Material en bodega
+En el campo Proveedor de cada partida (alta o edición) puede elegirse **MATERIAL EN BODEGA**: no requiere proveedor; sigue el flujo de revisión y autorización de Dirección, pero no genera OC, recepción ni pago, y no cuenta como pendiente de compra.
+
+## Perfil AUDITOR (migración 006)
+
+Nuevo flujo para requisiciones dirigidas a **Compras**: Residente → **Auditor** → Compras → Dirección.
+
+- El Auditor **solo valida** conceptos, cantidades y justificación. No cotiza ni edita partidas, ni ve datos bancarios de proveedores.
+- Puede **liberar a Compras**, **devolver al residente** (con justificación), **rechazar partidas específicas** (motivo obligatorio, reversible con «Deshacer» mientras la requisición siga en su bandeja) o **rechazar toda la requisición** (se cierra sin pasar a Compras).
+- Los gastos dirigidos a **Administración** y las **Reposiciones** no pasan por Auditoría.
+- Si Compras o Dirección devuelven una requisición, al corregirla el residente vuelve a pasar por Auditoría.
+- Las partidas rechazadas por Auditoría llegan a Compras/Dirección ya marcadas como rechazadas (con motivo).
+
+**Para activarlo en Supabase:** ejecute `supabase/migrations/006_auditor.sql` en el SQL Editor (requiere 004 y 005 ya ejecutadas). Después cree usuarios con perfil «Auditor» desde Sistemas → Usuarios y permisos. Suba `index.html` a GitHub **sin** `config.js`.
+
+## Costo de paquetería (ESTIMADO)
+
+- Compras puede agregar, al editar una partida en su bandeja, un **costo de paquetería** opcional rotulado «ESTIMADO»; se suma al total que autoriza Dirección.
+- Ya autorizado el gasto, Compras solo puede modificar ese costo (botón «Paquetería», antes de generar la OC).
+- Si el nuevo costo supera lo autorizado por **más de $1,000**, la partida regresa automáticamente a **Administración** (para revisión y liberación a Dirección, que debe reautorizarla). Si no, el ajuste se libera y queda autorizado.
+- No requiere migración de Supabase.
+
+## Auditoría numérica (revisión previa a publicar)
+
+- Todas las sumas ahora se redondean a 6 decimales internos (se elimina el ruido de punto flotante) y se muestran a centavos.
+- Una partida ya autorizada ya no puede ser editada por Residente, Compras ni Administración (solo partidas pendientes); la única excepción es el costo de paquetería por Compras.
+- Los reportes ya no cuentan como «saldo» el material en bodega ni las partidas cubiertas por reposición.
+- Los campos numéricos ya no cambian al girar la rueda del ratón sobre ellos.
+
+## Observaciones del Auditor por partida
+
+El Auditor puede dejar una **observación** en cualquier partida pendiente («Observar») sin rechazarla. Al devolver la requisición, el residente ve la justificación general y, en el aviso y en cada partida, las observaciones y los motivos de rechazo de Auditoría. Se limpian al reenviar (quedan en el historial).

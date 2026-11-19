@@ -1929,7 +1929,7 @@ function drawerHtml(r){
   const rv=(k,t)=>r.revision&&r.revision[k]?'<div><span>'+t+'</span><b>'+esc(nm(r.revision[k].uid))+'</b><small class="muted"> '+fstamp(r.revision[k].t)+'</small></div>':'';
   h+='<div class="kv"><div><span>Dirigido a</span><b>'+esc(DEST[destOf(r)])+'</b></div><div><span>Registró</span><b>'+esc(nm(r.creatorId))+'</b></div><div><span>Enviada</span><b>'+(r.enviado?fstamp(r.enviado):'—')+'</b></div>'+rv('auditor','Validó Auditoría')+rv('compras','Revisó Compras')+rv('administracion','Revisó Administración')+rv('direccion','Decidió Dirección')+(r.autT?'<div><span>Autorizada</span><b>'+fstamp(r.autT)+'</b></div>':'')+'</div>';
   h+='<div class="kv"><div><span>Solicita</span><b>'+esc(r.solicitante||'—')+'</b></div><div><span>Fecha de solicitud</span><b>'+fdate(r.fechaSol)+'</b></div><div><span>Requiere el material</span><b>'+fdate(r.fechaReq)+'</b></div><div><span>Total solicitado</span><b>'+money(reqTotal(r))+'</b></div><div><span>Autorizado</span><b>'+money(reqAut(r))+'</b></div><div><span>Pagado</span><b>'+money(reqPag(r))+'</b></div></div>';
-  if(r.estado==='devuelta')h+='<div class="note warn"><b>Devuelta por '+esc(r.devPor||'Compras')+'.</b> '+esc(r.devolucion||'')+'</div>';
+  if(r.estado==='devuelta'){h+='<div class="note warn"><b>Devuelta por '+esc(r.devPor||'Compras')+'.</b> '+esc(r.devolucion||'')+(L(r).some(l=>l.obs)?'<ul style="margin:8px 0 0;padding-left:18px">'+L(r).filter(l=>l.obs).map(l=>'<li><b>'+esc(l.clave||l.concepto)+'</b>'+(l.obs.rech?' (rechazada por Auditoría)':'')+': '+esc(l.obs.txt)+'</li>').join('')+'</ul>':'')+'</div>';}
   h+=topActions(r);
   h+=drawerLines(r);
   h+=selBar();
@@ -1959,7 +1959,7 @@ function drawerLines(r){
     h+='<tr>'+(sel?'<td>'+(el?'<input type="checkbox" aria-label="Seleccionar partida '+esc(l.clave)+'" data-act="sel" data-k="'+k+'"'+(S.sel.has(k)?' checked':'')+'>':'')+'</td>':'')+
     '<td class="mono">'+esc(l.clave)+'</td><td>'+esc(l.concepto)+'<div class="sub">'+esc(l.justificacion)+'</div>'+(paqM(l)?'<div class="sub"><b>Paquetería <span class="pill t-warn">ESTIMADO</span> '+money(paqM(l))+'</b> · incluida en el total</div>':'')+(l.paqRev&&l.auth==='pendiente'?'<div class="sub" style="color:var(--warn,#b45309)">Reautorización: paquetería pasó de '+money(l.paqRev.de)+' a '+money(l.paqRev.a)+'</div>':'')+
     (l.cot?'<div class="sub">Cotización: '+fileLink(l.cot)+'</div>':'')+
-    (l.auth==='rechazada'&&l.motivo?'<div class="rej">Motivo: '+esc(l.motivo)+'</div>':'')+
+    (l.auth==='rechazada'&&l.motivo?'<div class="rej">Motivo: '+esc(l.motivo)+'</div>':'')+(l.obs&&(r.estado==='devuelta'||okAudit(r))?'<div class="rej">Observación de '+esc(l.obs.por||'Auditoría')+(l.obs.rech?' (partida rechazada)':'')+': '+esc(l.obs.txt)+'</div>':'')+
     (l.pagoInfo&&l.pagoInfo.comprobante&&!(l.abonos&&l.abonos.length)?'<div class="sub">Comprobante ('+fdate(l.pagoInfo.fecha)+'): '+fileLink(l.pagoInfo.comprobante)+'</div>':'')+
     (l.abonos&&l.abonos.length?'<div class="sub">Abonos: '+l.abonos.map(a=>money(a.monto)+' ('+fdate(a.fecha)+(a.comprobante?', '+fileLink(a.comprobante):'')+')').join(' · ')+'</div>':'')+
     (l.oc&&l.oc!=='NA'?'<div class="sub">Entrega compromiso: '+fdate(l.oc.fecha)+'</div>':'')+
@@ -2337,7 +2337,7 @@ function fileLink(f){
 function lineActions(r,l){
   let h='';
   if(S.role==='direccion'&&l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion')h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
-  if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
+  if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm" data-act="audobs" data-id="'+r.id+'" data-l="'+l.id+'">'+(l.obs?'Editar observación':'Observar')+'</button><button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
   if(paqOk(r,l))h+='<button class="btn sm" data-act="paqedit" data-id="'+r.id+'" data-l="'+l.id+'">Paquetería</button>';
   if(canEdit(r,l))h+='<button class="btn sm" data-act="editlinea" data-id="'+r.id+'" data-l="'+l.id+'">Editar</button>';
   if(S.role==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')){
@@ -2528,14 +2528,14 @@ const A={
     S.open=null;S.tab='nueva';render();
   },
   reenviar(el){const r=reqById(el.dataset.id);const mal=L(r).filter(l=>l.provExc&&l.provExc.estado==='rechazada');if(mal.length){toast('Hay '+mal.length+' partida(s) con excepción de proveedor rechazada. Edite la partida: elija un proveedor activo del catálogo o ajuste el nombre y la justificación de la excepción.');return;}
-    r.estado=destOf(r)==='administracion'?'administracion':'auditoria';r.devolucion='';r.enviado=Date.now();hist(r,'corrigió y reenvió la solicitud a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));lhAll(r,'Corregida y reenviada a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));save(r);},
+    L(r).forEach(l=>{if(l.obs){lh(l,'Observación atendida: '+l.obs.txt);delete l.obs;}});r.estado=destOf(r)==='administracion'?'administracion':'auditoria';r.devolucion='';r.enviado=Date.now();hist(r,'corrigió y reenvió la solicitud a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));lhAll(r,'Corregida y reenviada a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));save(r);},
 
   /* compras */
   devolver(el){
     const r=reqById(el.dataset.id);
     modal({title:'Devolver al residente',html:'<div class="f"><label for="m-txt">Justificación <i>*</i></label><textarea id="m-txt" placeholder="¿Qué no cuadra y qué debe corregir?"></textarea></div>',ok:'Devolver',onOk:async root=>{
       const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba la justificación para devolverla.';
-      if(!okReview(r))return 'Esta solicitud ya no está en su bandeja.';r.estado='devuelta';r.devolucion=t;r.devPor=ROLES[S.role];if(S.role==='auditor'){r.lineas.forEach(l=>{if(l.rechPor==='auditor'){l.auth='pendiente';l.motivo='';delete l.rechPor;}});}mark(r,S.role);hist(r,'devolvió la solicitud al residente: '+t);lhAll(r,'Devuelta al residente: '+t);await save(r);return true;}});
+      if(!okReview(r))return 'Esta solicitud ya no está en su bandeja.';r.estado='devuelta';r.devolucion=t;r.devPor=ROLES[S.role];if(S.role==='auditor'){r.lineas.forEach(l=>{if(l.rechPor==='auditor'){l.obs={por:'Auditoría',txt:String(l.motivo||'').replace(/^Auditoría: /,''),rech:true,t:Date.now()};l.auth='pendiente';l.motivo='';delete l.rechPor;}});}mark(r,S.role);hist(r,'devolvió la solicitud al residente: '+t);lhAll(r,'Devuelta al residente: '+t);await save(r);return true;}});
   },
   paqedit(el){
     const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!paqOk(r,l))return;
@@ -2566,6 +2566,14 @@ const A={
       const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba el motivo del rechazo.';if(!okAudit(r)||l.auth!=='pendiente')return 'La partida ya no está pendiente.';
       l.auth='rechazada';l.motivo='Auditoría: '+t;l.rechPor='auditor';lh(l,'Rechazada por Auditoría: '+t);hist(r,'rechazó la partida '+l.clave+' (Auditoría): '+t);
       if(!L(r).some(x=>x.auth==='pendiente')){r.estado='resuelta';mark(r,'auditor');hist(r,'todas las partidas fueron rechazadas por Auditoría; la requisición se cerró');}
+      await save(r);return true;}});
+  },
+  audobs(el){
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!okAudit(r))return;
+    modal({title:'Observación · '+l.clave,html:'<p class="muted" style="margin:0">Queda visible para el residente en la partida si usted devuelve la requisición. No rechaza ni modifica la partida.</p><div class="f"><label for="m-txt">Observación</label><textarea id="m-txt">'+esc(l.obs?l.obs.txt:'')+'</textarea></div>',ok:'Guardar',onOk:async root=>{
+      const t=root.querySelector('#m-txt').value.trim();if(!okAudit(r))return 'Esta solicitud ya no está en su bandeja.';
+      if(t){l.obs={por:'Auditoría',txt:t,t:Date.now()};lh(l,'Observación de Auditoría: '+t);hist(r,'dejó una observación en la partida '+l.clave+': '+t);}
+      else if(l.obs){delete l.obs;lh(l,'Observación de Auditoría retirada');}
       await save(r);return true;}});
   },
   audrechall(el){
