@@ -286,7 +286,7 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n)||0);
 const r2=n=>Math.round((Number(n)||0)*100)/100;
-const sum=a=>a.reduce((x,y)=>x+(Number(y)||0),0);
+const sum=a=>Math.round(a.reduce((x,y)=>x+(Number(y)||0),0)*1e6)/1e6;
 const pad=n=>String(n).padStart(2,'0');
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
 const fdate=s=>s?new Date(s+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
@@ -344,7 +344,9 @@ function mark(r,k){(r.revision=r.revision||{})[k]={uid:myId,t:Date.now()};}
 
 /* ───────── cálculos ───────── */
 const L=r=>r.lineas||[];
-const lt=l=>r2((Number(l.cant)||0)*(Number(l.pu)||0));
+const paqM=l=>(l&&l.paq&&Number(l.paq.monto)>0)?Number(l.paq.monto):0;
+const PAQ_LIM=1000;
+const lt=l=>r2((Number(l.cant)||0)*(Number(l.pu)||0)+paqM(l));
 const reqTotal=r=>r2(sum(L(r).map(l=>l.total)));
 const reqAut=r=>r2(sum(L(r).filter(l=>l.auth==='autorizada').map(l=>l.total)));
 const abonado=l=>l.abonos&&l.abonos.length?r2(sum(l.abonos.map(a=>a.monto))):(l.pago==='pagado'?r2(l.total):0);
@@ -399,9 +401,9 @@ function eligibleFor(l){
   return false;
 }
 function canEdit(r,l){
-  if(S.role==='residente')return r.estado==='devuelta'&&isMine(r);
-  if(S.role==='compras')return r.estado==='compras';
-  if(S.role==='administracion')return r.estado==='administracion';
+  if(S.role==='residente')return r.estado==='devuelta'&&isMine(r)&&l.auth==='pendiente';
+  if(S.role==='compras')return r.estado==='compras'&&l.auth==='pendiente';
+  if(S.role==='administracion')return r.estado==='administracion'&&l.auth==='pendiente';
   if(S.role==='direccion')return(r.estado==='direccion'||r.estado==='resuelta')&&l.auth==='pendiente';
   return false;
 }
@@ -554,7 +556,7 @@ function lineTable(items,eTitle,eMsg,readonly,cred){
     h+='<tr class="grp"><td colspan="'+((readonly?5:6)+(cred?2:0))+'"><a href="#" data-act="open" data-id="'+g.r.id+'">'+esc(g.r.folio)+' · '+esc(g.r.obra||'')+'</a></td></tr>';
     g.ls.forEach(l=>{
       h+='<tr>'+(readonly?'':'<td><input type="checkbox" aria-label="Seleccionar partida '+esc(l.clave)+'" data-act="sel" data-k="'+key(g.r,l)+'"'+(S.sel.has(key(g.r,l))?' checked':'')+'></td>')+
-      '<td class="mono">'+esc(l.clave)+'</td><td>'+esc(l.concepto)+'</td><td>'+esc(l.proveedor||'—')+'</td><td class="num">'+money(l.total)+'</td>'+(cred?'<td class="num">'+money(abonado(l))+'</td><td class="num"><b>'+money(saldo(l))+'</b></td>':'')+'<td>'+lineChips(l,true)+'</td></tr>';
+      '<td class="mono">'+esc(l.clave)+'</td><td>'+esc(l.concepto)+(!readonly&&paqOk(g.r,l)?'<div class="sub"><button class="btn sm" data-act="paqedit" data-id="'+g.r.id+'" data-l="'+l.id+'">Paquetería</button></div>':'')+'</td><td>'+esc(l.proveedor||'—')+'</td><td class="num">'+money(l.total)+'</td>'+(cred?'<td class="num">'+money(abonado(l))+'</td><td class="num"><b>'+money(saldo(l))+'</b></td>':'')+'<td>'+lineChips(l,true)+'</td></tr>';
     });
   });
   h+='</tbody></table></div>';
@@ -581,6 +583,7 @@ function lineChips(l,compact){
     else if(l.pago==='credito')h+=' '+pill(l.abonos&&l.abonos.length?'Crédito · saldo '+money(saldo(l)):'Crédito','warn');
     else h+=' '+pill('Pendiente de pago','warn');
   }
+  if(paqM(l))h+=' '+pill('Paquetería ESTIMADO '+money(paqM(l)),'warn');
   if(l.provExc)h+=' '+pill(l.provExc.estado==='autorizada'?'Excepción autorizada':(l.provExc.estado==='rechazada'?'Excepción rechazada':'Excepción pendiente'),l.provExc.estado==='autorizada'?'ok':(l.provExc.estado==='rechazada'?'bad':'warn'));
   return '<div class="chips">'+h+'</div>';
 }
@@ -598,6 +601,7 @@ function lineFields(l,i,scope){
    '<div class="f"><label>Precio unitario <i>*</i></label><input '+a+' data-f="pu" type="number" min="0" step="any" inputmode="decimal" value="'+esc(l.pu)+'"></div>'+
    '<div class="f"><label>Precio total (se calcula)</label><input readonly data-total="'+scope+i+'" value="'+money(lt(l))+'"></div>'+
    provBlock(l,scope,i)+
+   (scope==='modal'&&S.role==='compras'?'<div class="f"><label>Costo de paquetería <span class="pill t-warn">ESTIMADO</span> <span class="muted">· opcional, solo si el envío lo requiere</span></label><input '+a+' data-f="paqm" type="number" min="0" step="any" inputmode="decimal" placeholder="0.00" value="'+esc(paqM(l)||'')+'"></div>':'')+
   '</div>'+
   '<div class="f"><label>Justificación <i>*</i></label><textarea '+a+' data-f="justificacion">'+esc(l.justificacion)+'</textarea></div>'+
   '<div class="file-line"><label class="btn sm" for="cot-'+scope+i+'">Adjuntar cotización</label><input id="cot-'+scope+i+'" type="file" '+a+' data-file="cot" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx">'+
@@ -1698,7 +1702,8 @@ function ndiffReq(o,n){
   if(n.estado!==oe){
     if(n.estado==='auditoria')E({ev:'req_audit',prio:'media',titulo:oe==='devuelta'?'Requisición corregida y reenviada a Auditoría':'Nueva requisición por auditar',desc:dsc,roles:['auditor']});
     if(n.estado==='compras'){E({ev:'req_compras',prio:'media',titulo:oe==='devuelta'?'Requisición corregida y reenviada':(oe==='auditoria'?'Requisición validada por Auditoría':'Nueva requisición enviada a Compras'),desc:dsc,roles:['compras']});if(oe==='auditoria')E({ev:'req_avance',prio:'info',titulo:'Su solicitud fue validada por Auditoría',desc:'Pasó a Compras.',uid:cre});}
-    if(n.estado==='administracion')E({ev:'gasto_admin',prio:'media',titulo:oe==='devuelta'?'Gasto corregido y reenviado':'Nueva solicitud de gasto enviada por un residente',desc:dsc,roles:['administracion']});
+    if(n.estado==='administracion'&&(oe==='resuelta'||oe==='direccion'))E({ev:'paq_rev',prio:'alta',titulo:'Paquetería excede el límite: reautorización requerida',desc:dsc,roles:['administracion']});
+    else if(n.estado==='administracion')E({ev:'gasto_admin',prio:'media',titulo:oe==='devuelta'?'Gasto corregido y reenviado':'Nueva solicitud de gasto enviada por un residente',desc:dsc,roles:['administracion']});
     if(n.estado==='direccion'){
       E({ev:'req_dir',prio:'alta',titulo:adm?'Gasto de Administración pendiente de autorización':'Requisición pendiente de autorización',desc:dsc,roles:['direccion']});
       E({ev:'req_avance',prio:'info',titulo:'Su solicitud pasó a Dirección',desc:'Está pendiente de autorización.',uid:cre});
@@ -1735,6 +1740,8 @@ function ndiffReq(o,n){
     E({ev:'exc_res',prio:pr,mod:'Proveedores',titulo:t,desc:dsc,roles:['compras']});
     E({ev:'exc_res',prio:pr,mod:'Proveedores',titulo:t,desc:dsc,uid:cre});
   }
+  let pq=0;L(n).forEach(l=>{const p=ol[l.id];if(p&&paqM(p)!==paqM(l)&&p.auth==='autorizada'&&l.auth==='autorizada')pq++;});
+  if(pq)E({ev:'paq_aj',prio:'media',mod:'Compras',titulo:'Paquetería ajustada por Compras',desc:pq+' partida(s) dentro del límite',roles:['direccion','administracion']});
   if(oc)E({ev:'oc',prio:'info',mod:'Compras',titulo:'Orden de compra generada',desc:oc+' partida(s) con OC',uid:cre});
   if(rec)E({ev:'recep',prio:'info',mod:'Compras',titulo:'Recepción de material registrada',desc:rec+' partida(s)',uid:cre});
   if(pg)E({ev:'pago',prio:'info',mod:'Pagos',titulo:'Pago registrado',desc:pg+' partida(s)',uid:cre});
@@ -1950,7 +1957,7 @@ function drawerLines(r){
   L(r).forEach(l=>{
     const k=key(r,l),el=sel&&eligibleFor(l);
     h+='<tr>'+(sel?'<td>'+(el?'<input type="checkbox" aria-label="Seleccionar partida '+esc(l.clave)+'" data-act="sel" data-k="'+k+'"'+(S.sel.has(k)?' checked':'')+'>':'')+'</td>':'')+
-    '<td class="mono">'+esc(l.clave)+'</td><td>'+esc(l.concepto)+'<div class="sub">'+esc(l.justificacion)+'</div>'+
+    '<td class="mono">'+esc(l.clave)+'</td><td>'+esc(l.concepto)+'<div class="sub">'+esc(l.justificacion)+'</div>'+(paqM(l)?'<div class="sub"><b>Paquetería <span class="pill t-warn">ESTIMADO</span> '+money(paqM(l))+'</b> · incluida en el total</div>':'')+(l.paqRev&&l.auth==='pendiente'?'<div class="sub" style="color:var(--warn,#b45309)">Reautorización: paquetería pasó de '+money(l.paqRev.de)+' a '+money(l.paqRev.a)+'</div>':'')+
     (l.cot?'<div class="sub">Cotización: '+fileLink(l.cot)+'</div>':'')+
     (l.auth==='rechazada'&&l.motivo?'<div class="rej">Motivo: '+esc(l.motivo)+'</div>':'')+
     (l.pagoInfo&&l.pagoInfo.comprobante&&!(l.abonos&&l.abonos.length)?'<div class="sub">Comprobante ('+fdate(l.pagoInfo.fecha)+'): '+fileLink(l.pagoInfo.comprobante)+'</div>':'')+
@@ -2025,7 +2032,7 @@ function registros(){
       out.push({r:r,l:l,k:r.id+'|'+l.id,folio:r.folio,fSol:r.fechaSol||'',obra:r.obra||'Sin obra',usuario:nm(r.creatorId),solicitante:r.solicitante||'',dest:DEST[destOf(r)],
         clave:l.clave||'',concepto:l.concepto||'',desc:l.justificacion||'',unidad:l.unidad||'',
         cantSol:Number(l.orig?l.orig.cant:l.cant),cantAut:aut?Number(l.cant):0,cantCom:(!l.adm&&l.oc)?Number(l.cant):0,cantRec:l.recibido?Number(l.recibido.cant):0,
-        pu:Number(l.pu),importe:Number(l.total),impAut:impAut,impPag:impPag,saldo:r2(Math.max(0,impAut-impPag)),
+        pu:Number(l.pu),importe:Number(l.total),impAut:impAut,impPag:impPag,saldo:(l.bodega||l.cubRep)?0:r2(Math.max(0,impAut-impPag)),
         prov:l.proveedor||'',fAut:l.autT?isoOf(l.autT):(aut&&r.autT?isoOf(r.autT):''),resp:uidAut?nm(uidAut):'',estatus:statusLine(l,r),
         oc:oc?oc.folio:'',fCompra:oc?(oc.creada||''):(l.compraT||''),fEntrega:oc?oc.fecha:'',fRecep:l.recibido?l.recibido.fecha:'',fPago:lastPagoFecha(l)||''});
     });
@@ -2331,6 +2338,7 @@ function lineActions(r,l){
   let h='';
   if(S.role==='direccion'&&l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion')h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
   if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
+  if(paqOk(r,l))h+='<button class="btn sm" data-act="paqedit" data-id="'+r.id+'" data-l="'+l.id+'">Paquetería</button>';
   if(canEdit(r,l))h+='<button class="btn sm" data-act="editlinea" data-id="'+r.id+'" data-l="'+l.id+'">Editar</button>';
   if(S.role==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')){
     if(l.auth==='pendiente'&&!excOk(l))h+='';
@@ -2395,6 +2403,7 @@ function selectedPicks(fn){
 }
 async function saveMany(picks){const ids=[...new Set(picks.map(x=>x.r.id))];for(const id of ids){await save(reqById(id));}}
 
+const paqOk=(r,l)=>S.role==='compras'&&(r.estado==='direccion'||r.estado==='resuelta')&&elegCompras(l);
 function okAudit(r){return S.role==='auditor'&&r.estado==='auditoria';}
 function okReview(r){return okAudit(r)||(S.role==='compras'&&r.estado==='compras')||(S.role==='administracion'&&r.estado==='administracion');}
 function draftToReq(d,estado){
@@ -2528,6 +2537,27 @@ const A={
       const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba la justificación para devolverla.';
       if(!okReview(r))return 'Esta solicitud ya no está en su bandeja.';r.estado='devuelta';r.devolucion=t;r.devPor=ROLES[S.role];if(S.role==='auditor'){r.lineas.forEach(l=>{if(l.rechPor==='auditor'){l.auth='pendiente';l.motivo='';delete l.rechPor;}});}mark(r,S.role);hist(r,'devolvió la solicitud al residente: '+t);lhAll(r,'Devuelta al residente: '+t);await save(r);return true;}});
   },
+  paqedit(el){
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!paqOk(r,l))return;
+    const base=(l.paqAut!==undefined&&l.paqAut!==null)?Number(l.paqAut):paqM(l);
+    modal({title:'Costo de paquetería · '+l.clave,html:'<p class="muted" style="margin:0">Es lo único que Compras puede modificar tras la autorización. Monto autorizado: <b>'+money(base)+'</b> <span class="pill t-warn">ESTIMADO</span>. Si el nuevo costo supera el autorizado por más de '+money(PAQ_LIM)+', la partida regresa automáticamente a Administración para su revisión y nueva autorización; de lo contrario se libera con el ajuste.</p><div class="f"><label for="m-paq">Costo de paquetería (ESTIMADO) <i>*</i></label><input id="m-paq" type="number" min="0" step="any" value="'+esc(paqM(l)||'')+'" placeholder="0 para quitarlo"></div><div class="f"><label for="m-txt">Justificación del cambio</label><textarea id="m-txt"></textarea></div>',ok:'Guardar',onOk:async root=>{
+      const raw=root.querySelector('#m-paq').value;const v=raw===''?0:Number(raw);if(isNaN(v)||v<0)return 'Escriba un monto válido (0 o mayor).';
+      if(!paqOk(r,l))return 'La partida ya no admite cambio de paquetería.';
+      const t=root.querySelector('#m-txt').value.trim(),nv=r2(v),delta=r2(nv-base);
+      if(nv===paqM(l))return 'El monto no cambió.';
+      const antes=paqM(l);l.paq=nv>0?{monto:nv,estimado:true}:null;l.total=lt(l);
+      if(delta>PAQ_LIM){
+        l.auth='pendiente';l.autT=null;l.paqRev={de:base,a:nv,t:Date.now(),uid:myId,just:t};
+        r.estado='administracion';
+        lh(l,'Paquetería ESTIMADO de '+money(base)+' a '+money(nv)+' (excede '+money(PAQ_LIM)+'): regresa a Administración'+(t?' · '+t:''));
+        hist(r,'ajustó la paquetería de la partida '+l.clave+' de '+money(base)+' a '+money(nv)+' (+'+money(delta)+', excede '+money(PAQ_LIM)+'): la requisición regresó automáticamente a Administración'+(t?' · '+t:''));
+      }else{
+        l.paqAut=nv;
+        lh(l,'Paquetería ESTIMADO ajustada de '+money(antes)+' a '+money(nv)+' (dentro del límite de '+money(PAQ_LIM)+'): liberada'+(t?' · '+t:''));
+        hist(r,'ajustó la paquetería de la partida '+l.clave+' de '+money(antes)+' a '+money(nv)+' (dentro del límite; liberada)'+(t?' · '+t:''));
+      }
+      await save(r);return true;}});
+  },
   audliberar(el){const r=reqById(el.dataset.id);if(!okAudit(r))return;if(!L(r).some(l=>l.auth==='pendiente')){toast('No hay partidas pendientes que liberar.');return;}
     r.estado='compras';mark(r,'auditor');const rc=L(r).filter(l=>l.rechPor==='auditor').length;hist(r,'validó y liberó la solicitud a Compras'+(rc?' ('+rc+' partida(s) rechazada(s) por Auditoría)':''));lhAll(r,'Validada por Auditoría y liberada a Compras');save(r);},
   audrech(el){
@@ -2613,14 +2643,14 @@ const A={
   },
 
   /* dirección */
-  aut(el){const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!excOk(l)){toast('Primero debe autorizarse la excepción del proveedor.');return;}l.auth='autorizada';l.motivo='';l.autT=Date.now();l.autUid=myId;lh(l,'Autorizada por '+money(l.total)+' ('+l.cant+' '+(l.unidad||'')+')');afterDecision(r);hist(r,'autorizó la partida '+l.clave+' por '+money(l.total));save(r);},
+  aut(el){const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!excOk(l)){toast('Primero debe autorizarse la excepción del proveedor.');return;}l.auth='autorizada';l.motivo='';l.autT=Date.now();l.autUid=myId;l.paqAut=paqM(l);lh(l,'Autorizada por '+money(l.total)+' ('+l.cant+' '+(l.unidad||'')+')');afterDecision(r);hist(r,'autorizó la partida '+l.clave+' por '+money(l.total));save(r);},
   rech(el){
     const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);
     modal({title:'Rechazar partida '+l.clave,html:'<div class="f"><label for="m-txt">Motivo (opcional)</label><textarea id="m-txt"></textarea></div>',ok:'Rechazar',onOk:async root=>{
       l.auth='rechazada';l.motivo=root.querySelector('#m-txt').value.trim();lh(l,'Rechazada'+(l.motivo?': '+l.motivo:''));afterDecision(r);hist(r,'rechazó la partida '+l.clave+(l.motivo?': '+l.motivo:''));await save(r);return true;}});
   },
   revert(el){const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);l.auth='pendiente';l.motivo='';delete l.autT;delete l.autUid;lh(l,'Regresada a pendiente por autorizar');hist(r,'regresó la partida '+l.clave+' a pendiente por autorizar');save(r);},
-  autall(el){const r=reqById(el.dataset.id);const p=L(r).filter(l=>l.auth==='pendiente'&&excOk(l));p.forEach(l=>{l.auth='autorizada';l.autT=Date.now();l.autUid=myId;lh(l,'Autorizada por '+money(l.total)+' ('+l.cant+' '+(l.unidad||'')+')');});afterDecision(r);hist(r,'autorizó '+p.length+' partida(s) pendientes');save(r);},
+  autall(el){const r=reqById(el.dataset.id);const p=L(r).filter(l=>l.auth==='pendiente'&&excOk(l));p.forEach(l=>{l.auth='autorizada';l.autT=Date.now();l.autUid=myId;l.paqAut=paqM(l);lh(l,'Autorizada por '+money(l.total)+' ('+l.cant+' '+(l.unidad||'')+')');});afterDecision(r);hist(r,'autorizó '+p.length+' partida(s) pendientes');save(r);},
   rechall(el){
     const r=reqById(el.dataset.id);
     modal({title:'Rechazar todo lo pendiente',html:'<div class="f"><label for="m-txt">Motivo (opcional)</label><textarea id="m-txt"></textarea></div>',ok:'Rechazar',onOk:async root=>{
@@ -2639,7 +2669,7 @@ const A={
       const prevExc=l.provExc?clone(l.provExc):null;
       const legacyOk=(!l.provId&&!l.provExc&&!t.provExc&&!t.provId&&t.proveedor===l.proveedor)||(!!l.provId&&t.provId===l.provId&&!t.provExc);
       const pe=provErr(t,0,legacyOk);if(pe)return pe;
-      const antes=l.total,cantAntes=l.cant;
+      const antes=l.total,cantAntes=l.cant,paqPrev=paqM(l);
       if(!l.orig)l.orig={cant:l.cant,pu:l.pu,total:l.total};
       const antesPu=l.pu,antesProv=l.proveedor;
       Object.assign(l,t,{total:lt(t),orig:l.orig,h:l.h});
@@ -2647,6 +2677,7 @@ const A={
         const same=prevExc&&prevExc.nombre===l.provExc.nombre&&prevExc.just===l.provExc.just;
         if(same)l.provExc=prevExc;else{l.provExc={nombre:l.provExc.nombre,just:l.provExc.just,estado:'pendiente',solT:Date.now(),solUid:myId};lh(l,'Proveedor con excepción solicitado a Dirección: '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}
       }else if(prevExc){lh(l,'Excepción de proveedor retirada; proveedor: '+(l.proveedor||'—'));}
+      if(paqM(t)!==paqPrev)lh(l,'Paquetería ESTIMADO: de '+money(paqPrev)+' a '+money(paqM(t)));
       lh(l,'Editada'+(cantAntes!==l.cant?': cantidad de '+cantAntes+' a '+l.cant:'')+(antesPu!==l.pu?'; precio unitario de '+money(antesPu)+' a '+money(l.pu):'')+(antesProv!==l.proveedor?'; proveedor de '+(antesProv||'-')+' a '+(l.proveedor||'-'):'')+'; importe '+money(l.total));
       hist(r,'editó la partida '+l.clave+(cantAntes!==l.cant?' (cantidad de '+cantAntes+' a '+l.cant+')':'')+(antes!==l.total?' (importe de '+money(antes)+' a '+money(l.total)+')':''));await save(r);return true;}});
   },
@@ -3079,12 +3110,14 @@ document.addEventListener('input',e=>{
   if(!tgt)return;
   if(f==='provq'){setProv(tgt,el.value);const b=$('pb-'+sc+el.dataset.i);if(b)b.innerHTML=provDetail(tgt,sc,el.dataset.i);return;}
   if(f==='excNombre'||f==='excJust'){if(tgt.provExc){tgt.provExc[f==='excNombre'?'nombre':'just']=el.value;if(f==='excNombre')tgt.proveedor=el.value;}return;}
+  if(f==='paqm'){const v=Number(el.value);tgt.paq=v>0?{monto:r2(v),estimado:true}:null;const t=document.querySelector('[data-total="'+sc+el.dataset.i+'"]');if(t)t.value=money(lt(tgt));return;}
   tgt[f]=(f==='cant'||f==='pu')?(el.value===''?'':Number(el.value)):el.value;
   if(f==='cant'||f==='pu'){
     const t=document.querySelector('[data-total="'+sc+el.dataset.i+'"]');if(t)t.value=money(lt(tgt));
     if(sc==='draft'){const dt=$('draft-total');if(dt)dt.innerHTML='Total de la requisición: <b class="mono">'+money(sum(S.draft.lineas.map(lt)))+'</b>';}
   }
 });
+document.addEventListener('wheel',e=>{const a=document.activeElement;if(a&&a.tagName==='INPUT'&&a.type==='number')a.blur();},{passive:true});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   if(curModal)closeModal();else if(S.open){S.open=null;render();}
