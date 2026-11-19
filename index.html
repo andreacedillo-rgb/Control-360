@@ -253,6 +253,7 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
     <div class="role" id="role-wrap"><span id="who" class="muted" style="margin-right:10px"></span><label for="role-sel">Ver como</label>
       <select id="role-sel">
         <option value="residente">Residente</option>
+        <option value="auditor">Auditor</option>
         <option value="compras">Compras</option>
         <option value="direccion">Dirección</option>
         <option value="administracion">Administración</option>
@@ -294,10 +295,11 @@ const rid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const code=()=>{const d=new Date();return String(d.getFullYear()).slice(2)+pad(d.getMonth()+1)+pad(d.getDate())+'-'+Math.random().toString(36).slice(2,5).toUpperCase();};
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const ROLES={residente:'Residente',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
+const ROLES={residente:'Residente',auditor:'Auditor',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['bitacora','Bitácora de seguridad'],['notif','Notificaciones']],
   residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
+  auditor:[['revisar','Por auditar'],['todas','Todas'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['revisar','Por revisar'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
   direccion:[['autorizar','Por autorizar'],['excep','Excepciones'],['nomaut','Nómina'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
   administracion:[['revisar','Por revisar'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
@@ -353,6 +355,7 @@ function allLines(fn){const o=[];V().forEach(r=>L(r).forEach(l=>{if(fn(l,r))o.pu
 function statusOf(r){
   const ls=L(r);
   if(r.estado==='elaboracion')return['En elaboración','mute'];
+  if(r.estado==='auditoria')return['En revisión de Auditoría','info'];
   if(r.estado!=='devuelta'&&L(r).some(l=>l.provExc&&l.provExc.estado==='pendiente'))return['Pendiente de autorización de excepción por Dirección','warn'];
   if(r.estado==='compras')return['Enviada a Compras','info'];
   if(r.estado==='administracion')return['En revisión por Administración','info'];
@@ -361,7 +364,9 @@ function statusOf(r){
   const pend=ls.filter(l=>l.auth==='pendiente').length;
   const aut=ls.filter(l=>l.auth==='autorizada');
   const rech=ls.filter(l=>l.auth==='rechazada').length;
-  if(aut.length&&aut.every(l=>l.pago==='pagado')&&!pend)return['Pagada','ok'];
+  const comp=aut.filter(l=>!l.bodega);
+  if(aut.length&&!comp.length&&!pend)return['Autorizada · material en bodega','ok'];
+  if(comp.length&&comp.every(l=>l.pago==='pagado')&&!pend)return['Pagada','ok'];
   if(pend&&aut.length)return['Autorizada parcial','warn'];
   if(pend)return['Pendiente de autorización de Dirección','info'];
   if(rech===ls.length)return['Rechazada','bad'];
@@ -382,7 +387,7 @@ async function loadNames(ids){
 const nm=id=>S.names[id]||'Usuario';
 
 /* elegibilidad de partidas por rol */
-const elegCompras=l=>l.auth==='autorizada'&&!l.oc&&excOk(l);
+const elegCompras=l=>l.auth==='autorizada'&&!l.oc&&!l.bodega&&excOk(l);
 const recQ=l=>l.recibido?Number(l.recibido.cant)||0:0;
 const recFalta=l=>Math.max(0,r2(Number(l.cant)-recQ(l)));
 const elegRecep=l=>l.auth==='autorizada'&&!l.adm&&l.oc&&recFalta(l)>1e-9&&excOk(l);
@@ -451,6 +456,7 @@ function tabCount(k){
   if(k==='repos'){try{return Vp().filter(repAtender).length;}catch(e){return 0;}}
   if(k==='notif'){try{return nAll().filter(n=>!nRead(n)).length;}catch(e){return 0;}}
   if(R==='residente'&&k==='mis')return V().filter(r=>r.estado==='devuelta'&&isMine(r)).length;
+  if(R==='auditor'&&k==='revisar')return V().filter(r=>r.estado==='auditoria').length;
   if(R==='compras'){
     if(k==='revisar')return V().filter(r=>r.estado==='compras').length;
     if(k==='oc')return allLines(elegCompras).length;
@@ -474,6 +480,9 @@ function statsHtml(){
   if(R==='residente'){
     const m=V().filter(isMine);
     h=st('Requisiciones',m.length,'creadas por usted')+st('Autorizado',money(sum(m.map(reqAut))),'por Dirección')+st('Pagado',money(sum(m.map(reqPag))),'con comprobante')+st('Devueltas',m.filter(r=>r.estado==='devuelta').length,'esperan su corrección');
+  }else if(R==='auditor'){
+    const au=V().filter(r=>r.estado==='auditoria'),al=au.reduce((a,r)=>a.concat(L(r)),[]);
+    h=st('Por auditar',au.length,'requisiciones en su bandeja')+st('Partidas por validar',al.length,money(sum(al.map(l=>l.total))))+st('Rechazadas por Auditoría',V().reduce((a,r)=>a+L(r).filter(l=>l.rechPor==='auditor').length,0),'partidas');
   }else if(R==='compras'){
     const ev=ocEvents().filter(e=>e.fecha>=todayISO()&&e.fecha<=addDays(todayISO(),7));
     h=st('Por revisar',V().filter(r=>r.estado==='compras').length,'requisiciones nuevas')+st('Por generar OC',allLines(elegCompras).length,money(sum(allLines(elegCompras).map(x=>x.l.total))))+st('Entregas en 7 días',ev.length,'según fecha compromiso');
@@ -482,7 +491,7 @@ function statsHtml(){
     h=st('Por autorizar',V().filter(r=>(r.estado==='direccion'||r.estado==='resuelta')&&L(r).some(l=>l.auth==='pendiente')).length,p.length+' partidas')+st('Monto pendiente',money(sum(p.map(x=>x.l.total))),'por autorizar')+st('Autorizado',money(sum(V().map(reqAut))),'acumulado');
   }else{
     const pg=allLines(elegPagar),cr=allLines(elegCred);
-    const espera=allLines(l=>l.auth==='autorizada'&&!l.oc).length;
+    const espera=allLines(l=>l.auth==='autorizada'&&!l.oc&&!l.bodega).length;
     h=st('Por revisar',V().filter(r=>r.estado==='administracion').length,'gastos dirigidos a Administración')+st('Por pagar',money(sum(pg.map(x=>x.l.total))),pg.length+' partidas con OC resuelta')+st('Saldo a crédito',money(sum(cr.map(x=>saldo(x.l)))),cr.length+' partidas')+st('Pagado',money(sum(V().map(reqPag))),'acumulado')+(espera?st('Esperan OC',espera,'Compras aún no define OC'):'');
   }
   return '<div class="stats">'+h+'</div>';
@@ -507,6 +516,7 @@ function viewHtml(){
   if(k==='cal'||(R==='compras'&&k==='ocs'))return calHtml(R==='compras');
   if(R==='residente'&&k==='mis')return reqList(V().filter(isMine),'Aún no tiene requisiciones','Cree su primera requisición para enviarla a Compras.',true);
   if(R==='administracion'&&k==='revisar')return reqList(V().filter(r=>r.estado==='administracion'),'Nada por revisar','Los gastos que los residentes dirigen a Administración aparecen aquí. Después de revisarlos, usted los libera directo a Dirección.');
+  if(R==='auditor'&&k==='revisar')return reqList(V().filter(r=>r.estado==='auditoria'),'Nada por auditar','Las requisiciones de los residentes dirigidas a Compras llegan primero aquí. Usted valida conceptos, cantidades y justificación, y las libera a Compras.');
   if(R==='compras'&&k==='revisar')return reqList(V().filter(r=>r.estado==='compras'),'Nada por revisar','Las requisiciones nuevas de los residentes aparecen aquí.');
   if(R==='compras'&&k==='recibir')return lineTable(allLines(elegRecep),'No hay partidas por recibir','Aparecen aquí las partidas con OC generada que aún no tienen recepción registrada.');
   if(R==='compras'&&k==='oc')return lineTable(allLines(elegCompras),'No hay partidas autorizadas esperando OC','Cuando Dirección autorice partidas, aparecerán aquí para generar la OC o marcar “No aplica OC”.');
@@ -560,6 +570,7 @@ function lineChips(l,compact){
   let h='';
   if(l.auth==='pendiente')h+=pill('Pendiente por autorizar','warn');
   else if(l.auth==='rechazada')h+=pill('Rechazada','bad');
+  else if(l.bodega)h+=pill('Autorizada','ok')+' '+pill('Material en bodega','info');
   else{
     h+=pill('Autorizada','ok');
     if(l.oc==='NA'){if(!l.adm)h+=' '+pill('No aplica OC','mute');}
@@ -618,6 +629,7 @@ function formHtml(){
 let provColl=null;
 S.provs=[];S.pvq='';S.pvEst='';S.pvDep='';S.excSeg='pend';
 const EXC_OPT='PROVEEDOR CON EXCEPCIÓN';
+const BOD_OPT='MATERIAL EN BODEGA';
 const provLabel=p=>(p.alias||p.razon)+' · '+p.razon+' · '+p.rfc;
 const provById=id=>S.provs.find(p=>p.id===id);
 const mask=c=>c?'****'+String(c).slice(-4):'';
@@ -640,11 +652,13 @@ async function saveProv(p){
 }
 function refreshProvList(){
   const dl=$('provlist');if(!dl)return;
-  dl.innerHTML=S.provs.filter(p=>p.activo).map(p=>'<option value="'+esc(provLabel(p))+'">').join('')+'<option value="'+EXC_OPT+'">';
+  dl.innerHTML=S.provs.filter(p=>p.activo).map(p=>'<option value="'+esc(provLabel(p))+'">').join('')+'<option value="'+BOD_OPT+'"><option value="'+EXC_OPT+'">';
 }
 /* selector de proveedor dentro de la partida */
 function setProv(t,val){
   const v=String(val||'').trim();
+  if(normQ(v)===normQ(BOD_OPT)){t.bodega=true;t.provId='';t.provSnap=null;t.provExc=null;t.proveedor=BOD_OPT;return;}
+  t.bodega=false;
   if(v===EXC_OPT){if(!t.provExc)t.provExc={nombre:'',just:'',estado:'pendiente'};t.provId='';t.provSnap=null;t.proveedor=t.provExc.nombre||'';return;}
   const p=S.provs.find(x=>x.activo&&provLabel(x)===v);
   if(p){t.provId=p.id;t.provSnap=snapProv(p);t.proveedor=p.alias||p.razon;t.provExc=null;return;}
@@ -652,6 +666,7 @@ function setProv(t,val){
 }
 function provDetail(l,scope,i){
   const a='data-scope="'+scope+'" data-i="'+i+'"';
+  if(l.bodega)return '<div class="pcard"><b>Material en bodega</b><p class="muted" style="margin:4px 0 0">Se surtirá de las existencias de bodega. No requiere proveedor, orden de compra ni pago; Dirección lo autoriza como cualquier otra partida.</p></div>';
   if(l.provExc){
     const e=l.provExc;
     let h='<div class="pcard"><b>Proveedor con excepción</b><p class="muted" style="margin:4px 0 8px">Se enviará a Dirección. La requisición quedará “Pendiente de autorización de excepción por Dirección” y no podrá avanzar a OC ni a pago hasta que se autorice.</p>';
@@ -669,12 +684,13 @@ function provDetail(l,scope,i){
 function provBlock(l,scope,i){
   const a='data-scope="'+scope+'" data-i="'+i+'"';
   const p=l.provId?provById(l.provId):null;
-  const val=l.provExc?EXC_OPT:(p?provLabel(p):(l.proveedor||''));
-  return '<div class="f" style="grid-column:1/-1"><label>Proveedor <i>*</i> <span class="muted">· solo proveedores activos; busque por razón social, alias o RFC, o elija PROVEEDOR CON EXCEPCIÓN</span></label><input '+a+' data-f="provq" list="provlist" value="'+esc(val)+'" autocomplete="off" placeholder="Escriba para buscar…"></div>'+
+  const val=l.bodega?BOD_OPT:(l.provExc?EXC_OPT:(p?provLabel(p):(l.proveedor||'')));
+  return '<div class="f" style="grid-column:1/-1"><label>Proveedor <i>*</i> <span class="muted">· busque por razón social, alias o RFC; elija MATERIAL EN BODEGA si se surte de existencias, o PROVEEDOR CON EXCEPCIÓN</span></label><input '+a+' data-f="provq" list="provlist" value="'+esc(val)+'" autocomplete="off" placeholder="Escriba para buscar…"></div>'+
     '<div id="pb-'+scope+i+'" style="grid-column:1/-1">'+provDetail(l,scope,i)+'</div>';
 }
 function provErr(l,i,legacyOk){
   const n='Partida '+(i+1)+': ';
+  if(l.bodega)return '';
   if(l.provExc){
     if(!(l.provExc.nombre||'').trim())return n+'escriba el nombre del proveedor con excepción.';
     if(!(l.provExc.just||'').trim())return n+'escriba la justificación de la excepción.';
@@ -694,7 +710,7 @@ const excPend=r=>L(r).filter(l=>!excOk(l));
 function provCell(l){
   let h=esc(l.proveedor||'—');
   const s=l.provSnap;
-  if(s)h+='<div class="sub">RFC '+esc(s.rfc)+(S.role!=='residente'?' · '+esc(s.banco)+' · CLABE '+esc(s.clabe)+'<br>Titular: '+esc(s.titular):'')+'</div>';
+  if(s)h+='<div class="sub">RFC '+esc(s.rfc)+(S.role!=='residente'&&S.role!=='auditor'?' · '+esc(s.banco)+' · CLABE '+esc(s.clabe)+'<br>Titular: '+esc(s.titular):'')+'</div>';
   if(l.provExc){
     const e=l.provExc;
     h+='<div class="sub">Excepción: '+esc(e.just)+'</div>';
@@ -1103,9 +1119,9 @@ function lineDiff(a,b,dates){
 /* ───────── SISTEMAS: usuarios, permisos y control de acceso ───────── */
 let usersColl=null,bitColl=null,unsubs=[],dataEpoch=0,unsubU=null,usersEpoch=0,unsubB=null;
 const APP_URL='https://claude.ai/artifact/1GC995gxqRDHSkft5HcWhA';
-const PERFILES={direccion:'Dirección',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
-const PERFIL_ORDER=['direccion','compras','administracion','residente','sistemas'];
-const PERFIL_ACC={direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
+const PERFILES={direccion:'Dirección',auditor:'Auditor',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
+const PERFIL_ORDER=['direccion','auditor','compras','administracion','residente','sistemas'];
+const PERFIL_ACC={auditor:'Valida conceptos, cantidades y justificación de las requisiciones antes de Compras; puede rechazar partidas o devolver al residente. No cotiza.',direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
 const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros'};
 S.auth='loading';S.users=[];S.bit=[];S.rec=null;S.me=null;S.isOwner=false;S.usersLoaded=false;S.usersFull=false;S.accessSig='';S.myEmail='';S.myName='';S.uq='';S.uEst='';S.bq='';S.bA='';
 S.ownerRole=S.role;
@@ -1320,6 +1336,7 @@ function Vp(){
   return S.reps.filter(r=>{
     const mine=repMine(r);
     if(S.role==='residente')return mine;
+    if(S.role==='auditor')return false;
     if(repDraftSt(r))return mine;
     if(S.role==='direccion')return true;
     if(S.role==='compras')return r.destino==='compras'||mine;
@@ -1664,7 +1681,7 @@ function docNotify(r,d,reemplazo){
 }
 /* ───────── notificaciones ───────── */
 const PRIO={critica:['Crítica','bad',0],alta:['Alta','warn',1],media:['Media','info',2],info:['Informativa','mute',3]};
-const NMODS={residente:['Requisiciones','Gastos','Nómina','Reposiciones'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones'],sistemas:['Sistemas']};
+const NMODS={auditor:['Requisiciones'],residente:['Requisiciones','Gastos','Nómina','Reposiciones'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones'],sistemas:['Sistemas']};
 function nPush(list){
   list.forEach(x=>{
     const n={id:rid(),t:Date.now(),by:myId,ev:x.ev,prio:x.prio,mod:x.mod,titulo:x.titulo,desc:x.desc||'',folio:x.folio||'',ref:x.ref||null,roles:x.roles||[],uid:x.uid||'',rt:x.rt||''};
@@ -1679,7 +1696,8 @@ function ndiffReq(o,n){
   const E=x=>out.push(Object.assign({folio:f,ref:ref,mod:mod,rt:rt},x));
   const oe=o?o.estado:'',dsc=(n.obra||'—')+' · solicita '+(n.solicitante||'—');
   if(n.estado!==oe){
-    if(n.estado==='compras')E({ev:'req_compras',prio:'media',titulo:oe==='devuelta'?'Requisición corregida y reenviada':'Nueva requisición enviada a Compras',desc:dsc,roles:['compras']});
+    if(n.estado==='auditoria')E({ev:'req_audit',prio:'media',titulo:oe==='devuelta'?'Requisición corregida y reenviada a Auditoría':'Nueva requisición por auditar',desc:dsc,roles:['auditor']});
+    if(n.estado==='compras'){E({ev:'req_compras',prio:'media',titulo:oe==='devuelta'?'Requisición corregida y reenviada':(oe==='auditoria'?'Requisición validada por Auditoría':'Nueva requisición enviada a Compras'),desc:dsc,roles:['compras']});if(oe==='auditoria')E({ev:'req_avance',prio:'info',titulo:'Su solicitud fue validada por Auditoría',desc:'Pasó a Compras.',uid:cre});}
     if(n.estado==='administracion')E({ev:'gasto_admin',prio:'media',titulo:oe==='devuelta'?'Gasto corregido y reenviado':'Nueva solicitud de gasto enviada por un residente',desc:dsc,roles:['administracion']});
     if(n.estado==='direccion'){
       E({ev:'req_dir',prio:'alta',titulo:adm?'Gasto de Administración pendiente de autorización':'Requisición pendiente de autorización',desc:dsc,roles:['direccion']});
@@ -1687,6 +1705,7 @@ function ndiffReq(o,n){
     }
     if(n.estado==='devuelta'){
       E({ev:'req_dev',prio:'alta',titulo:'Solicitud devuelta con observaciones',desc:n.devolucion||'',uid:cre});
+      if(n.devPor==='Auditor')E({ev:'obs_aud',prio:'media',titulo:'Auditoría devolvió una solicitud al residente',desc:n.devolucion||'',roles:['compras']});
       if(n.devPor==='Dirección')E({ev:'obs_dir',prio:'alta',titulo:'Observaciones de Dirección',desc:n.devolucion||'',roles:[adm?'administracion':'compras']});
     }
   }
@@ -1769,6 +1788,7 @@ function nDyn(){
     if(pend.length)D('pend','alta','Requisiciones','Pendientes de su autorización',pend.length+' requisición(es) esperan su decisión.','autorizar');
     pend.forEach(r=>{const f=r.fechaReq?new Date(r.fechaReq+'T00:00:00').getTime():0;if(f&&f-hoy<=2*86400000)D('urg:'+r.id,'critica','Requisiciones','Solicitud urgente pendiente de autorización','Se requiere el material el '+fdate(r.fechaReq)+' · '+(r.obra||'—'),'autorizar',r.folio,r.id);});
   }
+  if(R==='auditor'){const pa=V().filter(r=>r.estado==='auditoria').length;if(pa)D('aud','alta','Requisiciones','Requisiciones por auditar',pa+' requisición(es) esperan su validación.','revisar');}
   if(R==='compras'){
     const a=allLines(elegCompras).length,b=allLines(elegRecep).length;
     if(a)D('oc','media','Compras','Solicitudes pendientes de seguimiento',a+' partida(s) autorizadas sin orden de compra.','oc');
@@ -1900,7 +1920,7 @@ function drawerHtml(r){
   let h='<div class="dr-head"><div><div class="folio">'+esc(r.folio)+'</div><h3>'+esc(r.obra||'Gasto')+'</h3><div class="row" style="margin-top:6px">'+pill(s[0],s[1])+'</div></div><button class="btn" data-act="close">Cerrar</button></div><div class="dr-body">';
   loadNames([r.creatorId].concat(Object.values(r.revision||{}).map(x=>x.uid),(r.hist||[]).map(x=>x.uid)));
   const rv=(k,t)=>r.revision&&r.revision[k]?'<div><span>'+t+'</span><b>'+esc(nm(r.revision[k].uid))+'</b><small class="muted"> '+fstamp(r.revision[k].t)+'</small></div>':'';
-  h+='<div class="kv"><div><span>Dirigido a</span><b>'+esc(DEST[destOf(r)])+'</b></div><div><span>Registró</span><b>'+esc(nm(r.creatorId))+'</b></div><div><span>Enviada</span><b>'+(r.enviado?fstamp(r.enviado):'—')+'</b></div>'+rv('compras','Revisó Compras')+rv('administracion','Revisó Administración')+rv('direccion','Decidió Dirección')+(r.autT?'<div><span>Autorizada</span><b>'+fstamp(r.autT)+'</b></div>':'')+'</div>';
+  h+='<div class="kv"><div><span>Dirigido a</span><b>'+esc(DEST[destOf(r)])+'</b></div><div><span>Registró</span><b>'+esc(nm(r.creatorId))+'</b></div><div><span>Enviada</span><b>'+(r.enviado?fstamp(r.enviado):'—')+'</b></div>'+rv('auditor','Validó Auditoría')+rv('compras','Revisó Compras')+rv('administracion','Revisó Administración')+rv('direccion','Decidió Dirección')+(r.autT?'<div><span>Autorizada</span><b>'+fstamp(r.autT)+'</b></div>':'')+'</div>';
   h+='<div class="kv"><div><span>Solicita</span><b>'+esc(r.solicitante||'—')+'</b></div><div><span>Fecha de solicitud</span><b>'+fdate(r.fechaSol)+'</b></div><div><span>Requiere el material</span><b>'+fdate(r.fechaReq)+'</b></div><div><span>Total solicitado</span><b>'+money(reqTotal(r))+'</b></div><div><span>Autorizado</span><b>'+money(reqAut(r))+'</b></div><div><span>Pagado</span><b>'+money(reqPag(r))+'</b></div></div>';
   if(r.estado==='devuelta')h+='<div class="note warn"><b>Devuelta por '+esc(r.devPor||'Compras')+'.</b> '+esc(r.devolucion||'')+'</div>';
   h+=topActions(r);
@@ -1920,7 +1940,8 @@ function topActions(r){
   if(okReview(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de '+ROLES[R]+'</b><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="liberar" data-id="'+r.id+'">Liberar a Dirección</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Puede editar partidas si algo no cuadra. Para devolver debe escribir la justificación.'+(R==='administracion'?' Los gastos de Administración pasan directo a Dirección, sin intervención de Compras.':'')+'</p></div>';
   if(R==='residente'&&r.estado==='devuelta'&&isMine(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Corrija las partidas y reenvíe</b><button class="btn primary" data-act="reenviar" data-id="'+r.id+'">Reenviar a '+DEST[destOf(r)]+'</button></div></div>';
   if(R==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')&&L(r).some(l=>l.auth==='pendiente'))h='<div class="card"><div class="row"><b style="margin-right:auto">Decisión de Dirección</b><button class="btn danger" data-act="rechall" data-id="'+r.id+'">Rechazar todo lo pendiente</button><button class="btn ok" data-act="autall" data-id="'+r.id+'">Autorizar todo lo pendiente</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Autorice o rechace partida por partida. Lo que no decida queda como Pendiente por autorizar en esta misma requisición.</p></div>';
-  if(okReview(r)&&excPend(r).length){h=h.replace('<button class="btn primary" data-act="liberar"','<button class="btn primary" disabled title="Hay una excepción de proveedor sin autorizar" data-act="liberar"')+'<div class="note warn"><b>No puede liberarse todavía.</b> Hay '+excPend(r).length+' partida(s) con proveedor con excepción sin autorización de Dirección.</div>';}
+  if(okAudit(r)){const pn=L(r).filter(l=>l.auth==='pendiente').length;h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de Auditoría</b><button class="btn danger" data-act="audrechall" data-id="'+r.id+'">Rechazar toda la requisición</button><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="audliberar" data-id="'+r.id+'"'+(pn?'':' disabled')+'>Liberar a Compras</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Valide conceptos, cantidades y justificación. Puede rechazar partidas específicas en la tabla, rechazar toda la requisición o devolverla al residente para que corrija. No cotiza ni edita.</p></div>';}
+  if(okReview(r)&&!okAudit(r)&&excPend(r).length){h=h.replace('<button class="btn primary" data-act="liberar"','<button class="btn primary" disabled title="Hay una excepción de proveedor sin autorizar" data-act="liberar"')+'<div class="note warn"><b>No puede liberarse todavía.</b> Hay '+excPend(r).length+' partida(s) con proveedor con excepción sin autorización de Dirección.</div>';}
   return h;
 }
 function drawerLines(r){
@@ -1980,6 +2001,7 @@ const isoOf=ms=>{if(!ms)return '';const d=new Date(ms);return d.getFullYear()+'-
 function statusLine(l,r){
   if(l.auth==='rechazada')return 'Rechazada';
   if(l.auth==='pendiente')return statusOf(r)[0];
+  if(l.bodega)return 'Material en bodega';
   if(l.pago==='pagado')return 'Pagada';
   if(l.pago==='credito')return 'A crédito';
   if(l.recibido)return recFalta(l)>1e-9?'Recibida parcial':'Recibida';
@@ -2220,13 +2242,13 @@ function pdfBuild(tipo,keys){
       if(i)doc.addPage();
       let y=pdfHead(doc,'Requisición '+r.folio,r.obra||'Sin obra');
       const pairs=[['Dirigido a',DEST[destOf(r)]],['Estado',statusOf(r)[0]],['Solicita',r.solicitante||'-'],['Registró',nm(r.creatorId)],['Fecha de solicitud',fdate(r.fechaSol)],['Requiere el material',fdate(r.fechaReq)],['Enviada',r.enviado?fstamp(r.enviado):'-']];
-      [['compras','Revisó Compras'],['administracion','Revisó Administración'],['direccion','Decidió Dirección']].forEach(x=>{const v=r.revision&&r.revision[x[0]];if(v)pairs.push([x[1],nm(v.uid)+' ('+fstamp(v.t)+')']);});
+      [['auditor','Validó Auditoría'],['compras','Revisó Compras'],['administracion','Revisó Administración'],['direccion','Decidió Dirección']].forEach(x=>{const v=r.revision&&r.revision[x[0]];if(v)pairs.push([x[1],nm(v.uid)+' ('+fstamp(v.t)+')']);});
       if(r.autT)pairs.push(['Autorizada',fstamp(r.autT)]);
       y=pdfInfo(doc,y,pairs);
       const body=L(r).map(l=>{
         const cant=l.orig&&Number(l.orig.cant)!==Number(l.cant)?l.cant+' (solicitado '+l.orig.cant+')':String(l.cant);
         const aut=l.auth==='autorizada'?'Autorizada':l.auth==='rechazada'?'Rechazada':'Pendiente';
-        const oc=l.auth==='autorizada'?[(l.oc==='NA'?(l.adm?'':'Sin OC'):(l.oc?l.oc.folio:'Sin OC')),pagoTxt(l)].filter(Boolean).join(' / '):'';
+        const oc=l.auth==='autorizada'&&l.bodega?'Material en bodega':l.auth==='autorizada'?[(l.oc==='NA'?(l.adm?'':'Sin OC'):(l.oc?l.oc.folio:'Sin OC')),pagoTxt(l)].filter(Boolean).join(' / '):'';
         return [l.clave||'-',l.concepto+'\n'+(l.justificacion||'')+(l.auth==='rechazada'&&l.motivo?'\nRechazo: '+l.motivo:''),cant,money(l.pu),money(l.total),l.proveedor||'-',aut+(oc?'\n'+oc:'')];
       });
       y=tbl(y,['Clave','Concepto y justificación','Cant.','P. unitario','Total','Proveedor','Estatus'],body,{0:{cellWidth:22},2:{halign:'right',cellWidth:20},3:{halign:'right',cellWidth:24},4:{halign:'right',cellWidth:26}});
@@ -2308,6 +2330,7 @@ function fileLink(f){
 function lineActions(r,l){
   let h='';
   if(S.role==='direccion'&&l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion')h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
+  if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
   if(canEdit(r,l))h+='<button class="btn sm" data-act="editlinea" data-id="'+r.id+'" data-l="'+l.id+'">Editar</button>';
   if(S.role==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')){
     if(l.auth==='pendiente'&&!excOk(l))h+='';
@@ -2372,7 +2395,8 @@ function selectedPicks(fn){
 }
 async function saveMany(picks){const ids=[...new Set(picks.map(x=>x.r.id))];for(const id of ids){await save(reqById(id));}}
 
-function okReview(r){return(S.role==='compras'&&r.estado==='compras')||(S.role==='administracion'&&r.estado==='administracion');}
+function okAudit(r){return S.role==='auditor'&&r.estado==='auditoria';}
+function okReview(r){return okAudit(r)||(S.role==='compras'&&r.estado==='compras')||(S.role==='administracion'&&r.estado==='administracion');}
 function draftToReq(d,estado){
   const ex=d.id?reqById(d.id):null;
   const adm=d.destino==='administracion';
@@ -2475,9 +2499,9 @@ const A={
       else{const pe=provErr(l,i,false);if(pe)err=pe;}
     });
     if(err){d.err=err;render();return;}
-    const r=draftToReq(d,adm?'administracion':'compras');
-    hist(r,'envió la solicitud a '+DEST[d.destino]+' (obra: '+(r.obra||'sin obra')+')');
-    r.lineas.forEach(l=>lh(l,'Solicitada: '+l.cant+' '+(l.unidad||'')+' a '+money(l.pu)+' c/u ('+money(l.total)+'); enviada a '+DEST[d.destino]));
+    const r=draftToReq(d,adm?'administracion':'auditoria');
+    hist(r,'envió la solicitud a '+(adm?DEST[d.destino]:'Auditoría (para Compras)')+' (obra: '+(r.obra||'sin obra')+')');
+    r.lineas.forEach(l=>lh(l,'Solicitada: '+l.cant+' '+(l.unidad||'')+' a '+money(l.pu)+' c/u ('+money(l.total)+'); enviada a '+(adm?DEST[d.destino]:'Auditoría')));
     r.lineas.forEach(l=>{if(l.provExc){l.provExc.estado='pendiente';l.provExc.solT=Date.now();l.provExc.solUid=myId;lh(l,'Proveedor con excepción solicitado a Dirección: '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}});
     S.draft=null;S.tab='mis';S.open=r.id;save(r);
   },
@@ -2495,15 +2519,33 @@ const A={
     S.open=null;S.tab='nueva';render();
   },
   reenviar(el){const r=reqById(el.dataset.id);const mal=L(r).filter(l=>l.provExc&&l.provExc.estado==='rechazada');if(mal.length){toast('Hay '+mal.length+' partida(s) con excepción de proveedor rechazada. Edite la partida: elija un proveedor activo del catálogo o ajuste el nombre y la justificación de la excepción.');return;}
-    r.estado=destOf(r)==='administracion'?'administracion':'compras';r.devolucion='';r.enviado=Date.now();hist(r,'corrigió y reenvió la solicitud a '+DEST[destOf(r)]);lhAll(r,'Corregida y reenviada a '+DEST[destOf(r)]);save(r);},
+    r.estado=destOf(r)==='administracion'?'administracion':'auditoria';r.devolucion='';r.enviado=Date.now();hist(r,'corrigió y reenvió la solicitud a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));lhAll(r,'Corregida y reenviada a '+(r.estado==='auditoria'?'Auditoría':DEST[destOf(r)]));save(r);},
 
   /* compras */
   devolver(el){
     const r=reqById(el.dataset.id);
     modal({title:'Devolver al residente',html:'<div class="f"><label for="m-txt">Justificación <i>*</i></label><textarea id="m-txt" placeholder="¿Qué no cuadra y qué debe corregir?"></textarea></div>',ok:'Devolver',onOk:async root=>{
       const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba la justificación para devolverla.';
-      if(!okReview(r))return 'Esta solicitud ya no está en su bandeja.';r.estado='devuelta';r.devolucion=t;r.devPor=ROLES[S.role];mark(r,S.role);hist(r,'devolvió la solicitud al residente: '+t);lhAll(r,'Devuelta al residente: '+t);await save(r);return true;}});
+      if(!okReview(r))return 'Esta solicitud ya no está en su bandeja.';r.estado='devuelta';r.devolucion=t;r.devPor=ROLES[S.role];if(S.role==='auditor'){r.lineas.forEach(l=>{if(l.rechPor==='auditor'){l.auth='pendiente';l.motivo='';delete l.rechPor;}});}mark(r,S.role);hist(r,'devolvió la solicitud al residente: '+t);lhAll(r,'Devuelta al residente: '+t);await save(r);return true;}});
   },
+  audliberar(el){const r=reqById(el.dataset.id);if(!okAudit(r))return;if(!L(r).some(l=>l.auth==='pendiente')){toast('No hay partidas pendientes que liberar.');return;}
+    r.estado='compras';mark(r,'auditor');const rc=L(r).filter(l=>l.rechPor==='auditor').length;hist(r,'validó y liberó la solicitud a Compras'+(rc?' ('+rc+' partida(s) rechazada(s) por Auditoría)':''));lhAll(r,'Validada por Auditoría y liberada a Compras');save(r);},
+  audrech(el){
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!okAudit(r))return;
+    modal({title:'Rechazar partida '+l.clave,html:'<div class="f"><label for="m-txt">Motivo <i>*</i></label><textarea id="m-txt" placeholder="Concepto, cantidad o justificación que no procede"></textarea></div>',ok:'Rechazar partida',onOk:async root=>{
+      const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba el motivo del rechazo.';if(!okAudit(r)||l.auth!=='pendiente')return 'La partida ya no está pendiente.';
+      l.auth='rechazada';l.motivo='Auditoría: '+t;l.rechPor='auditor';lh(l,'Rechazada por Auditoría: '+t);hist(r,'rechazó la partida '+l.clave+' (Auditoría): '+t);
+      if(!L(r).some(x=>x.auth==='pendiente')){r.estado='resuelta';mark(r,'auditor');hist(r,'todas las partidas fueron rechazadas por Auditoría; la requisición se cerró');}
+      await save(r);return true;}});
+  },
+  audrechall(el){
+    const r=reqById(el.dataset.id);if(!okAudit(r))return;
+    modal({title:'Rechazar toda la requisición',html:'<p class="muted" style="margin:0">Se rechazarán todas las partidas pendientes y la requisición se cerrará sin pasar a Compras. Si solo requiere correcciones, use «Devolver al residente».</p><div class="f"><label for="m-txt">Motivo <i>*</i></label><textarea id="m-txt"></textarea></div>',ok:'Rechazar requisición',onOk:async root=>{
+      const t=root.querySelector('#m-txt').value.trim();if(!t)return 'Escriba el motivo del rechazo.';if(!okAudit(r))return 'Esta solicitud ya no está en su bandeja.';
+      const p=L(r).filter(l=>l.auth==='pendiente');p.forEach(l=>{l.auth='rechazada';l.motivo='Auditoría: '+t;l.rechPor='auditor';lh(l,'Rechazada por Auditoría: '+t);});
+      r.estado='resuelta';mark(r,'auditor');hist(r,'rechazó toda la requisición ('+p.length+' partida(s)) en Auditoría: '+t);await save(r);return true;}});
+  },
+  audundo(el){const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!okAudit(r)||l.rechPor!=='auditor')return;l.auth='pendiente';l.motivo='';delete l.rechPor;lh(l,'Rechazo de Auditoría deshecho');hist(r,'deshizo el rechazo de la partida '+l.clave);save(r);},
   liberar(el){const r=reqById(el.dataset.id);if(!okReview(r))return;if(excPend(r).length){toast('No puede liberarse: hay proveedor con excepción sin autorización de Dirección.');return;}r.estado='direccion';mark(r,S.role);hist(r,'revisó y liberó la solicitud a Dirección');lhAll(r,'Revisada y liberada a Dirección');save(r);},
   genoc(){
     const picks=selectedPicks(elegCompras);if(!picks.length)return;
@@ -2781,9 +2823,9 @@ const A={
     const mkP=(razon,alias,rfc,clabe,banco)=>{let q=S.provs.find(x=>x.rfc===rfc);if(!q){q={id:rid(),razon:razon,alias:alias,rfc:rfc,csf:{name:'constancia-situacion-fiscal.pdf',url:null},bdoc:null,titular:razon,banco:banco,clabe:clabe,depto:'compras',uid:myId,creado:Date.now(),activo:true,hist:[{t:Date.now(),uid:myId,rol:'Compras',txt:'Creó el proveedor “'+alias+'” (ejemplo)',tipo:'alta'}]};saveProv(q);}return q;};
     const P1=mkP('Vidrios del Sureste SA de CV','Vidrios del Sureste','VSU120304AB1','012180001234567891','BBVA'),P2=mkP('Aluminios Mérida SA de CV','Aluminios Mérida','AME090815CD2','014180005555666677','Santander'),P3=mkP('Selladores Industriales SA de CV','Selladores Industriales','SIN100220EF3','072180009999888871','Banorte');
     const mk=(clave,concepto,cant,pu,prov,just)=>({id:rid(),clave:clave,concepto:concepto,unidad:'pza',cant:cant,pu:pu,total:r2(cant*pu),proveedor:prov.alias,provId:prov.id,provSnap:snapProv(prov),justificacion:just,cot:null,auth:'pendiente',oc:null,pago:'pendiente'});
-    const r={id:rid(),folio:'REQ-'+code(),creatorId:myId,estado:'compras',obra:'Ejemplo · Fachada suspendida',solicitante:'Residente de obra',fechaSol:todayISO(),fechaReq:addDays(todayISO(),10),creado:Date.now(),
+    const r={id:rid(),folio:'REQ-'+code(),creatorId:myId,estado:'auditoria',obra:'Ejemplo · Fachada suspendida',solicitante:'Residente de obra',fechaSol:todayISO(),fechaReq:addDays(todayISO(),10),creado:Date.now(),
       lineas:[mk('VID-TEM-10','Vidrio templado 10 mm claro',24,1850,P1,'Piezas para módulos del nivel 4'),mk('PER-AL-3','Perfil de aluminio cuerpo 3 pulgadas',60,420,P2,'Reposición por corte de montantes'),mk('SEL-SIL','Sellador de silicón estructural',30,185,P3,'Sellado perimetral de cristales')],hist:[]};
-    hist(r,'creó la requisición de ejemplo y la envió a Compras');S.tab=TABS[S.role][0][0];save(r);
+    hist(r,'creó la requisición de ejemplo y la envió a Auditoría');S.tab=TABS[S.role][0][0];save(r);
   }
 };
 

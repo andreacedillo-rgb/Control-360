@@ -34,12 +34,13 @@ begin
     when 'usuarios'           then p in ('sistemas','direccion','administracion','compras') or lower(d->>'email') = em
     when 'bitacora_seguridad' then p = 'sistemas'
     when 'requisiciones'      then p in ('direccion','administracion','compras','sistemas') or (p='residente' and d->>'creatorId' = me)
+      or (p='auditor' and d->>'estado' <> 'elaboracion')
     when 'nominas'            then p in ('direccion','administracion','sistemas') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente','sistemas')
     when 'empleados'          then p in ('direccion','administracion','residente','sistemas')
     when 'auditoria_reportes' then p in ('direccion','administracion','compras','sistemas')
     -- Documentos adjuntos: Dirección, Administración y Compras ven todos; el residente solo los de sus requisiciones; Sistemas ninguno
-    when 'documentos'         then p in ('direccion','administracion','compras') or (p='residente' and d->>'creatorReqId' = me)
+    when 'documentos'         then p in ('direccion','administracion','compras','auditor') or (p='residente' and d->>'creatorReqId' = me)
     -- Notificaciones: Sistemas solo las del módulo Sistemas; el resto nunca las de Sistemas, solo las dirigidas a su usuario o a su perfil
     when 'notificaciones'     then case
         when p = 'sistemas'            then d->>'mod' = 'Sistemas'
@@ -70,6 +71,7 @@ begin
     when 'usuarios'           then p = 'sistemas' or lower(d->>'email') = em
     when 'bitacora_seguridad' then false
     when 'requisiciones'      then p in ('direccion','administracion','compras','sistemas') or (p='residente' and d->>'creatorId' = me)
+      or (p='auditor' and (d->>'estado'='auditoria' or (d->'revision') ? 'auditor'))
     when 'nominas'            then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente')
     when 'empleados'          then p in ('direccion','administracion')
@@ -172,7 +174,7 @@ create policy c360_files_ins on storage.objects for insert to authenticated
                and (storage.foldername(name))[1] = auth.uid()::text );
 create policy c360_files_sel on storage.objects for select to authenticated
   using ( bucket_id='comprobantes' and (
-            public.c360_perfil() in ('direccion','administracion','compras')
+            public.c360_perfil() in ('direccion','administracion','compras','auditor')
             or (storage.foldername(name))[1] = auth.uid()::text ) );
 
 -- ============================================================
