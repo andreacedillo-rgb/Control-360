@@ -48,6 +48,16 @@ begin
         else coalesce(d->>'uid','') = me or (coalesce(d->>'uid','') = '' and coalesce(d->'roles','[]'::jsonb) ? p)
       end
     when 'notif_lecturas'     then d->>'uid' = me
+    -- Reposiciones: el residente solo las suyas; borradores solo del autor; Compras/Administración las de su flujo; Dirección todas; Sistemas (depuración)
+    when 'reposiciones'       then case
+        when p = 'sistemas'            then true
+        when p = 'residente'           then d->>'creatorId' = me
+        when d->>'creatorId' = me      then true
+        when d->>'estado' in ('borrador','incompleta') then false
+        when p = 'direccion'           then true
+        when p = 'compras'             then d->>'destino' = 'compras'
+        when p = 'administracion'      then d->>'destino' = 'administracion' or d->>'estado' in ('autorizada','programada','pagada')
+        else false end
     else false end;
 end $$;
 
@@ -68,6 +78,12 @@ begin
     when 'documentos'         then p in ('administracion','compras') or (p='residente' and d->>'creatorReqId' = me)
     when 'notificaciones'     then p is not null and ((p = 'sistemas') = (d->>'mod' = 'Sistemas'))
     when 'notif_lecturas'     then p is not null and d->>'uid' = me
+    when 'reposiciones'       then case
+        when p = 'residente'           then d->>'creatorId' = me
+        when p = 'administracion'      then d->>'destino' = 'administracion' or d->>'estado' in ('autorizada','programada','pagada') or d->>'creatorId' = me
+        when p = 'compras'             then d->>'destino' = 'compras'
+        when p = 'direccion'           then true
+        else false end
     else false end;
 end $$;
 
@@ -98,7 +114,7 @@ create policy docs_update on public.docs for update to authenticated
 drop policy if exists docs_delete on public.docs;
 create policy docs_delete on public.docs for delete to authenticated
   using ( (coll='proveedores' and public.c360_perfil() in ('compras','sistemas'))
-       or (coll in ('requisiciones','nominas','empleados','auditoria_reportes') and public.c360_perfil()='sistemas') );
+       or (coll in ('requisiciones','nominas','empleados','auditoria_reportes','reposiciones') and public.c360_perfil()='sistemas') );
 
 -- Protección de la tabla de usuarios
 create or replace function public.c360_guard_usuarios() returns trigger
