@@ -2761,9 +2761,13 @@ const A={
   genoc(){
     const picks=selectedPicks(elegCompras);if(!picks.length)return;
     const provs=[...new Set(picks.map(x=>x.l.proveedor||'Sin proveedor'))];
-    modal({title:'Generar orden de compra',html:'<p style="margin:0" class="muted">Se generará <b>una sola OC</b> con '+picks.length+' partida'+(picks.length===1?'':'s')+' ('+money(sum(picks.map(x=>x.l.total)))+'). Proveedor'+(provs.length===1?'':'es')+': '+esc(provs.join(', '))+'.</p><div class="f"><label for="m-fecha">Fecha de entrega compromiso <i>*</i></label><input id="m-fecha" type="date" min="'+todayISO()+'"></div><p class="muted" style="margin:0;font-size:13px">La fecha se agrega al calendario y la OC pasa a Administración para pago o crédito.</p>',ok:'Generar OC',onOk:async root=>{
+    modal({title:'Generar orden de compra',html:'<p style="margin:0" class="muted">Se generará <b>una sola OC</b> con '+picks.length+' partida'+(picks.length===1?'':'s')+' ('+money(sum(picks.map(x=>x.l.total)))+'). Proveedor'+(provs.length===1?'':'es')+': '+esc(provs.join(', '))+'.</p><div class="f"><label for="m-ocn">Folio real de la Orden de Compra <i>*</i></label><div style="display:flex;align-items:stretch;gap:0"><span style="display:flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-right:0;border-radius:10px 0 0 10px;background:var(--bg,#f4f5f7);font-weight:700">OC-</span><input id="m-ocn" autocomplete="off" maxlength="30" placeholder="Número que le asignó (ej. 1458)" style="border-radius:0 10px 10px 0;flex:1;min-width:0"></div><span class="muted" style="font-size:12.5px">Capture manualmente el número; el sistema le antepone «OC-». No se puede repetir.</span></div><div class="f"><label for="m-fecha">Fecha de entrega compromiso <i>*</i></label><input id="m-fecha" type="date" min="'+todayISO()+'"></div><p class="muted" style="margin:0;font-size:13px">La fecha se agrega al calendario y la OC pasa a Administración para pago o crédito.</p>',ok:'Generar OC',onOk:async root=>{
       const f=root.querySelector('#m-fecha').value;if(!f)return 'Indique la fecha de entrega compromiso.';
-      const folio='OC-'+code();
+      let num=root.querySelector('#m-ocn').value.trim().toUpperCase().replace(/^OC[-\s]*/,'').replace(/\s+/g,'');
+      if(!num)return 'Capture el folio real de la OC (el número que sigue a «OC-»).';
+      if(!/^[A-Z0-9][A-Z0-9\-_\/.]*$/.test(num))return 'El folio solo puede llevar letras, números y los signos - _ / .';
+      const folio='OC-'+num;
+      if(S.reqs.some(r=>L(r).some(l=>l.oc&&l.oc!=='NA'&&String(l.oc.folio||'').toUpperCase()===folio)))return 'Ya existe una OC con el folio '+folio+'. Capture un número distinto.';
       picks.forEach(x=>{x.l.oc={folio:folio,fecha:f,prov:provs.join(', '),creada:todayISO(),uid:myId};lh(x.l,'Compra: OC '+folio+' generada; entrega compromiso '+fdate(f));});
       const rs=[...new Set(picks.map(x=>x.r))];
       rs.forEach(r=>{const mine=picks.filter(x=>x.r===r);hist(r,'generó '+folio+' con '+mine.length+' partida(s) y entrega compromiso el '+fdate(f));});

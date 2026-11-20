@@ -133,3 +133,6 @@ Nuevo apartado integrado a Nómina y a los perfiles de empleados.
 
 ### Solicitud de baja por el residente
 El residente también puede usar **SOLICITAR BAJA DE TRABAJADOR**: elige al trabajador, la fecha propuesta y escribe la **justificación obligatoria**. Administración la acepta, devuelve o rechaza (con justificación) y el residente recibe notificación; si la devuelven o rechazan puede corregir y reenviar. Aceptar la solicitud **no da de baja** al trabajador: el expediente muestra el aviso y Administración registra después la BAJA con el documento oficial del IMSS. Las solicitudes de baja (folio BAJ-) comparten lista, notificaciones y reportes con las de alta, identificadas en la columna «Tipo». No requiere cambios en Supabase.
+
+### Folio manual de la OC
+Al generar una orden de compra, Compras captura **manualmente el folio real**: el sistema muestra el prefijo fijo «OC-» y Compras escribe el número que le asignó (ej. 1458 → OC-1458). Es obligatorio, solo admite letras, números y - _ / . y no se puede repetir un folio ya usado. Ese folio es el que aparece en Administración, Calendario, reportes y el Centro de reportes. «No aplica OC» no cambia.
