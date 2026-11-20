@@ -2188,9 +2188,9 @@ function crData(t){
     loadNames(Vp().map(r=>r.creatorId));
     Vp().forEach(r=>{const x=repFlat(r);rows.push({k:r.id,fecha:x.fGasto||'',cells:[x.folio,x.req,x.fGasto,x.col,x.ben,x.obra,x.concepto,x.dest,x.imp,x.impAut===''?0:Number(x.impAut),x.fAut,x.fPago,x.est]});});
   }else if(t==='alt'){
-    cols=[C('Folio'),C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de solicitud'),C('Estatus de aprobación'),C('Revisó'),C('Fecha de decisión'),C('Justificación'),C('Situación laboral'),C('Documentos cargados')];
+    cols=[C('Folio'),C('Tipo'),C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de solicitud'),C('Estatus de aprobación'),C('Revisó'),C('Fecha de decisión'),C('Justificación'),C('Situación laboral'),C('Documentos cargados')];
     loadNames(altaMias().map(a=>a.dec&&a.dec.uid));
-    altaMias().filter(a=>a.estado!=='borrador'||S.role==='residente').forEach(a=>{const e=empById(a.empId);rows.push({k:a.id,fecha:a.fechaSol||'',cells:[a.folio,a.nombre,a.obra||'',a.solicitante||'',a.fechaSol||'',ALTA_EST[a.estado][0],a.dec?(nm(a.dec.uid)||'Administración'):'',a.dec?isoOf(a.dec.t):'',a.dec&&a.dec.txt||'',a.estado==='aceptada'?((a.empId&&!e)?'Perfil eliminado de Nómina':(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0]):'',ALTA_DOCS.filter(d=>a.docs&&a.docs[d[0]]).length+' de 6']});});
+    altaMias().filter(a=>a.estado!=='borrador'||S.role==='residente').forEach(a=>{const e=empById(a.empId);rows.push({k:a.id,fecha:a.fechaSol||'',cells:[a.folio,esBaja(a)?'Baja':'Alta',a.nombre,a.obra||'',a.solicitante||'',a.fechaSol||'',ALTA_EST[a.estado][0],a.dec?(nm(a.dec.uid)||'Administración'):'',a.dec?isoOf(a.dec.t):'',(a.dec&&a.dec.txt)||(esBaja(a)?a.motivo:'')||'',a.estado==='aceptada'?((a.empId&&!e)?'Perfil eliminado de Nómina':(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0]):'',esBaja(a)?'—':ALTA_DOCS.filter(d=>a.docs&&a.docs[d[0]]).length+' de 6']});});
   }else if(t==='trab'){
     cols=[C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de aceptación'),C('Autorizó'),C('Situación laboral'),C('Fecha ALTA IMSS'),C('Fecha BAJA'),C('Documentos de alta')];
     loadNames(S.exps.map(x=>x.aceptadoPor));
@@ -3329,6 +3329,25 @@ function altaForm(a){
   const mb=document.querySelector('#modal .mb-f');
   if(mb&&!document.getElementById('al-draft')){const b=document.createElement('button');b.className='btn';b.id='al-draft';b.type='button';b.textContent='Guardar borrador';b.setAttribute('data-act','aldraft');b.dataset.id=a?a.id:'';mb.insertBefore(b,mb.firstChild);}
 }
+const esBaja=a=>a&&a.tipo==='baja';
+function bajaForm(a){
+  const act=S.emps.filter(e=>e.activo!==false&&e.situacion!=='baja'&&!S.altas.some(x=>esBaja(x)&&x.empId===e.id&&x.estado==='pendiente'&&(!a||x.id!==a.id)));
+  const v=a||{empId:'',fMov:todayISO(),motivo:''};
+  modal({title:a?'Corregir solicitud '+a.folio:'Solicitar baja de trabajador',wide:true,ok:'ENVIAR SOLICITUD DE BAJA',
+   html:'<p class="muted" style="margin:0;font-size:13px">La solicitud llega a Administración, que la acepta o rechaza. La baja formal ante el IMSS la registra únicamente Administración.</p>'+
+    '<div class="grid"><div class="f span2"><label for="bj-e">Trabajador <i>*</i></label><select id="bj-e"><option value="">Seleccione…</option>'+act.map(e=>'<option value="'+esc(e.id)+'"'+(v.empId===e.id?' selected':'')+'>'+esc(e.nombre)+(e.obra?' · '+esc(e.obra):'')+'</option>').join('')+'</select></div>'+
+    '<div class="f"><label for="bj-f">Fecha propuesta de baja <i>*</i></label><input id="bj-f" type="date" value="'+esc(v.fMov||todayISO())+'"></div>'+
+    '<div class="f full"><label for="bj-m">Justificación de la baja <i>*</i></label><textarea id="bj-m" maxlength="800" placeholder="Motivo de la baja">'+esc(v.motivo||'')+'</textarea></div></div>',
+   onOk:async root=>{
+    const id=root.querySelector('#bj-e').value,f=root.querySelector('#bj-f').value,m=root.querySelector('#bj-m').value.trim();
+    const e=empById(id);if(!e)return 'Seleccione al trabajador.';if(!f)return 'Indique la fecha propuesta de baja.';if(!m)return 'Escriba la justificación (obligatoria).';
+    if(S.altas.some(x=>esBaja(x)&&x.empId===id&&x.estado==='pendiente'&&(!a||x.id!==a.id)))return 'Ya hay una solicitud de baja pendiente para este trabajador.';
+    const x=a?clone(a):{id:rid(),folio:'BAJ-'+code(),tipo:'baja',creatorId:myId,creado:Date.now(),docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
+    if(a&&!(a.estado==='devuelta'||a.estado==='rechazada')||(a&&a.creatorId!==myId))return 'Esta solicitud ya no admite cambios.';
+    const re=!!a;x.empId=id;x.nombre=e.nombre;x.obra=e.obra||'';x.fMov=f;x.motivo=m;x.estado='pendiente';x.enviado=Date.now();x.solicitante=(S.me&&S.me.nombre)||S.myName||'';
+    ah(x,(re?'Reenvió la solicitud de baja corregida: ':'Envió la solicitud de baja: ')+m);
+    await saveAlta(x);altaNotify(x,'baja_env',re?'Solicitud de baja corregida y reenviada':'Nueva solicitud de baja',re?'media':'alta',true);return true;}});
+}
 function altaDirecta(){
   modal({title:'Registrar alta directa de trabajador',wide:true,html:altaFormHtml(null,true),ok:'REGISTRAR ALTA',
    onOk:async root=>{
@@ -3360,9 +3379,11 @@ async function altaAceptarCore(a,sueldo,linkId){
 /* ── decisiones de Administración ── */
 function altaDecision(a,tipo){
   const cfg={aceptar:['Aceptar solicitud','Aceptar'],devolver:['Devolver para corrección','Devolver'],rechazar:['Rechazar solicitud','Rechazar']}[tipo];
-  const dups=tipo==='aceptar'?S.emps.filter(e=>normQ(e.nombre)===normQ(a.nombre)):[];
+  const bj=esBaja(a);const dups=tipo==='aceptar'&&!bj?S.emps.filter(e=>normQ(e.nombre)===normQ(a.nombre)):[];
   let html='<p style="margin:0">Trabajador: <b>'+esc(a.nombre)+'</b> · '+esc(a.obra)+'</p>';
-  if(tipo==='aceptar'){
+  if(tipo==='aceptar'&&bj){
+    html+='<p style="margin:0">Fecha propuesta de baja: <b>'+fdate(a.fMov)+'</b></p><p style="margin:0;white-space:pre-wrap"><span class="muted">Justificación del residente:</span> '+esc(a.motivo||'')+'</p><p class="muted" style="margin:0;font-size:13px">Al aceptar, la solicitud queda autorizada. La baja formal se registra después, desde el expediente del trabajador, con el documento oficial del IMSS.</p>';
+  }else if(tipo==='aceptar'){
     html+='<p class="muted" style="margin:0;font-size:13px">La aceptación es interna y crea el perfil del trabajador en Nómina; <b>no equivale al alta ante el IMSS</b>, que se registra después con su acuse.</p>'+
      '<div class="f"><label for="ad-s">Sueldo base diario <i>*</i></label><input id="ad-s" type="number" min="0" step="any" inputmode="decimal"></div>'+
      (dups.length?'<div class="f"><label for="ad-l">Ya existe un expediente con ese nombre</label><select id="ad-l"><option value="">Crear un expediente nuevo</option>'+dups.map(e=>'<option value="'+esc(e.id)+'" selected>Vincular a: '+esc(e.nombre)+' · '+esc(e.obra||'sin obra')+' ('+esc((SIT_LAB[sitOf(e)]||['sin expediente digital'])[0])+')</option>').join('')+'</select></div>':'');
@@ -3370,6 +3391,12 @@ function altaDecision(a,tipo){
   modal({title:cfg[0]+' · '+a.folio,html:html,ok:cfg[1],onOk:async root=>{
     const x=altaById(a.id);if(!x||x.estado!=='pendiente'||!rhAdm())return 'Esta solicitud ya no está pendiente.';
     const c=clone(x);
+    if(tipo==='aceptar'&&bj){
+      const em=empById(c.empId);if(!em)return 'El trabajador ya no existe en Nómina.';
+      c.estado='aceptada';c.dec={uid:myId,t:Date.now(),res:'aceptada',txt:''};ah(c,'Aceptó la solicitud de baja (pendiente de registrar la baja ante el IMSS)');
+      const ne=clone(em);nh(ne,'Solicitud de baja '+c.folio+' aceptada; fecha propuesta '+fdate(c.fMov));await saveEmp(ne);
+      const xx=expById(em.id);if(xx){const y=clone(xx);xh(y,'Solicitud de baja '+c.folio+' aceptada. Pendiente de registrar la baja ante el IMSS.');await saveExp(y);}
+      await saveAlta(c);altaNotify(c,'alta_res','Solicitud de baja aceptada','media',false);return true;}
     if(tipo==='aceptar'){
       const s=Number(root.querySelector('#ad-s').value);if(!(s>0))return 'Capture el sueldo base diario (mayor a cero).';
       const l=root.querySelector('#ad-l');const miss=ALTA_DOCS.filter(d=>!(c.docs&&c.docs[d[0]]));if(miss.length)return 'La solicitud no tiene los seis documentos.';
@@ -3377,7 +3404,7 @@ function altaDecision(a,tipo){
     const t=root.querySelector('#ad-t').value.trim();if(!t)return 'Escriba la justificación (obligatoria).';
     c.estado=tipo==='devolver'?'devuelta':'rechazada';c.dec={uid:myId,t:Date.now(),res:c.estado,txt:t};
     ah(c,(tipo==='devolver'?'Devolvió para corrección: ':'Rechazó la solicitud: ')+t);
-    await saveAlta(c);altaNotify(c,'alta_res',tipo==='devolver'?'Solicitud de alta devuelta para corrección':'Solicitud de alta rechazada','alta',false,t);return true;}});
+    await saveAlta(c);altaNotify(c,'alta_res',(bj?'Solicitud de baja ':'Solicitud de alta ')+(tipo==='devolver'?'devuelta para corrección':'rechazada'),'alta',false,t);return true;}});
 }
 /* ── documentos laborales (IMSS) y bajas ── */
 function laboralModal(e,tipo){
@@ -3413,17 +3440,17 @@ function altasHtml(){
   const R=S.role,sub=R==='residente'?'todas':S.al.sub;
   const pend=altaMias().filter(a=>a.estado==='pendiente').length;
   const seg=(k,t)=>'<button class="btn'+(sub===k?' primary':'')+'" data-act="alsub" data-k="'+k+'">'+t+'</button>';
-  let h='<div class="row" style="margin-bottom:12px">'+(R==='residente'?'<button class="btn primary" data-act="alnew">SOLICITAR ALTA DE TRABAJADOR</button>':'')+(R==='administracion'?'<button class="btn primary" data-act="aldir">Registrar alta directa</button>':'')+
-   (R!=='residente'?seg('pend','Solicitudes de alta pendientes ('+pend+')')+seg('todas','Todas las solicitudes')+seg('trab','Trabajadores y expedientes'):'')+'</div>';
+  let h='<div class="row" style="margin-bottom:12px">'+(R==='residente'?'<button class="btn primary" data-act="alnew">SOLICITAR ALTA DE TRABAJADOR</button><button class="btn" data-act="alnewb">SOLICITAR BAJA DE TRABAJADOR</button>':'')+(R==='administracion'?'<button class="btn primary" data-act="aldir">Registrar alta directa</button>':'')+
+   (R!=='residente'?seg('pend','Solicitudes pendientes ('+pend+')')+seg('todas','Todas las solicitudes')+seg('trab','Trabajadores y expedientes'):'')+'</div>';
   if(sub==='trab')return h+trabHtml();
   const rows=altaRows().filter(a=>sub==='pend'?a.estado==='pendiente':true);
   loadNames(rows.map(a=>a.creatorId));
   h+='<div class="card" style="margin-bottom:12px"><div class="grid" style="align-items:end"><div class="f" style="grid-column:span 2"><label for="al-q">Buscar</label><input id="al-q" type="search" value="'+esc(S.al.q)+'" placeholder="Trabajador, obra, residente, folio, estatus…" autocomplete="off"></div>'+
    (sub==='pend'?'':'<div class="f"><label for="al-e">Estado de la solicitud</label><select id="al-e"><option value="">Todos</option>'+Object.keys(ALTA_EST).filter(k=>R!=='administracion'&&R!=='direccion'||k!=='borrador').map(k=>'<option value="'+k+'"'+(S.al.est===k?' selected':'')+'>'+esc(ALTA_EST[k][0])+'</option>').join('')+'</select></div>')+'</div></div>';
   if(!rows.length)return h+'<div class="empty"><b>'+(sub==='pend'?'No hay solicitudes de alta pendientes':'Aún no hay solicitudes')+'</b><p>'+(R==='residente'?'Use «SOLICITAR ALTA DE TRABAJADOR» para registrar a un nuevo trabajador con sus seis documentos.':'Las solicitudes de los residentes llegan aquí con su documentación.')+'</p></div>';
-  return h+'<div class="tw"><table><thead><tr><th>Folio</th><th>Trabajador</th><th>Obra</th><th>Residente</th><th>Fecha de solicitud</th><th>Estado de la solicitud</th><th>Situación laboral</th><th></th></tr></thead><tbody>'+rows.map(a=>{
+  return h+'<div class="tw"><table><thead><tr><th>Folio</th><th>Tipo</th><th>Trabajador</th><th>Obra</th><th>Residente</th><th>Fecha de solicitud</th><th>Estado de la solicitud</th><th>Situación laboral</th><th></th></tr></thead><tbody>'+rows.map(a=>{
     const e=empById(a.empId),st=ALTA_EST[a.estado];
-    return '<tr><td class="mono">'+esc(a.folio)+'</td><td><b>'+esc(a.nombre)+'</b></td><td>'+esc(a.obra||'—')+'</td><td>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</td><td>'+fdate(a.fechaSol||isoOf(a.creado))+'</td><td>'+pill(st[0],st[1])+'</td><td>'+(a.estado==='aceptada'?sitPillA(a,e):'<span class="muted">—</span>')+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">'+(a.estado==='pendiente'&&rhAdm()?'Revisar':'Abrir')+'</button></td></tr>';}).join('')+'</tbody></table></div>';
+    return '<tr><td class="mono">'+esc(a.folio)+'</td><td>'+pill(esBaja(a)?'Baja':'Alta',esBaja(a)?'bad':'info')+'</td><td><b>'+esc(a.nombre)+'</b></td><td>'+esc(a.obra||'—')+'</td><td>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</td><td>'+fdate(a.fechaSol||isoOf(a.creado))+'</td><td>'+pill(st[0],st[1])+'</td><td>'+(a.estado==='aceptada'?sitPillA(a,e):'<span class="muted">—</span>')+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">'+(a.estado==='pendiente'&&rhAdm()?'Revisar':'Abrir')+'</button></td></tr>';}).join('')+'</tbody></table></div>';
 }
 function altaDetail(a){
   const R=S.role,st=ALTA_EST[a.estado],e=empById(a.empId);loadNames([a.creatorId].concat((a.hist||[]).map(x=>x.uid)));
@@ -3434,7 +3461,8 @@ function altaDetail(a){
   h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+
    (rhAdm()&&a.estado==='pendiente'?'<button class="btn primary" data-act="aldec" data-k="aceptar" data-id="'+a.id+'">Aceptar solicitud</button><button class="btn" data-act="aldec" data-k="devolver" data-id="'+a.id+'">Devolver para corrección</button><button class="btn danger" data-act="aldec" data-k="rechazar" data-id="'+a.id+'">Rechazar solicitud</button>':'')+
    (rhView()&&a.estado==='aceptada'&&a.empId?'<button class="btn" data-act="alexp" data-id="'+a.empId+'">Ver expediente del trabajador</button>':'')+'</div>';
-  h+='<h2 class="sec" style="margin:4px 0">Documentos de la solicitud</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(a.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td>'+(x?fstamp(x.t)+'<div class="sub">'+esc(nm(x.uid)||'')+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  if(esBaja(a))h+='<div class="card" style="margin-top:12px"><div class="grid"><div><span class="muted">Fecha propuesta de baja</span><br><b>'+fdate(a.fMov)+'</b></div><div class="f span2"><span class="muted">Justificación del residente</span><b style="white-space:pre-wrap">'+esc(a.motivo||'')+'</b></div></div></div>';
+  if(!esBaja(a))h+='<h2 class="sec" style="margin:4px 0">Documentos de la solicitud</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(a.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td>'+(x?fstamp(x.t)+'<div class="sub">'+esc(nm(x.uid)||'')+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
   h+='<h2 class="sec" style="margin:12px 0 4px">Historial</h2><ul class="hist">'+(a.hist||[]).slice().reverse().map(m=>'<li><time>'+fstamp(m.t)+'</time><div><b>'+esc(nm(m.uid)||m.rol||'')+'</b> · '+esc(m.txt)+'</div></li>').join('')+'</ul>';
   return h;
 }
@@ -3453,6 +3481,7 @@ function expDetail(e){
   let h='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="alback">← Volver</button><h2 class="sec" style="margin:0 auto 0 8px">Expediente · '+esc(e.nombre)+'</h2>'+sitPill(e)+'</div>';
   h+='<div class="card"><div class="grid"><div><span class="muted">Obra asignada</span><br><b>'+esc(e.obra||'—')+'</b></div><div><span class="muted">Sueldo base diario</span><br><b>'+money(e.sueldo)+'</b></div><div><span class="muted">Fecha de aceptación interna</span><br><b>'+(x.fAcept?fstamp(x.fAcept):'—')+'</b></div><div><span class="muted">Residente que solicitó</span><br><b>'+esc(x.solicitadoNom||nm(x.solicitadoPor)||'—')+'</b></div><div><span class="muted">Administrador que autorizó</span><br><b>'+esc(nm(x.aceptadoPor)||'—')+'</b></div><div><span class="muted">Folio de solicitud</span><br><b class="mono">'+esc(x.folioAlta||'—')+'</b></div></div>'+
    '<p class="muted" style="margin:10px 0 0;font-size:13px">La aceptación interna no equivale al alta formal ante el IMSS: la situación laboral cambia a «Activo» hasta cargar el acuse oficial de alta.</p></div>';
+  S.altas.filter(b=>esBaja(b)&&b.empId===e.id&&(b.estado==='pendiente'||(b.estado==='aceptada'&&sitOf(e)!=='baja'))).forEach(b=>{h+='<div class="note warn" style="margin-top:10px"><b>Solicitud de baja '+esc(b.folio)+' · '+esc(ALTA_EST[b.estado][0])+'</b> · fecha propuesta '+fdate(b.fMov)+'<br>'+esc(b.motivo||'')+'</div>';});
   h+='<div class="row" style="margin:12px 0">'+(rhAdm()?(sitOf(e)!=='activo'&&sitOf(e)!=='baja'?'<button class="btn primary" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar ALTA ante IMSS</button>':'')+(sitOf(e)!=='baja'?'<button class="btn danger" data-act="allab" data-k="BAJA" data-id="'+e.id+'">Registrar BAJA</button>':'<button class="btn" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar nueva ALTA ante IMSS</button>'):'')+'</div>';
   h+='<h2 class="sec" style="margin:4px 0">Documentos del expediente</h2><div class="tw"><table><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1]):'<span class="muted">Sin documento (expediente anterior al módulo)</span>')+'</td><td>'+(y?fstamp(y.t):'')+'</td></tr>';}).join('')+'</tbody></table></div>';
   h+='<h2 class="sec" style="margin:12px 0 4px">DOCUMENTOS LABORALES (IMSS)</h2>'+((x.laborales||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha del movimiento</th><th>Fecha de carga</th><th>Usuario responsable</th><th>Archivo</th></tr></thead><tbody>'+x.laborales.map(m=>'<tr><td>'+pill(m.tipo,m.tipo==='ALTA'?'ok':'bad')+'</td><td>'+fdate(m.fMov)+'</td><td>'+fstamp(m.fCarga)+'</td><td>'+esc(nm(m.uid)||'')+'</td><td>'+rhLink(m.file,'Documento '+m.tipo)+(m.obs?'<div class="sub">'+esc(m.obs)+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay documentos de alta o baja ante el IMSS.</p>');
@@ -3464,8 +3493,9 @@ function expDetail(e){
 }
 Object.assign(A,{
   alnew(){if(S.role==='residente')altaForm(null);},
+  alnewb(){if(S.role==='residente')bajaForm(null);},
   aldir(){if(rhAdm())altaDirecta();},
-  alfix(el){const a=altaById(el.dataset.id);if(a&&a.creatorId===myId)altaForm(a);},
+  alfix(el){const a=altaById(el.dataset.id);if(a&&a.creatorId===myId){if(esBaja(a))bajaForm(a);else altaForm(a);}},
   aldraft(el){
     const root=document.querySelector('#modal');const id=el.dataset.id;const a=id?altaById(id):null;
     (async()=>{const c=await altaCollect(root,a||{docs:{}},false);const err=$('m-err');if(c.err){if(err)err.textContent=c.err;return;}
