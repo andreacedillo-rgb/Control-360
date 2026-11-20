@@ -3329,7 +3329,7 @@ function altaFormHtml(a,directa){
    '<div class="grid"><div class="f span2"><label for="al-n">Nombre completo del trabajador <i>*</i></label><input id="al-n" value="'+esc(v.nombre)+'" autocomplete="off"></div>'+
    '<div class="f"><label for="al-o">Obra o proyecto <i>*</i></label><input id="al-o" value="'+esc(v.obra)+'" list="obras" autocomplete="off"></div>'+
    (directa?'<div class="f"><label for="al-s">Sueldo base diario <i>*</i></label><input id="al-s" type="number" min="0" step="any" inputmode="decimal"></div>':'')+'</div>';
-  h+='<div class="tw"><table><thead><tr><th>Documento</th><th>Archivo cargado</th><th>Cargar / sustituir</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(v.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b> <i style="color:var(--bad,#b42318)">*</i></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td><input type="file" id="al-f-'+d[0]+'" accept="'+DOC_ACCEPT+'" aria-label="'+esc(d[1])+'"></td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<div class="tw"><table><thead><tr><th>Documento</th><th>Archivo cargado</th><th>Cargar / sustituir</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(v.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b> <i style="color:var(--bad,#b42318)">*</i></td><td id="al-st-'+d[0]+'">'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td><input type="file" id="al-f-'+d[0]+'" accept="'+DOC_ACCEPT+'" aria-label="'+esc(d[1])+'"></td></tr>';}).join('')+'</tbody></table></div>';
   return h;
 }
 async function altaCollect(root,a,exigir){
@@ -3360,6 +3360,7 @@ function altaForm(a){
     await saveAlta(x);altaNotify(x,'alta_env',re?'Solicitud de alta corregida y reenviada':'Nueva solicitud de alta',re?'media':'alta',true);
     return true;},
    extra:null});
+  if(curModal)curModal.altaDocs=(a&&a.docs)||{};
   const mb=document.querySelector('#modal .mb-f');
   if(mb&&!document.getElementById('al-draft')){const b=document.createElement('button');b.className='btn';b.id='al-draft';b.type='button';b.textContent='Guardar borrador';b.setAttribute('data-act','aldraft');b.dataset.id=a?a.id:'';mb.insertBefore(b,mb.firstChild);}
 }
@@ -3561,6 +3562,9 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.id&&el.id.indexOf('al-f-')===0){const k=el.id.slice(5),c=$('al-st-'+k),f=el.files&&el.files[0];
+    if(c){if(f){const ck=docFilesCheck([f]);c.innerHTML=ck?'<span style="color:var(--bad,#b42318);font-weight:600">'+esc(ck)+'</span>':'<span style="color:var(--ok,#1a7f4b);font-weight:600">✔ Listo para enviar: '+esc(f.name)+'</span>';}
+      else{const cur=curModal&&curModal.altaDocs&&curModal.altaDocs[k];c.innerHTML=cur?rhLink(cur.file,k):'<span class="muted">Falta</span>';}}return;}
   if(el.id==='al-e'){S.al.est=el.value;render();return;}
   if(el.dataset&&el.dataset.repf){S.rF=el.value;render();return;}
   if(el.dataset&&el.dataset.rrf){S.rpt[el.dataset.rrf]=el.value;const b=$('rr-body');if(b)b.innerHTML=repRepBody();return;}
