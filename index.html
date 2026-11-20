@@ -2190,7 +2190,7 @@ function crData(t){
   }else if(t==='alt'){
     cols=[C('Folio'),C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de solicitud'),C('Estatus de aprobación'),C('Revisó'),C('Fecha de decisión'),C('Justificación'),C('Situación laboral'),C('Documentos cargados')];
     loadNames(altaMias().map(a=>a.dec&&a.dec.uid));
-    altaMias().filter(a=>a.estado!=='borrador'||S.role==='residente').forEach(a=>{const e=empById(a.empId);rows.push({k:a.id,fecha:a.fechaSol||'',cells:[a.folio,a.nombre,a.obra||'',a.solicitante||'',a.fechaSol||'',ALTA_EST[a.estado][0],a.dec?(nm(a.dec.uid)||'Administración'):'',a.dec?isoOf(a.dec.t):'',a.dec&&a.dec.txt||'',a.estado==='aceptada'?(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0]:'',ALTA_DOCS.filter(d=>a.docs&&a.docs[d[0]]).length+' de 6']});});
+    altaMias().filter(a=>a.estado!=='borrador'||S.role==='residente').forEach(a=>{const e=empById(a.empId);rows.push({k:a.id,fecha:a.fechaSol||'',cells:[a.folio,a.nombre,a.obra||'',a.solicitante||'',a.fechaSol||'',ALTA_EST[a.estado][0],a.dec?(nm(a.dec.uid)||'Administración'):'',a.dec?isoOf(a.dec.t):'',a.dec&&a.dec.txt||'',a.estado==='aceptada'?((a.empId&&!e)?'Perfil eliminado de Nómina':(SIT_LAB[sitOf(e)]||['Sin expediente digital'])[0]):'',ALTA_DOCS.filter(d=>a.docs&&a.docs[d[0]]).length+' de 6']});});
   }else if(t==='trab'){
     cols=[C('Trabajador'),C('Obra'),C('Residente solicitante'),C('Fecha de aceptación'),C('Autorizó'),C('Situación laboral'),C('Fecha ALTA IMSS'),C('Fecha BAJA'),C('Documentos de alta')];
     loadNames(S.exps.map(x=>x.aceptadoPor));
@@ -3260,6 +3260,7 @@ const rhAdm=()=>S.role==='administracion';
 const rhView=()=>S.role==='administracion'||S.role==='direccion';
 const altaMias=()=>S.role==='residente'?S.altas.filter(a=>a.creatorId===myId):S.altas;
 const sitOf=e=>e?(e.situacion||''):'';
+const sitPillA=(a,e)=>(a.empId&&!e)?pill('Perfil eliminado de Nómina','bad'):sitPill(e);
 const sitPill=e=>{const s=SIT_LAB[sitOf(e)];return s?pill(s[0],s[1]):pill('Sin expediente digital','mute');};
 const ah=(a,txt)=>{(a.hist=a.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt});};
 const xh=(x,txt)=>{(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt});};
@@ -3422,12 +3423,12 @@ function altasHtml(){
   if(!rows.length)return h+'<div class="empty"><b>'+(sub==='pend'?'No hay solicitudes de alta pendientes':'Aún no hay solicitudes')+'</b><p>'+(R==='residente'?'Use «SOLICITAR ALTA DE TRABAJADOR» para registrar a un nuevo trabajador con sus seis documentos.':'Las solicitudes de los residentes llegan aquí con su documentación.')+'</p></div>';
   return h+'<div class="tw"><table><thead><tr><th>Folio</th><th>Trabajador</th><th>Obra</th><th>Residente</th><th>Fecha de solicitud</th><th>Estado de la solicitud</th><th>Situación laboral</th><th></th></tr></thead><tbody>'+rows.map(a=>{
     const e=empById(a.empId),st=ALTA_EST[a.estado];
-    return '<tr><td class="mono">'+esc(a.folio)+'</td><td><b>'+esc(a.nombre)+'</b></td><td>'+esc(a.obra||'—')+'</td><td>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</td><td>'+fdate(a.fechaSol||isoOf(a.creado))+'</td><td>'+pill(st[0],st[1])+'</td><td>'+(a.estado==='aceptada'?sitPill(e):'<span class="muted">—</span>')+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">'+(a.estado==='pendiente'&&rhAdm()?'Revisar':'Abrir')+'</button></td></tr>';}).join('')+'</tbody></table></div>';
+    return '<tr><td class="mono">'+esc(a.folio)+'</td><td><b>'+esc(a.nombre)+'</b></td><td>'+esc(a.obra||'—')+'</td><td>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</td><td>'+fdate(a.fechaSol||isoOf(a.creado))+'</td><td>'+pill(st[0],st[1])+'</td><td>'+(a.estado==='aceptada'?sitPillA(a,e):'<span class="muted">—</span>')+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">'+(a.estado==='pendiente'&&rhAdm()?'Revisar':'Abrir')+'</button></td></tr>';}).join('')+'</tbody></table></div>';
 }
 function altaDetail(a){
   const R=S.role,st=ALTA_EST[a.estado],e=empById(a.empId);loadNames([a.creatorId].concat((a.hist||[]).map(x=>x.uid)));
   let h='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="alback">← Volver</button><h2 class="sec" style="margin:0 auto 0 8px">'+esc(a.nombre)+' · <span class="mono">'+esc(a.folio)+'</span></h2>'+pill(st[0],st[1])+'</div>';
-  h+='<div class="card"><div class="grid"><div><span class="muted">Obra o proyecto</span><br><b>'+esc(a.obra||'—')+'</b></div><div><span class="muted">Residente que solicita</span><br><b>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</b></div><div><span class="muted">Fecha de solicitud</span><br><b>'+fdate(a.fechaSol||isoOf(a.creado))+'</b></div>'+(a.estado==='aceptada'?'<div><span class="muted">Situación laboral</span><br>'+sitPill(e)+'</div>':'')+'</div>'+
+  h+='<div class="card"><div class="grid"><div><span class="muted">Obra o proyecto</span><br><b>'+esc(a.obra||'—')+'</b></div><div><span class="muted">Residente que solicita</span><br><b>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</b></div><div><span class="muted">Fecha de solicitud</span><br><b>'+fdate(a.fechaSol||isoOf(a.creado))+'</b></div>'+(a.estado==='aceptada'?'<div><span class="muted">Situación laboral</span><br>'+sitPillA(a,e)+'</div>':'')+'</div>'+
    (a.dec&&(a.estado!=='pendiente')?'<div class="note '+(a.dec.res==='aceptada'?'':'warn')+'" style="margin-top:10px"><b>'+(a.dec.res==='aceptada'?'Aceptada':a.dec.res==='rechazada'?'Rechazada':'Devuelta para corrección')+' por '+esc(nm(a.dec.uid)||'Administración')+'</b> · '+fstamp(a.dec.t)+(a.dec.txt?'<br>'+esc(a.dec.txt):'')+'</div>':'')+'</div>';
   const mine=R==='residente'&&a.creatorId===myId&&(a.estado==='borrador'||a.estado==='devuelta'||a.estado==='rechazada');
   h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+
