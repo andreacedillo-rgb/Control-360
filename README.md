@@ -136,3 +136,6 @@ El residente también puede usar **SOLICITAR BAJA DE TRABAJADOR**: elige al trab
 
 ### Folio manual de la OC
 Al generar una orden de compra, Compras captura **manualmente el folio real**: el sistema muestra el prefijo fijo «OC-» y Compras escribe el número que le asignó (ej. 1458 → OC-1458). Es obligatorio, solo admite letras, números y - _ / . y no se puede repetir un folio ya usado. Ese folio es el que aparece en Administración, Calendario, reportes y el Centro de reportes. «No aplica OC» no cambia.
+
+### Vista «Todas» con filtros
+«Todas» (todos los perfiles que la tienen) ahora trae buscador (folio, obra, solicitante, concepto, proveedor, estatus) y filtros por estatus con contador: En proceso, Por autorizar, Autorizadas, Rechazadas y Pagadas. En Dirección, «Resueltas» muestra solo lo que Dirección ya resolvió, con un resumen de autorizadas, rechazadas y pagadas.
