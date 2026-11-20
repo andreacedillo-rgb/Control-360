@@ -139,3 +139,9 @@ Al generar una orden de compra, Compras captura **manualmente el folio real**: e
 
 ### Vista «Todas» con filtros
 «Todas» (todos los perfiles que la tienen) ahora trae buscador (folio, obra, solicitante, concepto, proveedor, estatus) y filtros por estatus con contador: En proceso, Por autorizar, Autorizadas, Rechazadas y Pagadas. En Dirección, «Resueltas» muestra solo lo que Dirección ya resolvió, con un resumen de autorizadas, rechazadas y pagadas.
+
+### Expediente completo del empleado
+- **«Nuevo empleado»** en Empleados ya no crea un empleado «a secas»: abre el alta directa, que exige nombre, obra, sueldo y los **seis documentos de alta**. Sin ellos no se registra. (Los datos de nómina —horas extra, vacaciones, jornada, días— se ajustan con «Editar datos de nómina».)
+- **Expediente** (botón en Empleados o en Altas y bajas → Trabajadores): muestra los seis documentos de alta, los documentos laborales IMSS (ALTA/BAJA), **contratos, actas administrativas y otros documentos**, solicitudes, nómina e historial.
+- **Administración** puede agregar contratos, actas administrativas, incapacidades, constancias y otros (tipo, fecha, descripción y archivo obligatorios), y es la **única que sustituye** documentación (alta, IMSS o adicionales). Toda sustitución exige motivo y conserva la versión anterior, con usuario y fecha. Los empleados anteriores al módulo pueden completar sus documentos faltantes con «Cargar».
+- Dirección consulta todo, sin botones de edición. Residente, Compras, Auditor y Sistemas no acceden a los expedientes.

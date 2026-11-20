@@ -2942,8 +2942,8 @@ const A={
   },
 
   /* nómina */
-  empnew(){if(S.role!=='administracion')return;modal({title:'Nuevo empleado',html:empFormHtml(null),ok:'Guardar empleado',wide:true,noFocus:true,onOk:root=>empSubmit(root,null)});},
-  empver(el){const e=empById(el.dataset.id);if(!e)return;modal({title:'Expediente · '+e.nombre,html:empExp(e),ok:'Cerrar',noCancel:true,noFocus:true,wide:true});},
+  empnew(){if(S.role!=='administracion')return;altaDirecta();},
+  empver(el){const e=empById(el.dataset.id);if(!e)return;S.tab='altas';S.al.open=null;S.al.exp=e.id;S.al.sub='trab';rhLog('Consultó un expediente laboral');render();},
   empedit(el){const e=empById(el.dataset.id);if(!e||S.role!=='administracion')return;closeModal();modal({title:'Editar expediente',html:empFormHtml(e),ok:'Guardar cambios',wide:true,noFocus:true,onOk:root=>empSubmit(root,e)});},
   nomnew(){if(S.role!=='residente'&&S.role!=='administracion')return;S.nd=nomNewDraft();S.nv=null;render();},
   nomopen(el){S.nv={id:el.dataset.id};S.nd=null;render();},
@@ -3517,9 +3517,11 @@ function expDetail(e){
   h+='<div class="card"><div class="grid"><div><span class="muted">Obra asignada</span><br><b>'+esc(e.obra||'—')+'</b></div><div><span class="muted">Sueldo base diario</span><br><b>'+money(e.sueldo)+'</b></div><div><span class="muted">Fecha de aceptación interna</span><br><b>'+(x.fAcept?fstamp(x.fAcept):'—')+'</b></div><div><span class="muted">Residente que solicitó</span><br><b>'+esc(x.solicitadoNom||nm(x.solicitadoPor)||'—')+'</b></div><div><span class="muted">Administrador que autorizó</span><br><b>'+esc(nm(x.aceptadoPor)||'—')+'</b></div><div><span class="muted">Folio de solicitud</span><br><b class="mono">'+esc(x.folioAlta||'—')+'</b></div></div>'+
    '<p class="muted" style="margin:10px 0 0;font-size:13px">La aceptación interna no equivale al alta formal ante el IMSS: la situación laboral cambia a «Activo» hasta cargar el acuse oficial de alta.</p></div>';
   S.altas.filter(b=>esBaja(b)&&b.empId===e.id&&(b.estado==='pendiente'||(b.estado==='aceptada'&&sitOf(e)!=='baja'))).forEach(b=>{h+='<div class="note warn" style="margin-top:10px"><b>Solicitud de baja '+esc(b.folio)+' · '+esc(ALTA_EST[b.estado][0])+'</b> · fecha propuesta '+fdate(b.fMov)+'<br>'+esc(b.motivo||'')+'</div>';});
-  h+='<div class="row" style="margin:12px 0">'+(rhAdm()?(sitOf(e)!=='activo'&&sitOf(e)!=='baja'?'<button class="btn primary" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar ALTA ante IMSS</button>':'')+(sitOf(e)!=='baja'?'<button class="btn danger" data-act="allab" data-k="BAJA" data-id="'+e.id+'">Registrar BAJA</button>':'<button class="btn" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar nueva ALTA ante IMSS</button>'):'')+'</div>';
-  h+='<h2 class="sec" style="margin:4px 0">Documentos del expediente</h2><div class="tw"><table><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1]):'<span class="muted">Sin documento (expediente anterior al módulo)</span>')+'</td><td>'+(y?fstamp(y.t):'')+'</td></tr>';}).join('')+'</tbody></table></div>';
-  h+='<h2 class="sec" style="margin:12px 0 4px">DOCUMENTOS LABORALES (IMSS)</h2>'+((x.laborales||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha del movimiento</th><th>Fecha de carga</th><th>Usuario responsable</th><th>Archivo</th></tr></thead><tbody>'+x.laborales.map(m=>'<tr><td>'+pill(m.tipo,m.tipo==='ALTA'?'ok':'bad')+'</td><td>'+fdate(m.fMov)+'</td><td>'+fstamp(m.fCarga)+'</td><td>'+esc(nm(m.uid)||'')+'</td><td>'+rhLink(m.file,'Documento '+m.tipo)+(m.obs?'<div class="sub">'+esc(m.obs)+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay documentos de alta o baja ante el IMSS.</p>');
+  h+='<div class="row" style="margin:12px 0">'+(rhAdm()?'<button class="btn" data-act="empedx" data-id="'+e.id+'">Editar datos de nómina</button>':'')+(rhAdm()?(sitOf(e)!=='activo'&&sitOf(e)!=='baja'?'<button class="btn primary" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar ALTA ante IMSS</button>':'')+(sitOf(e)!=='baja'?'<button class="btn danger" data-act="allab" data-k="BAJA" data-id="'+e.id+'">Registrar BAJA</button>':'<button class="btn" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar nueva ALTA ante IMSS</button>'):'')+'</div>';
+  const sb=(kind,key,t,txt)=>rhAdm()?'<button class="btn sm" data-act="dsub" data-id="'+e.id+'" data-kind="'+kind+'" data-key="'+esc(key)+'" data-t="'+esc(t)+'">'+txt+'</button>':'';
+  h+='<h2 class="sec" style="margin:4px 0">Documentos de alta del trabajador ('+ALTA_DOCS.filter(d=>x.docs&&x.docs[d[0]]).length+' de 6)</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th><th></th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1])+docVer(y,d[1]):'<span class="muted">Falta (expediente anterior al módulo)</span>')+'</td><td>'+(y?fstamp(y.t)+'<div class="sub">'+esc(nm(y.uid)||'')+'</div>':'')+'</td><td>'+sb('doc',d[0],d[1],y?'Sustituir':'Cargar')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<h2 class="sec" style="margin:12px 0 4px">DOCUMENTOS LABORALES (IMSS)</h2>'+((x.laborales||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha del movimiento</th><th>Fecha de carga</th><th>Usuario responsable</th><th>Archivo</th><th></th></tr></thead><tbody>'+x.laborales.map(m=>'<tr><td>'+pill(m.tipo,m.tipo==='ALTA'?'ok':'bad')+'</td><td>'+fdate(m.fMov)+'</td><td>'+fstamp(m.fCarga)+'</td><td>'+esc(nm(m.uid)||'')+'</td><td>'+rhLink(m.file,'Documento '+m.tipo)+docVer(m,'Documento '+m.tipo)+(m.obs?'<div class="sub">'+esc(m.obs)+'</div>':'')+'</td><td>'+sb('lab',m.id,m.tipo+' IMSS','Sustituir')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay documentos de alta o baja ante el IMSS.</p>');
+  h+='<div class="row" style="margin:14px 0 4px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Contratos, actas administrativas y otros documentos</h2>'+(rhAdm()?'<button class="btn primary" data-act="odoc" data-id="'+e.id+'">Agregar documento</button>':'')+'</div>'+((x.otros||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha</th><th>Descripción</th><th>Archivo</th><th>Cargado por</th><th></th></tr></thead><tbody>'+x.otros.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).map(m=>'<tr><td>'+pill(m.tipo,'info')+'</td><td>'+fdate(m.fecha)+'</td><td>'+esc(m.nota||'')+'</td><td>'+rhLink(m.file,m.tipo)+docVer(m,m.tipo)+'</td><td>'+esc(nm(m.uid)||'')+'<div class="sub">'+fstamp(m.fCarga)+'</div></td><td>'+sb('otro',m.id,m.tipo,'Sustituir')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay contratos, actas ni otros documentos.</p>');
   h+='<h2 class="sec" style="margin:12px 0 4px">Solicitudes de alta</h2>'+(al.length?'<div class="tw"><table><tbody>'+al.map(a=>'<tr><td class="mono">'+esc(a.folio)+'</td><td>'+fdate(a.fechaSol)+'</td><td>'+pill(ALTA_EST[a.estado][0],ALTA_EST[a.estado][1])+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">Abrir</button></td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Sin solicitudes registradas.</p>');
   h+='<h2 class="sec" style="margin:12px 0 4px">Nómina</h2><div class="card"><div class="grid"><div><span class="muted">Días laborados</span><br><b>'+s.dias+'</b></div><div><span class="muted">Horas extra</span><br><b>'+s.he+'</b></div><div><span class="muted">Vacaciones tomadas</span><br><b>'+s.vac+' de '+(Number(e.vacDias)||0)+'</b></div><div><span class="muted">Aguinaldo (días pagados)</span><br><b>'+s.agui+' de '+(Number(e.aguiDias)||0)+'</b></div><div><span class="muted">Inasistencias</span><br><b>'+s.faltas+'</b></div><div><span class="muted">Pagado en nóminas</span><br><b>'+money(s.pagado)+'</b></div></div></div>';
   const mv=(x.hist||[]).concat(e.hist||[]).sort((a,b)=>b.t-a.t);
@@ -3547,8 +3549,41 @@ Object.assign(A,{
   alexp(el){if(!rhView())return;S.al.exp=el.dataset.id;S.al.open=null;rhLog('Consultó un expediente laboral');render();},
   aldec(el){const a=altaById(el.dataset.id);if(a&&rhAdm())altaDecision(a,el.dataset.k);},
   allab(el){const e=empById(el.dataset.id);if(e&&rhAdm())laboralModal(e,el.dataset.k);},
+  odoc(el){const e=empById(el.dataset.id);if(e&&rhAdm())otroModal(e);},
+  dsub(el){const e=empById(el.dataset.id);if(e&&rhAdm())sustModal(e,el.dataset.kind,el.dataset.key,el.dataset.t||'documento');},
+  empedx(el){A.empedit(el);},
   rhfile(el,e){rhLog('Consultó documento laboral'+(el.dataset.t?' ('+el.dataset.t+')':''));return A.viewfile(el,e);}
 });
+const OTRO_TIPOS=['Contrato','Acta administrativa','Convenio o carta','Incapacidad','Capacitación o constancia','Otro'];
+function docVer(o,tag){return (o&&o.ver&&o.ver.length)?'<div class="sub">Versiones anteriores: '+o.ver.map(v=>rhLink(v.file,tag)+' ('+fstamp(v.t)+')').join(' · ')+'</div>':'';}
+function expBase(e){const x=expById(e.id);return x?clone(x):{id:e.id,creado:Date.now(),nombre:e.nombre,obra:e.obra,docs:{},laborales:[],hist:[],altas:[],otros:[]};}
+function otroModal(e){
+  modal({title:'Agregar documento · '+e.nombre,html:'<p class="muted" style="margin:0;font-size:13px">Contratos, actas administrativas y demás documentación del trabajador. Quedan en su expediente y solo Administración puede sustituirlos.</p><div class="grid"><div class="f span2"><label for="od-t">Tipo de documento <i>*</i></label><select id="od-t">'+OTRO_TIPOS.map(t=>'<option>'+t+'</option>').join('')+'</select></div><div class="f"><label for="od-f">Fecha del documento <i>*</i></label><input id="od-f" type="date" value="'+todayISO()+'"></div><div class="f full"><label for="od-n">Descripción u observaciones <i>*</i></label><input id="od-n" maxlength="200" autocomplete="off" placeholder="Ej. Contrato por obra determinada, acta por falta del 12/11"></div><div class="f full"><label for="od-a">Archivo <i>*</i></label><input id="od-a" type="file" accept="'+DOC_ACCEPT+'"></div></div>',ok:'Guardar documento',noFocus:true,
+   onOk:async root=>{
+    if(!rhAdm())return 'Solo Administración puede agregar documentos.';
+    const em=empById(e.id);if(!em)return 'El trabajador ya no existe.';
+    const t=root.querySelector('#od-t').value,f=root.querySelector('#od-f').value,n=root.querySelector('#od-n').value.trim(),a=root.querySelector('#od-a').files[0];
+    if(!f)return 'Indique la fecha del documento.';if(!n)return 'Escriba una descripción.';if(!a)return 'Cargue el archivo.';
+    const ck=docFilesCheck([a]);if(ck)return ck;
+    let up;try{up=await rhUpload(a);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}
+    const x=expBase(em);(x.otros=x.otros||[]).push({id:rid(),tipo:t,fecha:f,nota:n,file:up,fCarga:Date.now(),uid:myId});
+    xh(x,'Agregó documento: '+t+' · '+n+' · '+a.name);await saveExp(x);return true;}});
+}
+function sustModal(e,kind,key,etq){
+  const x0=expBase(e);let ex=false;
+  if(kind==='doc')ex=!!(x0.docs&&x0.docs[key]);else ex=true;
+  modal({title:(ex?'Sustituir':'Cargar')+' documento · '+etq,html:'<p class="muted" style="margin:0;font-size:13px">'+(ex?'El archivo actual no se borra: queda guardado como versión anterior en el expediente.':'Este documento aún no está en el expediente.')+' Solo Administración puede hacerlo.</p>'+(ex?'<div class="f"><label for="sd-m">Motivo de la sustitución <i>*</i></label><textarea id="sd-m" maxlength="500"></textarea></div>':'')+'<div class="f"><label for="sd-f">Archivo nuevo <i>*</i></label><input id="sd-f" type="file" accept="'+DOC_ACCEPT+'"></div>',ok:ex?'Sustituir':'Cargar',noFocus:true,
+   onOk:async root=>{
+    if(!rhAdm())return 'Solo Administración puede sustituir documentación.';
+    const em=empById(e.id);if(!em)return 'El trabajador ya no existe.';
+    const mm=root.querySelector('#sd-m'),m=mm?mm.value.trim():'';if(ex&&!m)return 'Escriba el motivo de la sustitución.';
+    const f=root.querySelector('#sd-f').files[0];if(!f)return 'Seleccione el archivo.';const ck=docFilesCheck([f]);if(ck)return ck;
+    let up;try{up=await rhUpload(f);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}
+    const x=expBase(em);let t=null;
+    if(kind==='doc'){x.docs=x.docs||{};t=x.docs[key];if(!t){x.docs[key]={file:up,t:Date.now(),uid:myId};xh(x,'Cargó '+etq+': '+f.name);}else{(t.ver=t.ver||[]).push({file:t.file,t:t.t,uid:t.uid});t.file=up;t.t=Date.now();t.uid=myId;xh(x,'Sustituyó '+etq+': '+f.name+' · motivo: '+m);}}
+    else{const arr=kind==='lab'?x.laborales:x.otros;t=(arr||[]).find(z=>z.id===key);if(!t)return 'No se encontró el documento.';(t.ver=t.ver||[]).push({file:t.file,t:t.fCarga,uid:t.uid});t.file=up;t.fCarga=Date.now();t.uid=myId;xh(x,'Sustituyó '+etq+': '+f.name+' · motivo: '+m);}
+    await saveExp(x);return true;}});
+}
 function altasMod(){return '';}
 
 /* ───────── eventos ───────── */
