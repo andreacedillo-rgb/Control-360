@@ -38,6 +38,7 @@ begin
     when 'nominas'            then p in ('direccion','administracion','sistemas') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente','sistemas')
     when 'empleados'          then p in ('direccion','administracion','residente','sistemas')
+    when 'proyectos'          then p = 'administracion'
     when 'altas_trabajadores' then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
     when 'expedientes_trabajadores' then p in ('direccion','administracion')
     when 'auditoria_reportes' then p in ('direccion','administracion','compras','sistemas')
@@ -77,6 +78,7 @@ begin
     when 'nominas'            then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente')
     when 'empleados'          then p in ('direccion','administracion')
+    when 'proyectos'          then p = 'administracion'
     when 'altas_trabajadores' then p = 'administracion' or (p='residente' and d->>'creatorId' = me and d->>'estado' <> 'aceptada')
     when 'expedientes_trabajadores' then p = 'administracion'
     when 'auditoria_reportes' then p in ('direccion','administracion','compras')

@@ -205,6 +205,16 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
 .ev:hover{filter:brightness(.95);text-decoration:underline}
 .pcard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);font-size:13.5px}
 .mb.wide{width:min(920px,100%)}
+.folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.folder{display:flex;flex-direction:column;align-items:stretch;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px 16px;cursor:pointer;font:inherit;color:inherit;transition:transform .12s,box-shadow .12s,border-color .12s}
+.folder:hover,.folder:focus-visible{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#E8B800}
+.folder-ic{width:76%;max-width:190px;margin:0 auto 6px}
+.folder-ic.sm{width:120px;max-width:none;margin:0;flex:none}
+.folder-t{font-weight:700;font-size:16px;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+.folder-m{font-size:13.5px;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
+.folder-m b{color:var(--text,inherit);font-weight:600}
+.calc{height:44px;box-sizing:border-box;display:flex;align-items:center;padding:0 14px;border:1px dashed var(--line);border-radius:10px;background:var(--bg,#f4f5f7);font-weight:700}
+.folder-head{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .mb-b .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px;align-items:end}
 .mb-b .grid>.f{justify-content:flex-end}
 .mb-b .grid>.f.span2{grid-column:span 2}
@@ -217,6 +227,20 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
 .mb-b .hint{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
 @media(max-width:720px){.mb-b .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mb-b .grid>.f.span2{grid-column:1/-1}}
 @media(max-width:480px){.mb-b .grid{grid-template-columns:1fr}}
+.ev.pj-ini{background:#dff3e4;color:#1d6b38;border-left:3px solid #2f8f4e}
+.ev.pj-fin{background:#fbe0e0;color:#9a2a1f;border-left:3px solid #c0392b}
+.ev.pj-fia{background:#e4ecfb;color:#24478f;border-left:3px solid #3b6fd4}
+.ev.pj-fiaf{background:#ece3fa;color:#5b2b9a;border-left:3px solid #7b4fd1}
+.saldos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px}
+.saldo{background:#e3f6e8;border:1px solid #9fd8b0;border-radius:12px;padding:16px 18px;color:#14532d}
+.saldo .l{font-size:14px;font-weight:600}.saldo b{display:block;font-size:26px;margin-top:4px}.saldo .s{font-size:12.5px;margin-top:4px;opacity:.85}
+.saldo.neg{background:#fde4e1;border-color:#e8a29a;color:#8a1f13}
+.alarma{background:#b42318;color:#fff;border-radius:14px;padding:22px 26px;margin:14px 0;box-shadow:0 0 0 4px #fbd0cb;animation:alarma 1.6s ease-in-out infinite}
+.alarma-t{font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:.3px;line-height:1.15}.alarma-d{margin-top:8px;font-size:15px;font-weight:600}
+@keyframes alarma{50%{box-shadow:0 0 0 8px #f4a79e}}@media(prefers-reduced-motion:reduce){.alarma{animation:none}}
+.ct-big .card{padding:24px}.ct-big .card b{font-size:21px!important}.ct-big .card .muted{font-size:14px}.ct-big .card .grid{gap:22px}
+.ev.pj-sir{background:#d9f2f0;color:#0d5c57;border-left:3px solid #159a92}
+.ev.pj-alerta{background:#fff3bf;color:#7a5a00;border-left:3px solid #e0a800}
 .ev.rq{background:#fdf0d5;color:#8a5a00;border-left:3px solid #d99a00}
 .leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:8px 0}
 .leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
@@ -314,7 +338,7 @@ const TABS={
   auditor:[['revisar','Por auditar'],['todas','Todas'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
   direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
-  administracion:[['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
+  administracion:[['proy','Proyectos'],['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
 };
 
 /* ───────── estado ───────── */
@@ -421,7 +445,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']],['Avisos',['notif']]];
+const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']],['Avisos',['notif']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=TABS[S.role].filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -520,6 +544,7 @@ function viewHtml(){
   if(k==='notif')return notifHtml();
   if(k==='repos')return repView();
   if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
+  if(k==='proy'&&R==='administracion')return proyHtml();
   if(k==='altas'&&(R==='residente'||R==='administracion'||R==='direccion'))return altasHtml();
   if(k==='nueva')return formHtml();
   if(k==='rep')return repHtml()+repRepCard();
@@ -889,7 +914,7 @@ function excHtml(){
 /* ───────── nómina ───────── */
 let empColl=null,nomColl=null;
 S.emps=[];S.noms=[];S.nv=null;S.nd=null;S.empQ='';S.nomF='';
-const NOMTABS=['nom','nomina','emps','nomaut','altas'];
+const NOMTABS=['nom','nomina','emps','nomaut','altas','proy'];
 const NOM_ST={elaboracion:['En elaboración','mute'],enviada:['Enviada a Administración','info'],revision:['En revisión administrativa','info'],direccion:['Pendiente de autorización de Dirección','warn'],autorizada:['Autorizada','ok'],rechazada:['Rechazada','bad']};
 const nomSt=n=>(n.estado==='elaboracion'&&n.devolucion)?['En elaboración (devuelta)','warn']:NOM_ST[n.estado];
 const DIA_ST={T:'Trabajó',D:'Descanso',V:'Vacaciones',F:'Falta'};
@@ -1182,7 +1207,7 @@ const isSelf=u=>!!u&&((u.uid&&u.uid===myId)||(S.myEmail&&String(u.email).toLower
 function stopData(){
   dataEpoch++;
   unsubs.forEach(u=>{try{if(typeof u==='function')u();}catch(e){}});unsubs=[];
-  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.reps=[];S.altas=[];S.exps=[];
+  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.reps=[];S.altas=[];S.exps=[];S.proys=[];
 }
 function sub(q,fn){
   const ep=dataEpoch;
@@ -1196,6 +1221,7 @@ function startData(R){
   if(auditColl)sub(auditColl,sn=>{if(sn)S.audit=rows(sn);const b=$('rc-audit');if(b)b.innerHTML=auditHtml();});
   if(provColl)sub(provColl,sn=>{if(sn){S.provs=rows(sn);sortProvs();}safeRender();});
   if(altasColl&&(R==='administracion'||R==='residente'||R==='direccion'))sub(own(altasColl),sn=>{if(sn){S.altas=rows(sn);S.altas.sort((a,b)=>(b.creado||0)-(a.creado||0));}safeRender();});
+  if(proyColl&&R==='administracion')sub(proyColl,sn=>{if(sn){S.proys=rows(sn);S.proys.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
   if(expColl&&(R==='administracion'||R==='direccion'))sub(expColl,sn=>{if(sn)S.exps=rows(sn);safeRender();});
   if(empColl&&(R==='administracion'||R==='residente'||R==='sistemas'||R==='direccion'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
   if(nomColl&&R!=='compras')sub(own(nomColl),sn=>{if(sn){S.noms=rows(sn);snapAll('n',S.noms);}safeRender();});
@@ -1736,7 +1762,7 @@ function docNotify(r,d,reemplazo){
 }
 /* ───────── notificaciones ───────── */
 const PRIO={critica:['Crítica','bad',0],alta:['Alta','warn',1],media:['Media','info',2],info:['Informativa','mute',3]};
-const NMODS={auditor:['Requisiciones'],residente:['Requisiciones','Gastos','Nómina','Reposiciones'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones'],sistemas:['Sistemas']};
+const NMODS={auditor:['Requisiciones'],residente:['Requisiciones','Gastos','Nómina','Reposiciones'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones','Proyectos'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones'],sistemas:['Sistemas']};
 function nPush(list){
   list.forEach(x=>{
     const n={id:rid(),t:Date.now(),by:myId,ev:x.ev,prio:x.prio,mod:x.mod,titulo:x.titulo,desc:x.desc||'',folio:x.folio||'',ref:x.ref||null,roles:x.roles||[],uid:x.uid||'',rt:x.rt||''};
@@ -1857,6 +1883,20 @@ function nDyn(){
     if(p.length)D('pag','media','Pagos','Pagos pendientes de programación',p.length+' partida(s) por pagar · '+money(sum(p.map(x=>x.l.total))),'pagar');
     if(c.length)D('cred','alta','Pagos','Pagos a crédito con saldo pendiente',c.length+' partida(s) · saldo '+money(sum(c.map(x=>saldo(x.l)))),'credito');
   }
+  if(R==='administracion'){
+    const t=todayISO();
+    S.proys.forEach(p=>(p.alertas||[]).forEach(a=>{
+      const f=alFecha(a,p),e=alEvento(a,p);if(!f||!e)return;
+      if((a.tipo==='sini'||a.tipo==='sfin')&&sirocDone(p,a.tipo==='sini'?'ini':'fin'))return;
+      const act=a.tipo==='fecha'?t===f:(t>=f&&t<=e);if(!act)return;
+      const dl=ctDiff(t,e);
+      const msg=a.tipo==='fecha'?(a.nota||'Alerta programada para hoy'):((a.nota?a.nota+' · ':'')+(dl>0?'Faltan '+dl+' día(s) para el '+alWord(a)+' ('+fdate(e)+').':'Hoy es el '+alWord(a)+'.'));
+      out.push({id:'dyn:pa:'+a.id+':'+d,t:t0,by:'',ev:'dyn',prio:(a.tipo!=='fecha'&&dl<=3)?'critica':'alta',mod:'Proyectos',titulo:'Alerta de proyecto · '+p.nombre,desc:msg,folio:'',ref:{k:'proy',id:p.id,sub:'ale'},roles:[R],uid:'',dyn:true});
+    }));
+    S.proys.forEach(p=>{const o=fueraPeriodo(p);if(!o.fia.length&&!o.sir)return;out.push({id:'dyn:fp:'+p.id+':'+d,t:t0,by:'',ev:'dyn',prio:'critica',mod:'Proyectos',titulo:'REVISAR '+(o.fia.length?'FIANZAS':'')+(o.fia.length&&o.sir?' Y ':'')+(o.sir?'SIROC':'')+' · '+p.nombre,desc:'La fecha de término vigente se sale de periodo.',folio:'',ref:{k:'proy',id:p.id,sub:'adi'},roles:[R],uid:'',dyn:true});});
+    S.proys.forEach(p=>['ini','fin'].forEach(k=>{const l=sirocLim(p,k);if(!l||sirocDone(p,k))return;const dl=ctDiff(t,l);if(dl>3)return;
+      out.push({id:'dyn:sir:'+p.id+':'+k+':'+d,t:t0,by:'',ev:'dyn',prio:'critica',mod:'Proyectos',titulo:'SIROC · '+p.nombre,desc:(k==='ini'?'Registro de la obra ante el IMSS: ':'Aviso de terminación de obra: ')+(dl<0?'venció el '+fdate(l)+' (hace '+(-dl)+' día(s)).':dl===0?'vence hoy.':'vence en '+dl+' día(s) ('+fdate(l)+').'),folio:'',ref:{k:'proy',id:p.id,sub:'sir'},roles:[R],uid:'',dyn:true});}));
+  }
   return out;
 }
 function nAll(){
@@ -1919,6 +1959,7 @@ function nGo(n){
   if(rf.k==='req'){const r=V().find(x=>x.id===rf.id);if(!r)return nope();S.open=r.id;render();return;}
   if(rf.k==='nom'){const x=nomById(rf.id);if(!x||!Vn().some(y=>y.id===x.id))return nope();const tb={residente:'nom',administracion:'nomina',direccion:'nomaut'}[S.role];if(!tb)return nope();S.tab=tb;S.nv={id:x.id};S.nd=null;S.open=null;render();return;}
   if(rf.k==='rep'){const x=repById(rf.id);if(!x||!Vp().some(y=>y.id===x.id))return nope();S.tab='repos';S.rv={id:x.id};S.open=null;S.nv=null;S.nd=null;render();return;}
+  if(rf.k==='proy'){if(S.role!=='administracion')return nope();const x=proyById(rf.id);if(!x)return nope();S.tab='proy';S.py.open=x.id;S.py.sub=rf.sub||null;S.open=null;render();return;}
   if(rf.k==='altas'){if(!['residente','administracion','direccion'].includes(S.role))return nope();const x=altaById(rf.id);if(!x||(S.role==='residente'&&x.creatorId!==myId))return nope();S.tab='altas';S.al.open=x.id;S.al.exp=null;S.open=null;S.nv=null;S.nd=null;render();return;}
   if(rf.k==='usr'){if(S.role==='sistemas'){S.tab='usuarios';S.open=null;render();}return;}
   if(rf.k==='tab'){if(TABS[S.role].some(t=>t[0]===rf.tab)){S.tab=rf.tab;S.open=null;S.nv=null;S.nd=null;render();}return;}
@@ -1940,7 +1981,7 @@ function reqEvents(){
 function calHtml(){
   const d=S.cal,y=d.getFullYear(),m=d.getMonth();
   const first=new Date(y,m,1),off=(first.getDay()+6)%7,dim=new Date(y,m+1,0).getDate();
-  const evs=ocEvents(),rqs=reqEvents();
+  const evs=ocEvents(),rqs=reqEvents(),pjs=pyEvents();
   let cells='';
   ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(x=>cells+='<div class="dow">'+x+'</div>');
   const total=Math.ceil((off+dim)/7)*7,t=todayISO();
@@ -1948,13 +1989,15 @@ function calHtml(){
     const dn=i-off+1,inM=dn>=1&&dn<=dim;
     const dt=new Date(y,m,dn),iso=dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
     const es=evs.filter(e=>e.fecha===iso),qs=rqs.filter(e=>e.fecha===iso);
-    cells+='<div class="day'+(inM?'':' off')+(iso===t?' today':'')+'"><span class="dn">'+dt.getDate()+'</span>'+qs.map(e=>'<button class="ev rq" data-act="open" data-id="'+e.rid+'" title="Se requiere material · '+esc(e.obra+' · '+e.est)+'">Req. '+esc(e.folio)+'</button>').join('')+es.map(e=>'<button class="ev" data-act="open" data-id="'+e.rid+'" title="'+esc(e.proveedor+' · '+e.obra)+'">'+esc(e.folio)+'</button>').join('')+'</div>';
+    cells+='<div class="day'+(inM?'':' off')+(iso===t?' today':'')+'"><span class="dn">'+dt.getDate()+'</span>'+qs.map(e=>'<button class="ev rq" data-act="open" data-id="'+e.rid+'" title="Se requiere material · '+esc(e.obra+' · '+e.est)+'">Req. '+esc(e.folio)+'</button>').join('')+es.map(e=>'<button class="ev" data-act="open" data-id="'+e.rid+'" title="'+esc(e.proveedor+' · '+e.obra)+'">'+esc(e.folio)+'</button>').join('')+pjs.filter(e=>e.fecha===iso).map(e=>'<button class="ev pj-'+e.tipo+'" data-act="pyopenx" data-id="'+e.pid+'" title="'+esc(e.nom+' · '+e.txt)+'">'+(e.tipo==='alerta'?'🔔 ':e.tipo==='ini'?'▶ ':e.tipo==='fin'?'■ ':e.tipo==='fia'?'🛡 ':e.tipo==='sir'?'🏗 ':'⛔ ')+esc(e.nom)+'</button>').join('')+'</div>';
   }
   const prox=evs.filter(e=>e.fecha>=t).sort((a,b)=>a.fecha<b.fecha?-1:1);
   let h='<div class="cal-h"><h2>'+d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})+'</h2><div class="row"><button class="btn sm" data-act="calprev">Anterior</button><button class="btn sm" data-act="caltoday">Hoy</button><button class="btn sm" data-act="calnext">Siguiente</button></div></div>';
-  h+='<div class="leg"><span><i style="background:#fdf0d5;border-left:3px solid #d99a00"></i>Fecha en que se requiere el material (requisición)</span><span><i style="background:var(--accent-soft)"></i>Entrega compromiso de OC</span></div>';
+  h+='<div class="leg"><span><i style="background:#fdf0d5;border-left:3px solid #d99a00"></i>Fecha en que se requiere el material (requisición)</span><span><i style="background:var(--accent-soft)"></i>Entrega compromiso de OC</span>'+(S.role==='administracion'?'<span><i style="background:#dff3e4;border-left:3px solid #2f8f4e"></i>Inicio de contrato</span><span><i style="background:#fbe0e0;border-left:3px solid #c0392b"></i>Término de contrato</span><span><i style="background:#e4ecfb;border-left:3px solid #3b6fd4"></i>Inicio de fianza</span><span><i style="background:#ece3fa;border-left:3px solid #7b4fd1"></i>Vencimiento de fianza</span><span><i style="background:#d9f2f0;border-left:3px solid #159a92"></i>Límite SIROC (IMSS)</span><span><i style="background:#fff3bf;border-left:3px solid #e0a800"></i>Alerta de proyecto</span>':'')+'</div>';
   h+='<div class="cal">'+cells+'</div>';
   const rprox=rqs.filter(e=>e.fecha>=t).sort((a,b)=>a.fecha<b.fecha?-1:1);
+  if(pjs.length){const pr=pjs.filter(e=>e.fecha>=t).sort((a,b)=>a.fecha<b.fecha?-1:1);
+    h+='<h2 class="sec">Próximos hitos y alertas de proyectos</h2>'+(pr.length?'<div class="tw"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Hito</th><th></th></tr></thead><tbody>'+pr.map(e=>'<tr><td>'+fdate(e.fecha)+'</td><td><b>'+esc(e.nom)+'</b></td><td>'+(e.tipo==='alerta'?'🔔 ':'')+esc(e.txt)+'</td><td><button class="btn sm" data-act="pyopenx" data-id="'+e.pid+'">Abrir</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty"><p>No hay hitos próximos.</p></div>');}
   h+='<h2 class="sec">Próximos requerimientos</h2>';
   if(!rprox.length)h+='<div class="empty"><p>Las fechas en que se requiere el material aparecen aquí al registrar cada requisición.</p></div>';
   else h+='<div class="tw"><table><thead><tr><th>Se requiere el</th><th>Requisición</th><th>Obra</th><th>Solicita</th><th>Estado</th><th class="num">Partidas</th><th class="num">Importe</th></tr></thead><tbody>'+rprox.map(e=>'<tr><td>'+fdate(e.fecha)+'</td><td class="mono"><a href="#" data-act="open" data-id="'+e.rid+'">'+esc(e.folio)+'</a></td><td>'+esc(e.obra)+'</td><td>'+esc(e.sol||'—')+'</td><td>'+esc(e.est)+'</td><td class="num">'+e.n+'</td><td class="num">'+money(e.total)+'</td></tr>').join('')+'</tbody></table></div>';
@@ -2621,7 +2664,7 @@ function draftToReq(d,estado){
 const A={
   navg(el){const g=el.dataset.g;S.navG=(S.navG===g)?'':g;render();},
   menu(){const sd=$('side'),ov=$('side-ov');const on=!sd.classList.contains('open');sd.classList.toggle('open',on);ov.classList.toggle('on',on);},
-  tab(el){if(!TABS[S.role].some(t=>t[0]===el.dataset.k))return;S.al.open=null;S.al.exp=null;S.nv=null;S.nd=null;$('side').classList.remove('open');$('side-ov').classList.remove('on');S.tab=el.dataset.k;S.open=null;S.rv=null;if(S.tab==='nueva'&&!S.draft)S.draft=newDraft();render();},
+  tab(el){if(!TABS[S.role].some(t=>t[0]===el.dataset.k))return;S.py.open=null;S.al.open=null;S.al.exp=null;S.nv=null;S.nd=null;$('side').classList.remove('open');$('side-ov').classList.remove('on');S.tab=el.dataset.k;S.open=null;S.rv=null;if(S.tab==='nueva'&&!S.draft)S.draft=newDraft();render();},
   open(el,e){if(e)e.preventDefault();if(S.open!==el.dataset.id)S.showHist=false;S.open=el.dataset.id;render();},
   viewfile(el,e){
     if(e)e.preventDefault();
@@ -3586,6 +3629,614 @@ function sustModal(e,kind,key,etq){
 }
 function altasMod(){return '';}
 
+/* ───────── proyectos (carpetas por obra) ───────── */
+let proyColl=null;
+S.proys=[];S.py={q:'',open:null};
+const FOLDER_SVG='<svg viewBox="0 0 200 160" width="100%" role="img" aria-hidden="true" focusable="false"><path d="M14 22a10 10 0 0 1 10-10h42q6 0 10 4l13 12q4 3 9 3h69a10 10 0 0 1 10 10v85H14z" fill="#EDB000"/><rect x="28" y="38" width="140" height="74" rx="5" fill="#fff" stroke="#E4E6E9" stroke-width="2"/><path d="M34 68q2-8 10-8h60q4 0 8-2l16-9q4-3 9-3h33q9 0 7 9l-26 86q-2 6-8 6H22q-9 0-6-9z" fill="#FDCB00"/></svg>';
+const proyById=id=>S.proys.find(x=>x.id===id);
+async function saveProy(o){
+  const copy=clone(o);const i=S.proys.findIndex(x=>x.id===o.id);if(i>=0)S.proys[i]=copy;else S.proys.push(copy);
+  S.proys.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));render();
+  if(proyColl){const ref=proyColl.doc(o.id);let err=null;try{await ref.set(copy);}catch(e1){err=e1;try{await ref.update(copy);err=null;}catch(e2){err=e2;}}
+    if(err)setTimeout(()=>toast('No se pudo guardar en la base compartida: '+((err&&(err.message||err.code))||String(err))),50);}
+}
+function proyForm(p){
+  const v=p||{nombre:'',cliente:'',ubicacion:''};
+  modal({title:p?'Editar proyecto':'Nuevo proyecto',ok:p?'Guardar cambios':'Dar de alta proyecto',wide:true,
+   html:'<div class="grid"><div class="f full"><label for="py-n">Nombre del proyecto <i>*</i></label><input id="py-n" value="'+esc(v.nombre)+'" maxlength="120" autocomplete="off"></div>'+
+    '<div class="f span2"><label for="py-c">Cliente <i>*</i></label><input id="py-c" value="'+esc(v.cliente)+'" maxlength="120" autocomplete="off"></div>'+
+    '<div class="f"><label for="py-u">Ubicación <i>*</i></label><input id="py-u" value="'+esc(v.ubicacion)+'" maxlength="160" autocomplete="off" placeholder="Ciudad, estado"></div></div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede administrar proyectos.';
+    const n=root.querySelector('#py-n').value.trim(),c=root.querySelector('#py-c').value.trim(),u=root.querySelector('#py-u').value.trim();
+    if(!n)return 'Capture el nombre del proyecto.';if(!c)return 'Capture el cliente.';if(!u)return 'Capture la ubicación.';
+    if(S.proys.some(x=>(!p||x.id!==p.id)&&normQ(x.nombre)===normQ(n)&&normQ(x.cliente)===normQ(c)))return 'Ya existe un proyecto con ese nombre para ese cliente.';
+    const x=p?clone(p):{id:rid(),creado:Date.now(),uid:myId,hist:[]};
+    const ant=p?[p.nombre,p.cliente,p.ubicacion].join('|'):'';
+    x.nombre=n;x.cliente=c;x.ubicacion=u;
+    (x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:p?'Editó los datos del proyecto':'Dio de alta el proyecto'});
+    await saveProy(x);if(S.py.open===x.id)render();return true;}});
+}
+const ctDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')?new Date(v+'T12:00:00Z'):null;
+const ctAdd=(v,n)=>{const d=ctDate(v);if(!d||!isFinite(n))return '';d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const ctDiff=(a,b)=>{const x=ctDate(a),y=ctDate(b);return x&&y?Math.round((y-x)/864e5):NaN;};
+function ctCalc(){
+  const g=id=>{const e=$(id);return e?e.value:'';},set=(id,t)=>{const e=$(id);if(e)e.textContent=t;};
+  const m=Number(g('ct-monto'))||0,pa=Number(g('ct-pa'))||0,pf=Number(g('ct-pf'))||0;
+  set('ct-anticipo',money(r2(m*pa/100)));set('ct-fondo',money(r2(m*pf/100)));
+  const ini=g('ct-ini'),fin=g('ct-fin'),d=Number(g('ct-dias'));
+  let info='';
+  if(ini&&fin){const n=ctDiff(ini,fin)+1;info=n>0?'Periodo de ejecución: '+n+' día'+(n===1?'':'s')+' naturales.':'La fecha de término debe ser posterior al inicio.';}
+  else if(ini&&d>0){info='Fecha de término calculada: '+fdate(ctAdd(ini,d-1))+'.';}
+  set('ct-plazo',info);
+}
+function ctModal(p){
+  const c=p.contrato,v=c||{ini:'',fin:'',dias:'',monto:'',pa:'',pf:''};
+  modal({title:(c?'Editar contrato · ':'Subir contrato · ')+p.nombre,wide:true,noFocus:true,ok:c?'Guardar cambios':'Registrar contrato',
+   html:'<p class="muted" style="margin:0;font-size:13px">Capture las condiciones del contrato. El anticipo y el fondo de garantía se calculan solos con el monto total.</p>'+
+   '<div class="grid"><div class="f full"><label for="ct-a">'+(c?'Archivo del contrato (opcional: solo si lo sustituye)':'Archivo del contrato')+(c?'':' <i>*</i>')+'</label><input id="ct-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f"><label for="ct-ini">Fecha de inicio <i>*</i></label><input id="ct-ini" type="date" value="'+esc(v.ini)+'"></div>'+
+   '<div class="f"><label for="ct-fin">Fecha de término</label><input id="ct-fin" type="date" value="'+esc(v.fin)+'"></div>'+
+   '<div class="f"><label for="ct-dias">o periodo de ejecución (días naturales)</label><input id="ct-dias" type="number" min="1" step="1" inputmode="numeric" value="'+esc(v.dias)+'"></div>'+
+   '<div class="f full"><span id="ct-plazo" class="muted" style="font-size:13px;min-height:18px"></span><span class="muted" style="font-size:12.5px">Capture la fecha de término <b>o</b> el periodo (uno es obligatorio); el otro se calcula solo.</span></div>'+
+   '<div class="f full"><label for="ct-monto">Monto total del contrato <i>*</i></label><input id="ct-monto" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.monto)+'"></div>'+
+   '<div class="f"><label for="ct-pa">% de anticipo <i>*</i></label><input id="ct-pa" type="number" min="0" max="100" step="any" inputmode="decimal" value="'+esc(v.pa)+'"></div>'+
+   '<div class="f"><label>Monto del anticipo</label><div class="calc" id="ct-anticipo">$0.00</div></div><div></div>'+
+   '<div class="f"><label for="ct-pf">% de fondo de garantía <i>*</i></label><input id="ct-pf" type="number" min="0" max="100" step="any" inputmode="decimal" value="'+esc(v.pf)+'"></div>'+
+   '<div class="f"><label>Monto del fondo de garantía</label><div class="calc" id="ct-fondo">$0.00</div></div><div></div>'+
+   (c?'<div class="f full"><label for="ct-m">Motivo del cambio <i>*</i></label><input id="ct-m" maxlength="300" autocomplete="off"></div>':'')+'</div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede registrar contratos.';
+    const q=id=>root.querySelector('#'+id);
+    const ini=q('ct-ini').value,fin=q('ct-fin').value,dias=Number(q('ct-dias').value),monto=Number(q('ct-monto').value),pa=q('ct-pa').value,pf=q('ct-pf').value,f=q('ct-a').files[0];
+    if(!c&&!f)return 'Cargue el archivo del contrato.';
+    if(f){const ck=docFilesCheck([f]);if(ck)return ck;}
+    if(!ini)return 'Indique la fecha de inicio.';
+    if(!fin&&!(dias>0))return 'Indique la fecha de término o el periodo de ejecución (obligatorio).';
+    let fi=fin,di=dias;
+    if(fin){di=ctDiff(ini,fin)+1;if(!(di>0))return 'La fecha de término debe ser posterior a la fecha de inicio.';if(dias>0&&dias!==di)return 'La fecha de término y el periodo no coinciden ('+di+' días entre las fechas). Deje solo uno de los dos.';}
+    else{fi=ctAdd(ini,dias-1);}
+    if(!(monto>0))return 'Capture el monto total del contrato (mayor a cero).';
+    if(pa===''||isNaN(Number(pa))||Number(pa)<0||Number(pa)>100)return 'El % de anticipo debe estar entre 0 y 100.';
+    if(pf===''||isNaN(Number(pf))||Number(pf)<0||Number(pf)>100)return 'El % de fondo de garantía debe estar entre 0 y 100.';
+    const mm=c?q('ct-m').value.trim():'';if(c&&!mm)return 'Escriba el motivo del cambio.';
+    let up=null;if(f){try{up=await rhUpload(f);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}}
+    const x=clone(p);const n=c?clone(c):{ver:[]};
+    if(up){if(c&&c.file)(n.ver=n.ver||[]).push({file:c.file,t:c.t,uid:c.uid});n.file=up;n.t=Date.now();n.uid=myId;}
+    n.ini=ini;n.fin=fi;n.dias=di;n.monto=r2(monto);n.pa=Number(pa);n.pf=Number(pf);n.anticipo=r2(monto*Number(pa)/100);n.fondo=r2(monto*Number(pf)/100);
+    x.contrato=n;(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:c?'Actualizó el contrato'+(up?' (archivo sustituido: '+f.name+')':'')+' · '+mm:'Subió el contrato '+(f?f.name:'')+' · monto '+money(n.monto)});
+    await saveProy(x);return true;}});
+  ctCalc();
+}
+function ctHtml(p){
+  const c=p.contrato;const adm=S.role==='administracion';
+  if(!c)return '<div class="empty" style="margin-top:12px"><b>Este proyecto aún no tiene contrato</b><p>Suba el contrato con sus condiciones: fechas, monto, anticipo y fondo de garantía.</p>'+(adm?'<div class="row" style="justify-content:center"><button class="btn primary" data-act="ctnew" data-id="'+p.id+'">Subir contrato</button></div>':'')+'</div>';
+  const kv=(l,v,big)=>'<div><span class="muted">'+l+'</span><br><b'+(big?' style="font-size:18px"':'')+'>'+v+'</b></div>';
+  return '<div class="row" style="margin:14px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Contrato</h2>'+(adm?'<button class="btn" data-act="ctedit" data-id="'+p.id+'">Editar condiciones o sustituir archivo</button>':'')+'</div>'+
+   '<div class="card"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">'+
+   kv('Archivo',rhLink(c.file,'Contrato')+docVer(c,'Contrato'))+kv('Fecha de inicio',fdate(c.ini))+kv('Fecha de término',fdate(c.fin))+kv('Periodo de ejecución',c.dias+' días naturales')+
+   kv('Monto total',money(c.monto),1)+kv('Anticipo ('+c.pa+'%)',money(c.anticipo),1)+kv('Fondo de garantía ('+c.pf+'%)',money(c.fondo),1)+
+   '</div><div class="sub" style="margin-top:10px">Cargado '+fstamp(c.t)+' · '+esc(nm(c.uid)||'')+'</div></div>';
+}
+Object.assign(A,{
+  ctnew(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')ctModal(p);},
+  ctedit(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')ctModal(p);}
+});
+/* fianzas */
+const FIA_TIPOS=['Cumplimiento','Anticipo','Vicios ocultos','Otra'];
+function fiaEst(f){const t=todayISO();if(t>f.fin)return ['Vencida','bad'];const d=ctDiff(t,f.fin);if(d<=30)return ['Vence en '+d+' día'+(d===1?'':'s'),'warn'];if(t<f.ini)return ['Por iniciar','info'];return ['Vigente','ok'];}
+function fiaModal(p,f){
+  const v=f||{tipo:'Cumplimiento',poliza:'',afianzadora:'',monto:'',ini:'',fin:''};
+  modal({title:(f?'Editar fianza · ':'Agregar fianza · ')+p.nombre,wide:true,noFocus:true,ok:f?'Guardar cambios':'Registrar fianza',
+   html:'<div class="grid"><div class="f full"><label for="fi-a">'+(f?'Archivo de la póliza (opcional: solo si lo sustituye)':'Archivo de la póliza')+(f?'':' <i>*</i>')+'</label><input id="fi-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f span2"><label for="fi-af">Afianzadora <i>*</i></label><input id="fi-af" value="'+esc(v.afianzadora)+'" maxlength="120" autocomplete="off"></div>'+
+   '<div class="f"><label for="fi-t">Tipo de fianza <i>*</i></label><select id="fi-t">'+FIA_TIPOS.map(t=>'<option'+(v.tipo===t?' selected':'')+'>'+t+'</option>').join('')+'</select></div>'+
+   '<div class="f"><label for="fi-ini">Fecha de inicio <i>*</i></label><input id="fi-ini" type="date" value="'+esc(v.ini)+'"></div>'+
+   '<div class="f"><label for="fi-fin">Fecha de término <i>*</i></label><input id="fi-fin" type="date" value="'+esc(v.fin)+'"></div>'+
+   '<div class="f"><label for="fi-m">Monto <i>*</i></label><input id="fi-m" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.monto)+'"></div>'+
+   '<div class="f span2"><label for="fi-p">Número de póliza (opcional)</label><input id="fi-p" value="'+esc(v.poliza||'')+'" maxlength="60" autocomplete="off"></div>'+
+   '<div class="f full"><span id="fi-info" class="muted" style="font-size:13px"></span></div>'+
+   (f?'<div class="f full"><label for="fi-mm">Motivo del cambio <i>*</i></label><input id="fi-mm" maxlength="300" autocomplete="off"></div>':'')+'</div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede registrar fianzas.';
+    const q=id=>root.querySelector('#'+id);
+    const af=q('fi-af').value.trim(),tp=q('fi-t').value,ini=q('fi-ini').value,fin=q('fi-fin').value,m=Number(q('fi-m').value),po=q('fi-p').value.trim(),file=q('fi-a').files[0];
+    if(!f&&!file)return 'Cargue el archivo de la póliza.';
+    if(file){const ck=docFilesCheck([file]);if(ck)return ck;}
+    if(!af)return 'Capture la afianzadora.';if(!ini)return 'Indique la fecha de inicio.';if(!fin)return 'Indique la fecha de término.';
+    if(!(ctDiff(ini,fin)>0))return 'La fecha de término debe ser posterior a la fecha de inicio.';
+    if(!(m>0))return 'Capture el monto de la fianza (mayor a cero).';
+    const mm=f?q('fi-mm').value.trim():'';if(f&&!mm)return 'Escriba el motivo del cambio.';
+    let up=null;if(file){try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}}
+    const x=clone(p);x.fianzas=x.fianzas||[];
+    let n=f?x.fianzas.find(z=>z.id===f.id):null;if(f&&!n)return 'La fianza ya no existe.';
+    if(!n){n={id:rid(),ver:[]};x.fianzas.push(n);}
+    if(up){if(f&&n.file)(n.ver=n.ver||[]).push({file:n.file,t:n.t,uid:n.uid});n.file=up;n.t=Date.now();n.uid=myId;}
+    n.afianzadora=af;n.tipo=tp;n.ini=ini;n.fin=fin;n.monto=r2(m);n.poliza=po;
+    (x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:(f?'Actualizó la fianza ':'Agregó la fianza ')+tp+' · '+af+' · '+money(n.monto)+(f?' · '+mm:'')});
+    await saveProy(x);return true;}});
+  const sync=()=>{const i=$('fi-ini').value,fn=$('fi-fin').value,e=$('fi-info');const n=ctDiff(i,fn)+1;e.textContent=(i&&fn)?(n>1?'Vigencia: '+n+' días naturales.':'La fecha de término debe ser posterior al inicio.'):'';};
+  ['fi-ini','fi-fin'].forEach(id=>{$(id).addEventListener('input',sync);$(id).addEventListener('change',sync);});sync();
+}
+function fianzasHtml(p){
+  const adm=S.role==='administracion',fs=(p.fianzas||[]).slice().sort((a,b)=>String(a.fin).localeCompare(String(b.fin)));
+  let h='<div class="row" style="margin:14px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Fianzas</h2>'+(adm?'<button class="btn" data-act="finew" data-id="'+p.id+'">Agregar fianza</button>':'')+'</div>';
+  if(!fs.length)return h+'<p class="muted" style="margin:0">Aún no hay fianzas registradas en este proyecto.</p>';
+  const cm=p.contrato&&p.contrato.monto;
+  return h+'<div class="tw"><table><thead><tr><th>Fianza</th><th>Afianzadora</th><th>Inicio</th><th>Término</th><th class="num">Monto</th><th>Estado</th><th>Póliza</th><th></th></tr></thead><tbody>'+fs.map(f=>{const e=fiaEst(f);return '<tr><td><b>'+esc(f.tipo)+'</b>'+(f.poliza?'<div class="sub">Póliza '+esc(f.poliza)+'</div>':'')+'</td><td>'+esc(f.afianzadora)+'</td><td>'+fdate(f.ini)+'</td><td>'+fdate(f.fin)+'</td><td class="num">'+money(f.monto)+(cm?'<div class="sub">'+r2(f.monto/cm*100)+'% del contrato</div>':'')+'</td><td>'+pill(e[0],e[1])+'</td><td>'+rhLink(f.file,'Fianza')+docVer(f,'Fianza')+'</td><td>'+(adm?'<button class="btn sm" data-act="fiedit" data-id="'+p.id+'" data-f="'+f.id+'">Editar</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  finew(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')fiaModal(p,null);},
+  fiedit(el){const p=proyById(el.dataset.id);const f=p&&fiaById(p,el.dataset.f);if(f&&S.role==='administracion')fiaModal(p,f);}
+});
+/* alertas y calendario de proyectos (solo Administración) */
+const AL_TIPOS={ini:'Antes del inicio del contrato',fin:'Antes del término del contrato',fia:'Antes del vencimiento de una fianza',sini:'Antes del límite de registro SIROC',sfin:'Antes del límite de aviso de terminación SIROC',fecha:'En una fecha específica'};
+const alWord=a=>a.tipo==='ini'?'inicio del contrato':a.tipo==='fin'?'término del contrato':a.tipo==='fia'?'vencimiento de la fianza':a.tipo==='sini'?'límite de registro SIROC':a.tipo==='sfin'?'límite de aviso de terminación SIROC':'';
+function fiaById(p,id){return (p.fianzas||[]).find(f=>f.id===id);}
+function alEvento(a,p){const c=p.contrato;if(a.tipo==='fia'){const f=fiaById(p,a.fid);return f&&f.fin;}if(a.tipo==='sini')return sirocLim(p,'ini');if(a.tipo==='sfin')return sirocLim(p,'fin');return a.tipo==='ini'?(c&&c.ini):a.tipo==='fin'?(c&&c.fin&&finEff(p)):a.fecha;}
+function alFecha(a,p){const e=alEvento(a,p);if(!e)return '';return a.tipo==='fecha'?e:ctAdd(e,-(Number(a.dias)||0));}
+function pyEvents(){
+  if(S.role!=='administracion')return [];
+  const out=[];
+  S.proys.forEach(p=>{
+    const c=p.contrato;
+    if(c){if(c.ini)out.push({pid:p.id,nom:p.nombre,tipo:'ini',fecha:c.ini,txt:'Inicio del contrato'});if(c.fin){const fv=finEff(p);if(fv!==c.fin)out.push({pid:p.id,nom:p.nombre,tipo:'fin',fecha:c.fin,txt:'Término original del contrato'});out.push({pid:p.id,nom:p.nombre,tipo:'fin',fecha:fv,txt:fv!==c.fin?'Término VIGENTE del contrato (ampliado)':'Término del contrato'});}}
+    (p.fianzas||[]).forEach(f=>{out.push({pid:p.id,nom:p.nombre,tipo:'fia',fecha:f.ini,txt:'Inicio de fianza · '+f.afianzadora});out.push({pid:p.id,nom:p.nombre,tipo:'fiaf',fecha:f.fin,txt:'Vencimiento de fianza · '+f.afianzadora+' · '+money(f.monto)});});
+    ['ini','fin'].forEach(k=>{const l=sirocLim(p,k);if(l&&!sirocDone(p,k))out.push({pid:p.id,nom:p.nombre,tipo:'sir',fecha:l,txt:k==='ini'?'Límite SIROC: registro de la obra ante el IMSS':'Límite SIROC: aviso de terminación de obra'});});
+    (p.alertas||[]).forEach(a=>{const f=alFecha(a,p);if(f)out.push({pid:p.id,nom:p.nombre,tipo:'alerta',fecha:f,txt:a.nota||(a.tipo==='fecha'?'Alerta':(a.dias+' día(s) antes del '+alWord(a)))});});
+  });
+  return out;
+}
+function alertaModal(p){
+  const c=p.contrato;
+  modal({title:'Nueva alerta · '+p.nombre,wide:true,noFocus:true,ok:'Guardar alerta',
+   html:'<p class="muted" style="margin:0;font-size:13px">La alerta aparece en el calendario y en sus notificaciones desde el día indicado hasta la fecha del evento.</p>'+
+   '<div class="grid"><div class="f full"><label for="al2-t">¿Cuándo avisar? <i>*</i></label><select id="al2-t"><option value="ini">'+AL_TIPOS.ini+'</option><option value="fin">'+AL_TIPOS.fin+'</option>'+((p.fianzas||[]).length?'<option value="fia">'+AL_TIPOS.fia+'</option>':'')+'<option value="sini">'+AL_TIPOS.sini+'</option><option value="sfin">'+AL_TIPOS.sfin+'</option><option value="fecha">'+AL_TIPOS.fecha+'</option></select></div>'+
+   '<div class="f" id="al2-dw"><label for="al2-d">Días de anticipación <i>*</i></label><input id="al2-d" type="number" min="0" step="1" inputmode="numeric" value="15"></div>'+
+   '<div class="f span2" id="al2-fiaw" style="display:none"><label for="al2-fia">Fianza <i>*</i></label><select id="al2-fia">'+(p.fianzas||[]).map(f=>'<option value="'+f.id+'">'+esc(f.tipo+' · '+f.afianzadora+' · vence '+fdate(f.fin))+'</option>').join('')+'</select></div>'+
+   '<div class="f" id="al2-fw" style="display:none"><label for="al2-f">Fecha <i>*</i></label><input id="al2-f" type="date"></div>'+
+   '<div class="f span2"><label for="al2-n">Nota (opcional)</label><input id="al2-n" maxlength="160" autocomplete="off" placeholder="Ej. Preparar estimación 1"></div>'+
+   '<div class="f full"><span id="al2-info" class="muted" style="font-size:13px"></span></div></div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede crear alertas.';
+    const t=root.querySelector('#al2-t').value,d=Number(root.querySelector('#al2-d').value),f=root.querySelector('#al2-f').value,n=root.querySelector('#al2-n').value.trim();
+    const a={id:rid(),tipo:t,nota:n,uid:myId,t:Date.now()};
+    if(t==='fecha'){if(!f)return 'Indique la fecha de la alerta.';a.fecha=f;}
+    else if(t==='fia'){const fi=fiaById(p,root.querySelector('#al2-fia').value);if(!fi)return 'Seleccione la fianza.';if(!(d>=0)||d!==Math.floor(d))return 'Los días de anticipación deben ser un número entero (0 o más).';a.dias=d;a.fid=fi.id;}
+    else if(t==='sini'||t==='sfin'){if(!sirocLim(p,t==='sini'?'ini':'fin'))return 'Primero suba el contrato o capture el registro SIROC: la alerta se calcula con esa fecha.';if(!(d>=0)||d!==Math.floor(d))return 'Los días de anticipación deben ser un número entero (0 o más).';a.dias=d;}
+    else{if(!c||!(t==='ini'?c.ini:c.fin))return 'Primero suba el contrato: la alerta se calcula con sus fechas.';if(!(d>=0)||d!==Math.floor(d))return 'Los días de anticipación deben ser un número entero (0 o más).';a.dias=d;}
+    const x=clone(p);(x.alertas=x.alertas||[]).push(a);(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Creó una alerta: '+AL_TIPOS[t]+(t==='fecha'?' ('+fdate(f)+')':' ('+d+' día(s))')+(n?' · '+n:'')});
+    await saveProy(x);return true;}});
+  const sync=()=>{const t=$('al2-t').value;$('al2-dw').style.display=t==='fecha'?'none':'';$('al2-fw').style.display=t==='fecha'?'':'none';$('al2-fiaw').style.display=t==='fia'?'':'none';
+    const tmp={tipo:t,dias:Number($('al2-d').value)||0,fecha:$('al2-f').value,fid:t==='fia'?$('al2-fia').value:''},f=alFecha(tmp,p);const e=$('al2-info');
+    e.textContent=(t==='sini'||t==='sfin')&&!f?'Esta opción requiere el contrato con fechas o el registro SIROC.':t!=='fecha'&&t!=='fia'&&t!=='sini'&&t!=='sfin'&&!(c&&(t==='ini'?c.ini:c.fin))?'Esta opción requiere que el proyecto tenga contrato con fechas.':(f?'La alerta se activará el '+fdate(f)+'.':'');};
+  ['al2-t','al2-d','al2-f','al2-fia'].forEach(id=>{$(id).addEventListener('input',sync);$(id).addEventListener('change',sync);});sync();
+}
+function alertasHtml(p){
+  const adm=S.role==='administracion',as=p.alertas||[];
+  let h='<div class="row" style="margin:14px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Alertas</h2>'+(adm?'<button class="btn" data-act="pyalert" data-id="'+p.id+'">Agregar alerta</button>':'')+'</div>';
+  if(!as.length)return h+'<p class="muted" style="margin:0">Sin alertas. Puede pedir un aviso antes del inicio o del término del contrato, o en una fecha específica.</p>';
+  const t=todayISO();
+  return h+'<div class="tw"><table><thead><tr><th>Alerta</th><th>Se activa</th><th>Evento</th><th>Estado</th><th></th></tr></thead><tbody>'+as.map(a=>{const f=alFecha(a,p),e=alEvento(a,p);const st=!f?pill('Sin fecha (falta contrato)','warn'):(t>(e||f)?pill('Vencida','mute'):(t>=f?pill('Activa','bad'):pill('Programada','info')));
+    return '<tr><td>'+esc(AL_TIPOS[a.tipo])+(a.tipo==='fia'?(fiaById(p,a.fid)?' ('+esc(fiaById(p,a.fid).afianzadora)+')':''):'')+(a.tipo!=='fecha'?' · '+a.dias+' día(s)':'')+(a.nota?'<div class="sub">'+esc(a.nota)+'</div>':'')+'</td><td>'+(f?fdate(f):'—')+'</td><td>'+(e?fdate(e):'—')+'</td><td>'+st+'</td><td>'+(adm?'<button class="btn sm" data-act="pyalertdel" data-id="'+p.id+'" data-a="'+a.id+'">Quitar</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  pyalert(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')alertaModal(p);},
+  pyalertdel(el){const p=proyById(el.dataset.id);if(!p||S.role!=='administracion')return;const a=(p.alertas||[]).find(z=>z.id===el.dataset.a);if(!a)return;
+    modal({title:'Quitar alerta',html:'<p style="margin:0">¿Quitar la alerta «'+esc(AL_TIPOS[a.tipo])+(a.nota?' · '+esc(a.nota):'')+'»?</p>',ok:'Quitar',onOk:async()=>{const x=clone(p);x.alertas=(x.alertas||[]).filter(z=>z.id!==a.id);(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Quitó una alerta: '+AL_TIPOS[a.tipo]});await saveProy(x);return true;}});},
+  pyopenx(el){if(S.role!=='administracion')return;S.tab='proy';S.py.open=el.dataset.id;S.py.sub=null;S.open=null;render();}
+});
+function proyCard(p){
+  return '<button class="folder" data-act="pyopen" data-id="'+p.id+'" aria-label="Abrir carpeta del proyecto '+esc(p.nombre)+'"><div class="folder-ic">'+FOLDER_SVG+'</div><div class="folder-t">'+esc(p.nombre)+'</div><div class="folder-m"><b>Cliente:</b> '+esc(p.cliente)+'</div><div class="folder-m"><b>Ubicación:</b> '+esc(p.ubicacion)+'</div><div style="margin-top:8px">'+(p.contrato?pill('Contrato · '+money(p.contrato.monto),'ok'):pill('Sin contrato','mute'))+((p.fianzas||[]).length?' '+pill((p.fianzas.length)+' fianza'+(p.fianzas.length===1?'':'s'),'info'):'')+((p.alertas||[]).length?' '+pill('🔔 '+p.alertas.length,'info'):'')+(S.role==='administracion'&&p.contrato&&(()=>{const o=fueraPeriodo(p);return o.fia.length||o.sir;})()?' '+pill('⚠ REVISAR · se sale de periodo','bad'):'')+'</div></button>';
+}
+function proyHtml(){
+  if(S.py.open){const p=proyById(S.py.open);if(p)return proyDetail(p);S.py.open=null;}
+  const q=normQ(S.py.q||'').trim();
+  const list=S.proys.filter(p=>!q||q.split(/\s+/).every(w=>normQ([p.nombre,p.cliente,p.ubicacion].join(' ')).indexOf(w)>=0));
+  let h='<div class="card" style="margin-bottom:14px"><div class="grid" style="align-items:end;grid-template-columns:minmax(0,1fr) auto"><div class="f"><label for="py-q">Buscar proyecto</label><input id="py-q" type="search" value="'+esc(S.py.q)+'" placeholder="Nombre, cliente o ubicación" autocomplete="off"></div><button class="btn primary" data-act="pynew" style="height:44px">Nuevo proyecto</button></div></div>';
+  if(!S.proys.length)return h+'<div class="empty"><b>Aún no hay proyectos</b><p>Dé de alta el primero con «Nuevo proyecto»: nombre, cliente y ubicación. Cada proyecto tendrá su propia carpeta.</p></div>';
+  if(!list.length)return h+'<div class="empty"><b>Ningún proyecto coincide con la búsqueda</b></div>';
+  return h+'<div class="folders">'+list.map(proyCard).join('')+'</div>';
+}
+const PY_SUBS=[['fia','Fianzas'],['adi','Aditivas y deductivas'],['fac','Facturas y estimaciones'],['sir','SIROC (IMSS)']];
+function pySubInfo(p,k){
+  if(k==='fia'){const n=(p.fianzas||[]).length;const v=(p.fianzas||[]).filter(f=>fiaEst(f)[1]==='warn'||fiaEst(f)[1]==='bad').length;return pill(n+' registrada'+(n===1?'':'s'),n?'info':'mute')+(v?' '+pill(v+' por vencer / vencida'+(v===1?'':'s'),'warn'):'');}
+  if(k==='adi'){const n=(p.adits||[]).length;return pill(n+' '+(n===1?'modificación':'modificaciones'),n?'info':'mute');}
+  if(k==='fac'){const n=(p.facturas||[]).length;return pill(n+' documento'+(n===1?'':'s'),n?'info':'mute');}
+  if(k==='sir'){const g=p.siroc&&p.siroc.reg,a=((p.siroc&&p.siroc.trab)||[]).filter(w=>!w.fBaja).length;const e1=sirocEst(p,'ini'),e2=sirocEst(p,'fin');return (g?pill('Registrada','ok'):pill(e1[1]==='bad'||e1[1]==='warn'?'Registro: '+e1[0]:'Sin registrar',e1[1]==='bad'?'bad':'mute'))+(g&&!sirocDone(p,'fin')&&(e2[1]==='bad'||e2[1]==='warn')?' '+pill('Aviso term.: '+e2[0],e2[1]):'')+' '+pill(a+' trabajador'+(a===1?'':'es'),a?'info':'mute')+((p.siroc&&p.siroc.pagos||[]).length?' '+pill((p.siroc.pagos.length)+' pago'+(p.siroc.pagos.length===1?'':'s')+' IMSS','info'):'');}
+  return '';
+}
+function pySubBody(p){
+  const k=S.py.sub,def=PY_SUBS.find(x=>x[0]===k);
+  if(def){
+    const body=k==='fia'?fianzasHtml(p):k==='fac'?facHtml(p):k==='adi'?adiHtml(p):sirocHtml(p);
+    return '<div class="row" style="margin:6px 0"><button class="btn" data-act="pysubback">← Carpeta de '+esc(p.nombre)+'</button><span class="muted" style="margin-left:8px">/ '+esc(def[1])+'</span></div>'+body;
+  }
+  return '<div class="ct-big">'+ctHtml(p)+'</div>'+actualHtml(p)+saldosHtml(p)+'<h2 class="sec" style="margin:22px 0 8px">Carpetas del proyecto</h2><div class="folders">'+PY_SUBS.map(x=>'<button class="folder" data-act="pysub" data-s="'+x[0]+'" aria-label="Abrir carpeta '+x[1]+'"><div class="folder-ic">'+FOLDER_SVG+'</div><div class="folder-t">'+x[1]+'</div><div style="margin-top:8px">'+pySubInfo(p,x[0])+'</div></button>').join('')+'</div>'+alertasHtml(p)+'<details style="margin-top:18px"><summary style="cursor:pointer;font-weight:600;padding:8px 0">Historial ('+(p.hist||[]).length+' movimientos)</summary><ul class="hist">'+(p.hist||[]).slice().reverse().map(m=>'<li><time>'+fstamp(m.t)+'</time><div><b>'+esc(nm(m.uid)||m.rol||'')+'</b> · '+esc(m.txt)+'</div></li>').join('')+'</ul></details>';
+}
+function proyDetail(p){
+  loadNames([p.uid].concat((p.hist||[]).map(m=>m.uid)));
+  return '<div class="row" style="margin-bottom:10px"><button class="btn" data-act="pyback">← Todas las carpetas</button><button class="btn" data-act="pypdf" data-id="'+p.id+'" style="margin-left:auto">Descargar reporte PDF</button><button class="btn" data-act="pyedit" data-id="'+p.id+'">Editar datos</button></div>'+
+   '<div class="card folder-head"><div class="folder-ic sm">'+FOLDER_SVG+'</div><div><h2 class="sec" style="margin:0 0 6px">'+esc(p.nombre)+'</h2><div><span class="muted">Cliente:</span> <b>'+esc(p.cliente)+'</b></div><div><span class="muted">Ubicación:</span> <b>'+esc(p.ubicacion)+'</b></div><div class="sub">Alta: '+fstamp(p.creado)+' · '+esc(nm(p.uid)||'')+'</div></div></div>'+
+   revisarHtml(p)+pySubBody(p);
+}
+Object.assign(A,{
+  pynew(){if(S.role==='administracion')proyForm(null);},
+  pyedit(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')proyForm(p);},
+  pyopen(el){S.py.open=el.dataset.id;S.py.sub=null;render();},
+  pyback(){S.py.open=null;S.py.sub=null;render();},
+  pysub(el){S.py.sub=el.dataset.s;render();},
+  pysubback(){S.py.sub=null;render();}
+});
+
+/* ───── SIROC (IMSS): registro de obra, avisos y trabajadores (solo Administración) ───── */
+const SIR_AV=['Terminación de obra','Modificación de datos','Suspensión de obra','Reanudación de obra','Otro aviso'];
+const sirocPlazo=p=>{const n=Number(p.siroc&&p.siroc.plazo);return n>=0?n:5;};
+function sirocLim(p,k){const g=p.siroc&&p.siroc.reg,c=p.contrato;
+  if(k==='ini'){const b=(g&&g.fIni)||(c&&c.ini);return b?ctAdd(b,sirocPlazo(p)):'';}
+  let b=(g&&g.fTerm)||'';const fv=c&&c.fin?finEff(p):'';if(fv&&fv>b)b=fv;return b?ctAdd(b,sirocPlazo(p)):'';}
+function sirocDone(p,k){const sr=p.siroc;if(!sr)return false;if(k==='ini')return !!sr.reg;return (sr.avisos||[]).some(a=>a.tipo==='Terminación de obra');}
+function sirocEst(p,k){const l=sirocLim(p,k);if(sirocDone(p,k))return ['Cumplido','ok'];if(!l)return ['Sin fecha base','mute'];const d=ctDiff(todayISO(),l);return d<0?['Vencido hace '+(-d)+' día(s)','bad']:(d<=3?['Vence en '+d+' día(s)','warn']:['Pendiente','info']);}
+async function sirocSave(p,fn,txt){const x=clone(p);x.siroc=x.siroc||{};fn(x.siroc);(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:txt});await saveProy(x);return true;}
+function sirocRegModal(p){
+  const g=(p.siroc&&p.siroc.reg)||null,c=p.contrato;
+  const v=g||{folio:'',patronal:'',fReg:todayISO(),fIni:(c&&c.ini)||'',fTerm:(c&&c.fin)||'',nota:''};
+  modal({title:(g?'Editar registro SIROC · ':'Registrar obra en SIROC · ')+p.nombre,wide:true,noFocus:true,ok:g?'Guardar cambios':'Registrar obra',
+   html:'<div class="grid"><div class="f span2"><label for="sr-f">Folio o número de registro de la obra <i>*</i></label><input id="sr-f" value="'+esc(v.folio)+'" maxlength="60" autocomplete="off"></div>'+
+   '<div class="f"><label for="sr-pt">Registro patronal (opcional)</label><input id="sr-pt" value="'+esc(v.patronal||'')+'" maxlength="30" autocomplete="off"></div>'+
+   '<div class="f"><label for="sr-r">Fecha de registro <i>*</i></label><input id="sr-r" type="date" value="'+esc(v.fReg)+'"></div>'+
+   '<div class="f"><label for="sr-i">Fecha de inicio de la obra <i>*</i></label><input id="sr-i" type="date" value="'+esc(v.fIni)+'"></div>'+
+   '<div class="f"><label for="sr-t">Fecha de terminación estimada <i>*</i></label><input id="sr-t" type="date" value="'+esc(v.fTerm)+'"></div>'+
+   '<div class="f"><label for="sr-pl">Plazo para avisos (días naturales) <i>*</i></label><input id="sr-pl" type="number" min="0" step="1" inputmode="numeric" value="'+sirocPlazo(p)+'"></div>'+
+   '<div class="f span2"><label for="sr-a">'+(g?'Acuse o constancia de registro (opcional: solo si lo sustituye)':'Acuse o constancia de registro')+(g?'':' <i>*</i>')+'</label><input id="sr-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f full"><label for="sr-n">Notas (opcional)</label><input id="sr-n" value="'+esc(v.nota||'')+'" maxlength="200" autocomplete="off"></div>'+
+   '<div class="f full"><span id="sr-info" class="muted" style="font-size:13px"></span></div>'+
+   (g?'<div class="f full"><label for="sr-mm">Motivo del cambio <i>*</i></label><input id="sr-mm" maxlength="300" autocomplete="off"></div>':'')+'</div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede administrar SIROC.';
+    const q=id=>root.querySelector('#'+id),file=q('sr-a').files[0];
+    const folio=q('sr-f').value.trim(),pt=q('sr-pt').value.trim(),fr=q('sr-r').value,fi=q('sr-i').value,ft=q('sr-t').value,pl=Number(q('sr-pl').value),nota=q('sr-n').value.trim();
+    if(!folio)return 'Capture el folio o número de registro de la obra.';
+    if(!fr)return 'Indique la fecha de registro.';if(!fi)return 'Indique la fecha de inicio de la obra.';if(!ft)return 'Indique la fecha de terminación estimada.';
+    if(!(ctDiff(fi,ft)>0))return 'La terminación estimada debe ser posterior al inicio.';
+    if(!(pl>=0)||pl!==Math.floor(pl))return 'El plazo para avisos debe ser un número entero de días (0 o más).';
+    if(!g&&!file)return 'Cargue el acuse o constancia de registro.';
+    if(file){const ck=docFilesCheck([file]);if(ck)return ck;}
+    const mm=g?q('sr-mm').value.trim():'';if(g&&!mm)return 'Escriba el motivo del cambio.';
+    let up=null;if(file){try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}}
+    return sirocSave(p,sr=>{const n=sr.reg||{ver:[]};if(up){if(sr.reg&&n.file)(n.ver=n.ver||[]).push({file:n.file,t:n.t,uid:n.uid});n.file=up;n.t=Date.now();n.uid=myId;}
+      n.folio=folio;n.patronal=pt;n.fReg=fr;n.fIni=fi;n.fTerm=ft;n.nota=nota;sr.reg=n;sr.plazo=pl;},(g?'Actualizó el registro SIROC · ':'Registró la obra en SIROC · folio ')+folio+(g?' · '+mm:''));}});
+  const sync=()=>{const i=$('sr-i').value,t=$('sr-t').value,pl=Number($('sr-pl').value)||0,e=$('sr-info');
+    e.textContent=(i&&t&&ctDiff(i,t)>0)?'Límite para el aviso de terminación: '+fdate(ctAdd(t,pl))+' ('+pl+' día(s) naturales después de la terminación). Confirme el plazo vigente con su asesor del IMSS.':'';};
+  ['sr-i','sr-t','sr-pl'].forEach(id=>{$(id).addEventListener('input',sync);$(id).addEventListener('change',sync);});sync();
+}
+function sirocAvModal(p){
+  modal({title:'Registrar aviso SIROC · '+p.nombre,wide:true,noFocus:true,ok:'Guardar aviso',
+   html:'<div class="grid"><div class="f span2"><label for="sv-t">Tipo de aviso <i>*</i></label><select id="sv-t">'+SIR_AV.map(t=>'<option>'+t+'</option>').join('')+'</select></div>'+
+   '<div class="f"><label for="sv-d">Fecha del aviso <i>*</i></label><input id="sv-d" type="date" value="'+todayISO()+'"></div>'+
+   '<div class="f span2"><label for="sv-fo">Folio o acuse (opcional)</label><input id="sv-fo" maxlength="60" autocomplete="off"></div>'+
+   '<div class="f full"><label for="sv-a">Archivo del aviso o acuse <i>*</i></label><input id="sv-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f full"><label for="sv-n">Notas (opcional)</label><input id="sv-n" maxlength="200" autocomplete="off"></div></div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede administrar SIROC.';
+    if(!(p.siroc&&p.siroc.reg))return 'Primero registre la obra en SIROC.';
+    const q=id=>root.querySelector('#'+id),file=q('sv-a').files[0],t=q('sv-t').value,d=q('sv-d').value;
+    if(!d)return 'Indique la fecha del aviso.';if(!file)return 'Cargue el archivo del aviso o acuse.';
+    const ck=docFilesCheck([file]);if(ck)return ck;
+    let up;try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}
+    return sirocSave(p,sr=>{(sr.avisos=sr.avisos||[]).push({id:rid(),tipo:t,fecha:d,folio:q('sv-fo').value.trim(),nota:q('sv-n').value.trim(),file:up,t:Date.now(),uid:myId});},'Registró aviso SIROC: '+t+' ('+fdate(d)+')');}});
+}
+function sirocAsig(excl){const m={};S.proys.forEach(p=>((p.siroc&&p.siroc.trab)||[]).forEach(w=>{if(!w.fBaja&&p.id!==excl)m[w.empId]=p.nombre;}));return m;}
+function sirocTrabModal(p){
+  const here=new Set(((p.siroc&&p.siroc.trab)||[]).filter(w=>!w.fBaja).map(w=>w.empId)),otras=sirocAsig(p.id);
+  const list=S.emps.filter(e=>sitOf(e)!=='baja'&&!here.has(e.id)).slice().sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
+  modal({title:'Asignar trabajadores · '+p.nombre,wide:true,noFocus:true,ok:'Asignar a la obra',
+   html:'<div class="grid"><div class="f span2"><label for="sw-q">Buscar trabajador</label><input id="sw-q" type="search" autocomplete="off" placeholder="Nombre u obra"></div><div class="f"><label for="sw-d">Fecha de alta en la obra <i>*</i></label><input id="sw-d" type="date" value="'+todayISO()+'"></div></div>'+
+   '<div id="sw-l" style="max-height:300px;overflow:auto;border:1px solid var(--line,#ddd);border-radius:10px;margin-top:8px">'+(list.length?list.map(e=>{const o=otras[e.id];return '<label class="sw-r" data-n="'+esc(normQ([e.nombre,e.obra].join(' ')))+'" style="display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line,#eee);'+(o?'opacity:.55':'')+'"><input type="checkbox" class="sw-c" value="'+esc(e.id)+'"'+(o?' disabled':'')+'><span style="flex:1"><b>'+esc(e.nombre||'')+'</b><span class="sub" style="display:block">'+esc(e.obra||'sin obra')+(o?' · ya asignado en «'+esc(o)+'»':'')+'</span></span>'+sitPill(e)+'</label>';}).join(''):'<p class="muted" style="padding:12px;margin:0">No hay trabajadores disponibles para asignar.</p>')+'</div>'+
+   '<p class="muted" style="font-size:13px;margin:8px 0 0">Un trabajador solo puede estar activo en una obra a la vez. Los que aún no tienen alta ante el IMSS se pueden asignar, pero quedarán marcados.</p>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede administrar SIROC.';
+    const ids=[].slice.call(root.querySelectorAll('.sw-c:checked')).map(i=>i.value),d=root.querySelector('#sw-d').value;
+    if(!ids.length)return 'Seleccione al menos un trabajador.';if(!d)return 'Indique la fecha de alta en la obra.';
+    const o2=sirocAsig(p.id);const bad=ids.find(i=>o2[i]);if(bad)return 'Un trabajador seleccionado ya está activo en otra obra.';
+    const nms=ids.map(i=>(empById(i)||{}).nombre||'');
+    return sirocSave(p,sr=>{sr.trab=sr.trab||[];ids.forEach(i=>sr.trab.push({id:rid(),empId:i,nombre:(empById(i)||{}).nombre||'',fAlta:d,fBaja:'',t:Date.now(),uid:myId}));},'Asignó '+ids.length+' trabajador(es) a la obra: '+nms.join(', '));}});
+  const f=()=>{const w=normQ($('sw-q').value).trim().split(/\s+/).filter(Boolean);document.querySelectorAll('#sw-l .sw-r').forEach(r=>{r.style.display=w.every(x=>(r.dataset.n||'').indexOf(x)>=0)?'':'none';});};
+  $('sw-q').addEventListener('input',f);
+}
+function sirocHtml(p){
+  const adm=S.role==='administracion',sr=p.siroc||{},g=sr.reg;
+  let h='<div class="row" style="margin:14px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">SIROC · Registro de obra ante el IMSS</h2>'+(adm?'<button class="btn'+(g?'':' primary')+'" data-act="sirreg" data-id="'+p.id+'">'+(g?'Editar registro':'Registrar obra')+'</button>':'')+'</div>';
+  const kv=(l,v)=>'<div><span class="muted">'+l+'</span><br><b>'+v+'</b></div>';
+  const e1=sirocEst(p,'ini'),e2=sirocEst(p,'fin'),l1=sirocLim(p,'ini'),l2=sirocLim(p,'fin');
+  if(!g)h+='<div class="empty"><b>La obra aún no está registrada en SIROC</b><p>Capture el folio de registro, las fechas y suba el acuse.'+(l1?' Límite para registrarla: <b>'+fdate(l1)+'</b> '+pill(e1[0],e1[1]):'')+'</p></div>';
+  else h+='<div class="card"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">'+kv('Folio de registro',esc(g.folio))+(g.patronal?kv('Registro patronal',esc(g.patronal)):'')+kv('Fecha de registro',fdate(g.fReg))+kv('Inicio de la obra',fdate(g.fIni))+kv('Terminación estimada',fdate(g.fTerm))+kv('Acuse',rhLink(g.file,'Acuse SIROC')+docVer(g,'Acuse SIROC'))+
+    kv('Registro',pill(e1[0],e1[1]))+kv('Aviso de terminación · límite '+(l2?fdate(l2):'—'),pill(e2[0],e2[1]))+'</div>'+(g.nota?'<div class="sub" style="margin-top:10px">'+esc(g.nota)+'</div>':'')+'<div class="sub" style="margin-top:6px">Plazo para avisos: '+sirocPlazo(p)+' día(s) naturales · Cargado '+fstamp(g.t)+' · '+esc(nm(g.uid)||'')+'</div></div>';
+  const av=(sr.avisos||[]).slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  h+='<div class="row" style="margin:14px 0 6px;align-items:center"><h3 class="sec" style="margin:0 auto 0 0;font-size:16px">Avisos presentados</h3>'+(adm&&g?'<button class="btn" data-act="siraviso" data-id="'+p.id+'">Registrar aviso</button>':'')+'</div>';
+  h+=av.length?'<div class="tw"><table><thead><tr><th>Aviso</th><th>Fecha</th><th>Folio / acuse</th><th>Archivo</th></tr></thead><tbody>'+av.map(a=>'<tr><td><b>'+esc(a.tipo)+'</b>'+(a.nota?'<div class="sub">'+esc(a.nota)+'</div>':'')+'</td><td>'+fdate(a.fecha)+'</td><td>'+esc(a.folio||'—')+'</td><td>'+rhLink(a.file,'Aviso')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">'+(g?'Aún no hay avisos registrados.':'Registre primero la obra para poder cargar avisos.')+'</p>';
+  h+=pagosHtml(p);
+  const tr=(sr.trab||[]).slice().sort((a,b)=>(a.fBaja?1:0)-(b.fBaja?1:0)||String(a.nombre).localeCompare(String(b.nombre),'es'));
+  const act=tr.filter(w=>!w.fBaja),sin=act.filter(w=>sitOf(empById(w.empId))!=='activo').length;
+  h+='<div class="row" style="margin:14px 0 6px;align-items:center"><h3 class="sec" style="margin:0 auto 0 0;font-size:16px">Trabajadores asignados a la obra</h3>'+(adm?'<button class="btn" data-act="sirtrab" data-id="'+p.id+'">Asignar trabajadores</button>':'')+'</div>';
+  if(!tr.length)return h+'<p class="muted" style="margin:0">Aún no hay trabajadores asignados a esta obra.</p>';
+  return h+'<div style="margin-bottom:6px">'+pill(act.length+' activo(s) en obra','ok')+(sin?' '+pill(sin+' sin alta vigente ante el IMSS','warn'):'')+'</div><div class="tw"><table><thead><tr><th>Trabajador</th><th>Situación IMSS</th><th>Alta en obra</th><th>Salida de obra</th><th></th></tr></thead><tbody>'+tr.map(w=>{const e=empById(w.empId);return '<tr><td><b>'+esc((e&&e.nombre)||w.nombre||'')+'</b>'+(e&&e.puesto?'<div class="sub">'+esc(e.puesto)+'</div>':'')+'</td><td>'+(e?sitPill(e):pill('Perfil eliminado de Nómina','bad'))+'</td><td>'+fdate(w.fAlta)+'</td><td>'+(w.fBaja?fdate(w.fBaja):'—')+'</td><td>'+(adm?(w.fBaja?'':'<button class="btn sm" data-act="sirsale" data-id="'+p.id+'" data-w="'+w.id+'">Registrar salida</button> ')+'<button class="btn sm" data-act="sirquit" data-id="'+p.id+'" data-w="'+w.id+'">Quitar</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  sirreg(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')sirocRegModal(p);},
+  siraviso(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')sirocAvModal(p);},
+  sirtrab(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')sirocTrabModal(p);},
+  sirsale(el){const p=proyById(el.dataset.id);const w=p&&((p.siroc&&p.siroc.trab)||[]).find(z=>z.id===el.dataset.w);if(!w||S.role!=='administracion')return;
+    modal({title:'Registrar salida de la obra',ok:'Registrar salida',html:'<p style="margin:0 0 10px"><b>'+esc(w.nombre||'')+'</b> deja de estar asignado a «'+esc(p.nombre)+'».</p><div class="f"><label for="ss-d">Fecha de salida <i>*</i></label><input id="ss-d" type="date" value="'+todayISO()+'"></div>',
+     onOk:async root=>{const d=root.querySelector('#ss-d').value;if(!d)return 'Indique la fecha de salida.';if(d<w.fAlta)return 'La salida no puede ser anterior al alta en la obra ('+fdate(w.fAlta)+').';
+      return sirocSave(p,sr=>{const z=sr.trab.find(q=>q.id===w.id);if(z)z.fBaja=d;},'Salida de la obra: '+(w.nombre||'')+' ('+fdate(d)+')');}});},
+  sirquit(el){const p=proyById(el.dataset.id);const w=p&&((p.siroc&&p.siroc.trab)||[]).find(z=>z.id===el.dataset.w);if(!w||S.role!=='administracion')return;
+    modal({title:'Quitar de la obra',ok:'Quitar',html:'<p style="margin:0">¿Quitar a <b>'+esc(w.nombre||'')+'</b> de la lista de la obra? Úselo solo si la asignación fue un error; para una salida real use «Registrar salida».</p>',
+     onOk:async()=>sirocSave(p,sr=>{sr.trab=(sr.trab||[]).filter(q=>q.id!==w.id);},'Quitó de la obra a '+(w.nombre||'')+' (asignación errónea)')});}
+});
+
+/* ───── Facturas y estimaciones por proyecto (solo Administración) ───── */
+const FAC_TIPOS=['Factura','Estimación'];
+function facSum(p){const c=p.contrato,f=(p.facturas||[]).filter(x=>x.cuenta);const sum=k=>r2(f.reduce((a,x)=>a+(Number(x[k])||0),0));
+  return {neto:sum('neto'),ant:sum('ant'),fg:sum('fg'),n:f.length,c:c};}
+function saldosHtml(p){
+  const t=facSum(p),c=t.c;
+  if(!c)return '<p class="muted" style="margin:14px 0 0">Suba el contrato para ver los saldos por cobrar y por amortizar.</p>';
+  const ce=cEff(p),cob=r2(ce.monto-t.neto),am=r2(ce.anticipo-t.ant),fg=r2(ce.fondo-t.fg);
+  const tile=(l,v,orig,usado,lbl)=>'<div class="saldo'+(v<0?' neg':'')+'"><div class="l">'+l+'</div><b>'+money(v)+'</b><div class="s">'+lbl+' '+money(usado)+' de '+money(orig)+(v<0?' · excede lo contratado':'')+'</div></div>';
+  return '<h2 class="sec" style="margin:22px 0 0">Saldos</h2><div class="saldos">'+tile('Por cobrar',cob,ce.monto,t.neto,'Facturado neto')+tile('Anticipo por amortizar',am,ce.anticipo,t.ant,'Amortizado')+tile('Fondo de garantía por retener',fg,ce.fondo,t.fg,'Retenido')+'</div><div class="sub" style="margin-top:6px">Los importes originales del contrato no cambian; los saldos se calculan sobre el monto vigente (con aditivas y deductivas), restando lo capturado en cada factura o estimación marcada para descontar ('+t.n+').</div>';
+}
+function facModal(p,f){
+  const v=f||{tipo:'Factura',folio:'',fecha:todayISO(),neto:'',ant:'0',fg:'0',cuenta:true,nota:''};
+  modal({title:(f?'Editar documento · ':'Subir factura o estimación · ')+p.nombre,wide:true,noFocus:true,ok:f?'Guardar cambios':'Registrar',
+   html:'<div class="grid"><div class="f full"><label for="fc-a">'+(f?'Archivo (opcional: solo si lo sustituye)':'Archivo (PDF o Excel)')+(f?'':' <i>*</i>')+'</label><input id="fc-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f"><label for="fc-t">Tipo <i>*</i></label><select id="fc-t">'+FAC_TIPOS.map(t=>'<option'+(v.tipo===t?' selected':'')+'>'+t+'</option>').join('')+'</select></div>'+
+   '<div class="f"><label for="fc-f">Folio o número <i>*</i></label><input id="fc-f" value="'+esc(v.folio)+'" maxlength="60" autocomplete="off"></div>'+
+   '<div class="f"><label for="fc-d">Fecha <i>*</i></label><input id="fc-d" type="date" value="'+esc(v.fecha)+'"></div>'+
+   '<div class="f"><label for="fc-n">Monto neto <i>*</i></label><input id="fc-n" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.neto)+'"></div>'+
+   '<div class="f"><label for="fc-an">Anticipo amortizado</label><input id="fc-an" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.ant)+'"></div>'+
+   '<div class="f"><label for="fc-fg">Fondo de garantía</label><input id="fc-fg" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.fg)+'"></div>'+
+   '<div class="f full"><label class="opt" style="display:flex;gap:8px;align-items:center"><input id="fc-c" type="checkbox"'+(v.cuenta?' checked':'')+'> Descontar estos importes de los saldos de abajo</label></div>'+
+   '<div class="f full"><label for="fc-o">Notas (opcional)</label><input id="fc-o" value="'+esc(v.nota||'')+'" maxlength="200" autocomplete="off"></div>'+
+   (f?'<div class="f full"><label for="fc-mm">Motivo del cambio <i>*</i></label><input id="fc-mm" maxlength="300" autocomplete="off"></div>':'')+'</div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede registrar facturas y estimaciones.';
+    const q=id=>root.querySelector('#'+id),file=q('fc-a').files[0];
+    const tp=q('fc-t').value,fo=q('fc-f').value.trim(),fe=q('fc-d').value,ne=Number(q('fc-n').value),an=Number(q('fc-an').value||0),fg=Number(q('fc-fg').value||0),cu=q('fc-c').checked,no=q('fc-o').value.trim();
+    if(!f&&!file)return 'Cargue el archivo (PDF o Excel).';
+    if(file){const ck=docFilesCheck([file]);if(ck)return ck;}
+    if(!fo)return 'Capture el folio o número.';if(!fe)return 'Indique la fecha.';
+    if(!(ne>0))return 'Capture el monto neto (mayor a cero).';
+    if(!(an>=0)||!(fg>=0))return 'El anticipo amortizado y el fondo de garantía no pueden ser negativos.';
+    const mm=f?q('fc-mm').value.trim():'';if(f&&!mm)return 'Escriba el motivo del cambio.';
+    let up=null;if(file){try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}}
+    {
+      const x=clone(p);x.facturas=x.facturas||[];let n=f?x.facturas.find(z=>z.id===f.id):null;if(f&&!n)return 'El documento ya no existe.';
+      if(!n){n={id:rid(),ver:[]};x.facturas.push(n);}
+      if(up){if(f&&n.file)(n.ver=n.ver||[]).push({file:n.file,t:n.t,uid:n.uid});n.file=up;n.t=Date.now();n.uid=myId;}
+      n.tipo=tp;n.folio=fo;n.fecha=fe;n.neto=r2(ne);n.ant=r2(an);n.fg=r2(fg);n.cuenta=cu;n.nota=no;
+      (x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:(f?'Actualizó ':'Registró ')+tp.toLowerCase()+' '+fo+' · neto '+money(n.neto)+' · anticipo amort. '+money(n.ant)+' · fondo '+money(n.fg)+(cu?'':' (no descuenta)')+(f?' · '+mm:'')});
+      await saveProy(x);return true;}}});
+}
+function facHtml(p){
+  const adm=S.role==='administracion',fs=(p.facturas||[]).slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  let h=saldosHtml(p)+'<div class="row" style="margin:18px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Facturas y estimaciones</h2>'+(adm?'<button class="btn primary" data-act="facnew" data-id="'+p.id+'">Subir factura o estimación</button>':'')+'</div>';
+  if(!fs.length)return h+'<p class="muted" style="margin:0">Aún no hay facturas ni estimaciones en este proyecto.</p>';
+  return h+'<div class="tw"><table><thead><tr><th>Documento</th><th>Fecha</th><th class="num">Monto neto</th><th class="num">Anticipo amortizado</th><th class="num">Fondo de garantía</th><th>Descuenta</th><th>Archivo</th><th></th></tr></thead><tbody>'+fs.map(f=>'<tr><td><b>'+esc(f.tipo)+' '+esc(f.folio)+'</b>'+(f.nota?'<div class="sub">'+esc(f.nota)+'</div>':'')+'</td><td>'+fdate(f.fecha)+'</td><td class="num">'+money(f.neto)+'</td><td class="num">'+money(f.ant)+'</td><td class="num">'+money(f.fg)+'</td><td>'+(f.cuenta?pill('Sí','ok'):pill('No','mute'))+'</td><td>'+rhLink(f.file,f.tipo)+docVer(f,f.tipo)+'</td><td>'+(adm?'<button class="btn sm" data-act="facedit" data-id="'+p.id+'" data-f="'+f.id+'">Editar</button> <button class="btn sm" data-act="facdel" data-id="'+p.id+'" data-f="'+f.id+'">Quitar</button>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  facnew(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')facModal(p,null);},
+  facedit(el){const p=proyById(el.dataset.id);const f=p&&(p.facturas||[]).find(z=>z.id===el.dataset.f);if(f&&S.role==='administracion')facModal(p,f);},
+  facdel(el){const p=proyById(el.dataset.id);const f=p&&(p.facturas||[]).find(z=>z.id===el.dataset.f);if(!f||S.role!=='administracion')return;
+    modal({title:'Quitar documento',ok:'Quitar',html:'<p style="margin:0">¿Quitar '+esc(f.tipo)+' <b>'+esc(f.folio)+'</b>? Sus importes dejarán de restarse de los saldos.</p><div class="f" style="margin-top:10px"><label for="fd-m">Motivo <i>*</i></label><input id="fd-m" maxlength="300" autocomplete="off"></div>',
+     onOk:async root=>{const m=root.querySelector('#fd-m').value.trim();if(!m)return 'Escriba el motivo.';const x=clone(p);x.facturas=(x.facturas||[]).filter(z=>z.id!==f.id);(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Quitó '+f.tipo.toLowerCase()+' '+f.folio+' · '+m});await saveProy(x);return true;}});}
+});
+
+/* ───── Aditivas y deductivas (solo Administración) ───── */
+const ADI_TIPOS=['Aditiva','Deductiva','Aditiva de tiempo'];
+const esT=x=>x.tipo==='Aditiva de tiempo';
+function adSum(p){const a=p.adits||[];const f=t=>r2(a.filter(x=>x.tipo===t).reduce((n,x)=>n+(Number(x.monto)||0),0));return {add:f('Aditiva'),ded:f('Deductiva'),n:a.filter(x=>!esT(x)).length,nt:a.filter(esT).length};}
+function cEff(p){const c=p.contrato,a=adSum(p),m=r2(c.monto+a.add-a.ded);return {monto:m,anticipo:r2(m*c.pa/100),fondo:r2(m*c.pf/100)};}
+function finEff(p,skip){const c=p.contrato;if(!c)return '';let f=c.fin;(p.adits||[]).forEach(x=>{if(esT(x)&&x.id!==skip&&x.fNueva&&x.fNueva>f)f=x.fNueva;});return f;}
+/* qué se sale de periodo con la fecha de término vigente */
+function fueraPeriodo(p,fin){
+  const c=p.contrato,out={fia:[],sir:null};if(!c)return out;fin=fin||finEff(p);if(!(fin>c.fin))return out;
+  (p.fianzas||[]).forEach(f=>{if(f.fin<fin)out.fia.push(f);});
+  const g=p.siroc&&p.siroc.reg;if(g&&g.fTerm&&g.fTerm<fin)out.sir=g;
+  return out;
+}
+function revisarHtml(p){
+  if(S.role!=='administracion'||!p.contrato)return '';
+  const o=fueraPeriodo(p),fin=finEff(p);if(!o.fia.length&&!o.sir)return '';
+  const bn=(t,d)=>'<div class="alarma" role="alert"><div class="alarma-t">⚠ '+t+'</div><div class="alarma-d">'+d+'</div></div>';
+  return (o.fia.length?bn('REVISAR FIANZAS · SE SALE DE PERIODO','La nueva fecha de término del contrato ('+fdate(fin)+') rebasa la vigencia de: '+o.fia.map(f=>esc(f.tipo+' · '+f.afianzadora+' (vence '+fdate(f.fin)+')')).join('; ')+'. Tramite la ampliación de la fianza.'):'')+
+   (o.sir?bn('REVISAR SIROC · SE SALE DE PERIODO','La nueva fecha de término del contrato ('+fdate(fin)+') es posterior a la terminación estimada registrada en SIROC ('+fdate(o.sir.fTerm)+'). Actualice el registro de la obra ante el IMSS.'):'');
+}
+function actualHtml(p){
+  const c=p.contrato,a=adSum(p);if(!c||!(a.n||a.nt))return '';
+  const e=cEff(p),fe=finEff(p);let h='';
+  if(a.n)h+='<div class="card" style="margin-top:14px;border-color:#9db8e8;background:#eef3fc"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px"><div><span class="muted">Monto original</span><br><b style="font-size:19px">'+money(c.monto)+'</b></div><div><span class="muted">Aditivas</span><br><b style="font-size:19px;color:#14532d">+ '+money(a.add)+'</b></div><div><span class="muted">Deductivas</span><br><b style="font-size:19px;color:#8a1f13">− '+money(a.ded)+'</b></div><div><span class="muted">Monto total actualizado</span><br><b style="font-size:24px;color:#1e3a8a">'+money(e.monto)+'</b></div><div><span class="muted">Anticipo ('+c.pa+'%) · Fondo ('+c.pf+'%) actualizados</span><br><b style="font-size:16px">'+money(e.anticipo)+' · '+money(e.fondo)+'</b></div></div></div>';
+  if(a.nt)h+='<div class="card" style="margin-top:14px;border-color:#9db8e8;background:#eef3fc"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px"><div><span class="muted">Fecha de término original</span><br><b style="font-size:19px">'+fdate(c.fin)+'</b></div><div><span class="muted">Días ampliados</span><br><b style="font-size:19px;color:#14532d">+ '+ctDiff(c.fin,fe)+' días</b></div><div><span class="muted">Fecha de término vigente</span><br><b style="font-size:24px;color:#1e3a8a">'+fdate(fe)+'</b></div></div></div>';
+  return h;
+}
+function adiModal(p,f){
+  const v=f||{tipo:'Aditiva',folio:'',fecha:todayISO(),monto:'',desc:'',fNueva:'',dias:''};
+  modal({title:(f?'Editar ':'Nueva ')+'aditiva o deductiva · '+p.nombre,wide:true,noFocus:true,ok:f?'Guardar cambios':'Registrar',
+   html:'<div class="grid"><div class="f full"><label for="ad-a">'+(f?'Archivo (opcional: solo si lo sustituye)':'Archivo (PDF o Excel)')+(f?'':' <i>*</i>')+'</label><input id="ad-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f"><label for="ad-t">Tipo <i>*</i></label><select id="ad-t">'+ADI_TIPOS.map(t=>'<option'+(v.tipo===t?' selected':'')+'>'+t+'</option>').join('')+'</select></div>'+
+   '<div class="f"><label for="ad-f">Folio o número <i>*</i></label><input id="ad-f" value="'+esc(v.folio)+'" maxlength="60" autocomplete="off"></div>'+
+   '<div class="f"><label for="ad-d">Fecha del documento <i>*</i></label><input id="ad-d" type="date" value="'+esc(v.fecha)+'"></div>'+
+   '<div class="f" id="ad-mw"><label for="ad-m">Monto <i>*</i></label><input id="ad-m" type="number" min="0" step="any" inputmode="decimal" value="'+esc(v.monto)+'"></div>'+
+   '<div class="f" id="ad-dw" style="display:none"><label for="ad-di">Días de ampliación <i>*</i></label><input id="ad-di" type="number" min="1" step="1" inputmode="numeric" value="'+esc(v.dias||'')+'"></div>'+
+   '<div class="f" id="ad-fw" style="display:none"><label for="ad-fn">Nueva fecha de término <i>*</i></label><input id="ad-fn" type="date" value="'+esc(v.fNueva||'')+'"></div>'+
+   '<div class="f span2"><label for="ad-o">Concepto o descripción (opcional)</label><input id="ad-o" value="'+esc(v.desc||'')+'" maxlength="200" autocomplete="off"></div>'+
+   '<div class="f full"><span id="ad-info" class="muted" style="font-size:13px"></span></div>'+
+   (f?'<div class="f full"><label for="ad-mm">Motivo del cambio <i>*</i></label><input id="ad-mm" maxlength="300" autocomplete="off"></div>':'')+'</div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede registrar aditivas y deductivas.';
+    if(!p.contrato)return 'Primero suba el contrato.';
+    const q=id=>root.querySelector('#'+id),file=q('ad-a').files[0];
+    const tp=q('ad-t').value,fo=q('ad-f').value.trim(),fe=q('ad-d').value,m=Number(q('ad-m').value),de=q('ad-o').value.trim(),fn=q('ad-fn').value;
+    if(!f&&!file)return 'Cargue el archivo (PDF o Excel).';
+    if(file){const ck=docFilesCheck([file]);if(ck)return ck;}
+    if(!fo)return 'Capture el folio o número.';if(!fe)return 'Indique la fecha del documento.';
+    const tiempo=tp==='Aditiva de tiempo';
+    const prev=finEff(p,f&&f.id);
+    if(tiempo){if(!fn)return 'Indique la nueva fecha de término (o los días de ampliación).';if(!(fn>prev))return 'La nueva fecha de término debe ser posterior a la vigente ('+fdate(prev)+').';}
+    else if(!(m>0))return 'Capture el monto (mayor a cero).';
+    const mm=f?q('ad-mm').value.trim():'';if(f&&!mm)return 'Escriba el motivo del cambio.';
+    const x=clone(p);x.adits=x.adits||[];let n=f?x.adits.find(z=>z.id===f.id):null;if(f&&!n)return 'El registro ya no existe.';
+    if(!n){n={id:rid(),ver:[]};x.adits.push(n);}
+    const old=clone(n);n.tipo=tp;n.monto=tiempo?0:r2(m);n.fNueva=tiempo?fn:'';n.dias=tiempo?ctDiff(prev,fn):'';n.finPrev=tiempo?prev:'';
+    if(!tiempo&&cEff(x).monto<=0){Object.keys(n).forEach(k=>delete n[k]);Object.assign(n,old);return 'Con esta deductiva el monto total actualizado quedaría en cero o negativo.';}
+    let up=null;if(file){try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}}
+    if(up){if(f&&n.file)(n.ver=n.ver||[]).push({file:n.file,t:n.t,uid:n.uid});n.file=up;n.t=Date.now();n.uid=myId;}
+    n.folio=fo;n.fecha=fe;n.desc=de;
+    (x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:(f?'Actualizó ':'Registró ')+tp.toLowerCase()+' '+fo+' · '+(tiempo?'nueva fecha de término '+fdate(fn)+' (+'+n.dias+' días)':money(n.monto)+' · total actualizado '+money(cEff(x).monto))+(f?' · '+mm:'')});
+    const o=tiempo?fueraPeriodo(x,finEff(x)):null;
+    await saveProy(x);if(o&&(o.fia.length||o.sir))setTimeout(()=>toast('REVISAR '+(o.fia.length?'FIANZAS':'')+(o.fia.length&&o.sir?' Y ':'')+(o.sir?'SIROC':'')+': la nueva fecha se sale de periodo.'),80);return true;}});
+  const sync=()=>{const c=p.contrato,t=$('ad-t').value,e=$('ad-info'),tiempo=t==='Aditiva de tiempo';
+    $('ad-mw').style.display=tiempo?'none':'';$('ad-dw').style.display=tiempo?'':'none';$('ad-fw').style.display=tiempo?'':'none';
+    if(!c){e.textContent='Primero suba el contrato.';return;}
+    if(tiempo){const prev=finEff(p,f&&f.id),fn=$('ad-fn').value;if(!fn){e.textContent='Fecha de término vigente: '+fdate(prev)+' (original '+fdate(c.fin)+').';return;}
+      const x=clone(p);x.adits=(x.adits||[]).filter(z=>!f||z.id!==f.id);x.adits.push({id:'tmp',tipo:'Aditiva de tiempo',fNueva:fn});const o=fueraPeriodo(x,finEff(x));
+      e.innerHTML='Nueva fecha de término: <b>'+fdate(fn)+'</b> (original '+fdate(c.fin)+')'+((o.fia.length||o.sir)?'<div style="margin-top:8px;padding:10px 12px;border-radius:8px;background:#b42318;color:#fff;font-weight:800;font-size:15px">⚠ REVISAR '+(o.fia.length?'FIANZAS':'')+(o.fia.length&&o.sir?' Y ':'')+(o.sir?'SIROC':'')+' · SE SALE DE PERIODO</div>':'');return;}
+    const m=Number($('ad-m').value)||0,a=adSum(p);let cur=a.add-a.ded;if(f&&!esT(f))cur-=(f.tipo==='Aditiva'?1:-1)*f.monto;const nuevo=r2(c.monto+cur+(t==='Aditiva'?m:-m));e.textContent='Monto total actualizado resultante: '+money(nuevo)+' (original '+money(c.monto)+').';};
+  const fromDias=()=>{const prev=finEff(p,f&&f.id),d=Number($('ad-di').value);if(d>0)$('ad-fn').value=ctAdd(prev,d);sync();};
+  const fromFecha=()=>{const prev=finEff(p,f&&f.id),fn=$('ad-fn').value;$('ad-di').value=fn?ctDiff(prev,fn):'';sync();};
+  $('ad-t').addEventListener('change',sync);$('ad-m').addEventListener('input',sync);$('ad-di').addEventListener('input',fromDias);$('ad-fn').addEventListener('change',fromFecha);$('ad-fn').addEventListener('input',fromFecha);sync();
+}
+function adiHtml(p){
+  const adm=S.role==='administracion',fs=(p.adits||[]).slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  let h=(p.contrato?'':'<p class="muted">Suba el contrato para registrar aditivas y deductivas.</p>')+(actualHtml(p)||'')+'<div class="row" style="margin:18px 0 6px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Aditivas y deductivas</h2>'+(adm&&p.contrato?'<button class="btn primary" data-act="adinew" data-id="'+p.id+'">Subir aditiva, deductiva o de tiempo</button>':'')+'</div>';
+  if(!fs.length)return h+'<p class="muted" style="margin:0">Aún no hay aditivas ni deductivas. El monto y la fecha de término originales del contrato se conservan siempre.</p>';
+  return h+'<div class="tw"><table><thead><tr><th>Documento</th><th>Fecha</th><th class="num">Monto / nueva fecha</th><th>Archivo</th><th></th></tr></thead><tbody>'+fs.map(f=>'<tr><td><b>'+esc(f.tipo)+' '+esc(f.folio)+'</b>'+(f.desc?'<div class="sub">'+esc(f.desc)+'</div>':'')+'</td><td>'+fdate(f.fecha)+'</td><td class="num" style="color:'+(esT(f)?'#1e3a8a':f.tipo==='Aditiva'?'#14532d':'#8a1f13')+'">'+(esT(f)?fdate(f.fNueva)+'<div class="sub">+ '+f.dias+' días sobre '+fdate(f.finPrev)+'</div>':(f.tipo==='Aditiva'?'+ ':'− ')+money(f.monto))+'</td><td>'+rhLink(f.file,f.tipo)+docVer(f,f.tipo)+'</td><td>'+(adm?'<button class="btn sm" data-act="adiedit" data-id="'+p.id+'" data-f="'+f.id+'">Editar</button> <button class="btn sm" data-act="adidel" data-id="'+p.id+'" data-f="'+f.id+'">Quitar</button>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  adinew(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')adiModal(p,null);},
+  adiedit(el){const p=proyById(el.dataset.id);const f=p&&(p.adits||[]).find(z=>z.id===el.dataset.f);if(f&&S.role==='administracion')adiModal(p,f);},
+  adidel(el){const p=proyById(el.dataset.id);const f=p&&(p.adits||[]).find(z=>z.id===el.dataset.f);if(!f||S.role!=='administracion')return;
+    modal({title:'Quitar '+f.tipo.toLowerCase(),ok:'Quitar',html:'<p style="margin:0">¿Quitar '+esc(f.tipo)+' <b>'+esc(f.folio)+'</b>? El monto total actualizado se recalculará.</p><div class="f" style="margin-top:10px"><label for="adx-m">Motivo <i>*</i></label><input id="adx-m" maxlength="300" autocomplete="off"></div>',
+     onOk:async root=>{const m=root.querySelector('#adx-m').value.trim();if(!m)return 'Escriba el motivo.';const x=clone(p);x.adits=(x.adits||[]).filter(z=>z.id!==f.id);if(cEff(x).monto<=0)return 'Al quitarla, el monto total actualizado quedaría en cero o negativo.';(x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Quitó '+f.tipo.toLowerCase()+' '+f.folio+' · '+m});await saveProy(x);return true;}});}
+});
+
+/* ───── Pagos de seguro social (IMSS) ───── */
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const mesLbl=m=>{const a=String(m||'').split('-');return a.length===2?MESES[Number(a[1])-1]+' '+a[0]:'—';};
+const mesAdd=(m,n)=>{const a=m.split('-').map(Number);const t=a[0]*12+(a[1]-1)+n;return Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');};
+const perLbl=x=>x.desde===x.hasta?mesLbl(x.desde):mesLbl(x.desde)+' a '+mesLbl(x.hasta);
+function pagoModal(p){
+  const pg=(p.siroc&&p.siroc.pagos)||[];const ult=pg.reduce((m,x)=>x.hasta>m?x.hasta:m,'');
+  const ini=ult?mesAdd(ult,1):todayISO().slice(0,7);
+  const sug=h=>mesAdd(h,2)+'-12';
+  modal({title:'Subir pago de seguro social · '+p.nombre,wide:true,noFocus:true,ok:'Registrar pago y alerta',
+   html:'<div class="grid"><div class="f full"><label for="pg-a">Comprobante de pago (PDF o Excel) <i>*</i></label><input id="pg-a" type="file" accept="'+DOC_ACCEPT+'"></div>'+
+   '<div class="f"><label for="pg-d">Periodo pagado: desde <i>*</i></label><input id="pg-d" type="month" value="'+ini+'"></div>'+
+   '<div class="f"><label for="pg-h">Hasta <i>*</i></label><input id="pg-h" type="month" value="'+ini+'"></div>'+
+   '<div class="f"><label for="pg-f">Fecha de pago <i>*</i></label><input id="pg-f" type="date" value="'+todayISO()+'"></div>'+
+   '<div class="f"><label for="pg-m">Monto pagado (opcional)</label><input id="pg-m" type="number" min="0" step="any" inputmode="decimal"></div>'+
+   '<div class="f span2"><label for="pg-n">Notas (opcional)</label><input id="pg-n" maxlength="200" autocomplete="off"></div>'+
+   '<div class="f full" style="border-top:1px solid var(--line,#ddd);padding-top:12px"><b>Alerta para revisar el pago del siguiente periodo</b><div id="pg-sig" class="muted" style="font-size:13px;margin-top:2px"></div></div>'+
+   '<div class="f"><label for="pg-al">Fecha de la alerta <i>*</i></label><input id="pg-al" type="date" value="'+sug(ini)+'"></div></div>',
+   onOk:async root=>{
+    if(S.role!=='administracion')return 'Solo Administración puede registrar pagos.';
+    const q=id=>root.querySelector('#'+id),file=q('pg-a').files[0];
+    const d=q('pg-d').value,h=q('pg-h').value,fp=q('pg-f').value,m=q('pg-m').value,al=q('pg-al').value,no=q('pg-n').value.trim();
+    if(!file)return 'Cargue el comprobante de pago.';const ck=docFilesCheck([file]);if(ck)return ck;
+    if(!d||!h)return 'Indique el periodo pagado (desde y hasta).';if(h<d)return 'El periodo «hasta» no puede ser anterior al «desde».';
+    if(!fp)return 'Indique la fecha de pago.';
+    if(m!==''&&!(Number(m)>=0))return 'El monto no puede ser negativo.';
+    if(!al)return 'Indique la fecha de la alerta para revisar el siguiente periodo.';
+    const ex=pg.find(x=>d<=x.hasta&&h>=x.desde);if(ex)return 'Ya hay un pago registrado que se traslapa con ese periodo ('+perLbl(ex)+').';
+    let up;try{up=await rhUpload(file);}catch(er){return (er&&er.message)||'No se pudo subir el archivo.';}
+    const x=clone(p);x.siroc=x.siroc||{};x.siroc.pagos=x.siroc.pagos||[];
+    const aid=rid(),sig=mesAdd(h,1);
+    x.siroc.pagos.push({id:rid(),desde:d,hasta:h,fPago:fp,monto:m===''?null:r2(Number(m)),nota:no,file:up,t:Date.now(),uid:myId,alertaId:aid});
+    (x.alertas=x.alertas||[]).push({id:aid,tipo:'fecha',fecha:al,nota:'Revisar pago de seguro social del periodo '+mesLbl(sig),uid:myId,t:Date.now()});
+    (x.hist=x.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Registró pago de seguro social del periodo '+perLbl({desde:d,hasta:h})+(m!==''?' · '+money(Number(m)):'')+' · alerta para revisar '+mesLbl(sig)+' el '+fdate(al)});
+    await saveProy(x);return true;}});
+  const sync=()=>{const h=$('pg-h').value,d=$('pg-d').value;if(d&&$('pg-h').value<d)$('pg-h').value=d;const hh=$('pg-h').value;if(!hh)return;$('pg-sig').textContent='Siguiente periodo por revisar: '+mesLbl(mesAdd(hh,1))+'. Fecha sugerida: el 12 del mes siguiente a ese periodo (confirme el límite de pago vigente con su asesor del IMSS).';};
+  $('pg-d').addEventListener('change',sync);$('pg-h').addEventListener('change',()=>{const h=$('pg-h').value;sync();$('pg-al').value=sug($('pg-h').value||h);});
+  $('pg-d').addEventListener('change',()=>{$('pg-al').value=sug($('pg-h').value);});sync();
+}
+function pagosHtml(p){
+  const adm=S.role==='administracion',pg=((p.siroc&&p.siroc.pagos)||[]).slice().sort((a,b)=>String(b.hasta).localeCompare(String(a.hasta)));
+  let h='<div class="row" style="margin:14px 0 6px;align-items:center"><h3 class="sec" style="margin:0 auto 0 0;font-size:16px">Pagos de seguro social</h3>'+(adm?'<button class="btn" data-act="pagonew" data-id="'+p.id+'">Subir pago</button>':'')+'</div>';
+  if(!pg.length)return h+'<p class="muted" style="margin:0">Aún no hay pagos registrados. Al subir uno se le pedirá el periodo pagado y una alerta para revisar el siguiente.</p>';
+  const sig=mesAdd(pg[0].hasta,1);
+  return h+'<div style="margin-bottom:6px">'+pill('Último periodo pagado: '+mesLbl(pg[0].hasta),'ok')+' '+pill('Siguiente por revisar: '+mesLbl(sig),'info')+'</div><div class="tw"><table><thead><tr><th>Periodo pagado</th><th>Fecha de pago</th><th class="num">Monto</th><th>Comprobante</th><th></th></tr></thead><tbody>'+pg.map(x=>'<tr><td><b>'+esc(perLbl(x))+'</b>'+(x.nota?'<div class="sub">'+esc(x.nota)+'</div>':'')+'</td><td>'+fdate(x.fPago)+'</td><td class="num">'+(x.monto==null?'—':money(x.monto))+'</td><td>'+rhLink(x.file,'Pago IMSS')+'</td><td>'+(adm?'<button class="btn sm" data-act="pagodel" data-id="'+p.id+'" data-w="'+x.id+'">Quitar</button>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+}
+Object.assign(A,{
+  pagonew(el){const p=proyById(el.dataset.id);if(p&&S.role==='administracion')pagoModal(p);},
+  pagodel(el){const p=proyById(el.dataset.id);const x=p&&((p.siroc&&p.siroc.pagos)||[]).find(z=>z.id===el.dataset.w);if(!x||S.role!=='administracion')return;
+    modal({title:'Quitar pago',ok:'Quitar',html:'<p style="margin:0">¿Quitar el pago del periodo <b>'+esc(perLbl(x))+'</b>? También se quitará su alerta de revisión si aún existe.</p><div class="f" style="margin-top:10px"><label for="pgx-m">Motivo <i>*</i></label><input id="pgx-m" maxlength="300" autocomplete="off"></div>',
+     onOk:async root=>{const m=root.querySelector('#pgx-m').value.trim();if(!m)return 'Escriba el motivo.';const y=clone(p);y.siroc.pagos=y.siroc.pagos.filter(z=>z.id!==x.id);if(x.alertaId)y.alertas=(y.alertas||[]).filter(z=>z.id!==x.alertaId);(y.hist=y.hist||[]).push({t:Date.now(),uid:myId,rol:ROLES[S.role],txt:'Quitó el pago de seguro social '+perLbl(x)+' · '+m});await saveProy(y);return true;}});}
+});
+
+/* ───── Reporte PDF del proyecto (solo datos, no los archivos subidos) ───── */
+function proyPdf(p){
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No se cargó el generador de PDF. Revise su conexión y recargue la página.');
+  const doc=new J({orientation:'portrait',unit:'mm',format:'letter'});
+  if(typeof doc.autoTable!=='function')throw new Error('No se cargó el generador de tablas del PDF. Recargue la página.');
+  const H=doc.internal.pageSize.getHeight(),fn=f=>(f&&f.name)||'-',who=(u,t)=>[u?nm(u):'',t?fstamp(t):''].filter(Boolean).join(' · ')||'-';
+  let y=pdfHead(doc,'Reporte del proyecto: '+p.nombre,'Cliente: '+(p.cliente||'-')+'  |  Ubicación: '+(p.ubicacion||'-'));
+  const sec=t=>{if(y>H-40){doc.addPage();y=20;}doc.setTextColor(11,95,122);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(pdfT(t),14,y);doc.setDrawColor(11,95,122);doc.line(14,y+1.5,202,y+1.5);doc.setTextColor(20,35,43);y+=8;};
+  const info=pairs=>{if(y>H-30){doc.addPage();y=20;}y=pdfInfo(doc,y,pairs);};
+  const tbl=(head,body,cols)=>{doc.autoTable({startY:y,head:[head],body:body.map(r=>r.map(pdfT)),styles:{fontSize:8.5,cellPadding:2,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[11,95,122],textColor:255},alternateRowStyles:{fillColor:[245,248,249]},columnStyles:cols||{},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+6;};
+  const vacio=t=>{doc.setFont('helvetica','italic');doc.setFontSize(9.5);doc.text(pdfT(t),14,y);doc.setFont('helvetica','normal');y+=8;};
+  const R={halign:'right'};
+  info([['Proyecto',p.nombre],['Cliente',p.cliente||'-'],['Ubicación',p.ubicacion||'-'],['Alta del proyecto',who(p.uid,p.creado)]]);
+  const c=p.contrato,o=c?fueraPeriodo(p):{fia:[],sir:null};
+  if(o.fia.length||o.sir){sec('REVISAR: se sale de periodo');
+    const par=(t,d)=>{const L=doc.splitTextToSize(pdfT(d),182);if(y+L.length*5+10>H-20){doc.addPage();y=20;}doc.setTextColor(180,35,24);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(pdfT(t),14,y);y+=5.5;doc.setTextColor(20,35,43);doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.text(L,14,y);y+=L.length*4.6+4;};
+    if(o.fia.length)par('REVISAR FIANZAS - SE SALE DE PERIODO',o.fia.map(f=>f.tipo+' '+f.afianzadora+' (vence '+fdate(f.fin)+')').join('; ')+'. Vencen antes de la fecha de término vigente del contrato ('+fdate(finEff(p))+').');
+    if(o.sir)par('REVISAR SIROC - SE SALE DE PERIODO','La terminación estimada del registro ('+fdate(o.sir.fTerm)+') es anterior a la fecha de término vigente del contrato ('+fdate(finEff(p))+').');}
+  sec('Contrato');
+  if(!c)vacio('Sin contrato registrado.');
+  else{
+    info([['Archivo del contrato',fn(c.file)],['Cargado',who(c.uid,c.t)],['Fecha de inicio',fdate(c.ini)],['Fecha de término original',fdate(c.fin)],['Periodo de ejecución',c.dias+' días naturales'],['Monto total original',money(c.monto)],['Anticipo ('+c.pa+'%)',money(c.anticipo)],['Fondo de garantía ('+c.pf+'%)',money(c.fondo)]]);
+    const a=adSum(p),e=cEff(p),fe=finEff(p);
+    if(a.n||a.nt){
+      sec('Aditivas y deductivas');
+      tbl(['Documento','Fecha','Concepto','Archivo','Monto / nueva fecha'],(p.adits||[]).slice().sort((x,z)=>String(x.fecha).localeCompare(String(z.fecha))).map(x=>[x.tipo+' '+x.folio,fdate(x.fecha),x.desc||'-',fn(x.file),esT(x)?fdate(x.fNueva)+' (+'+x.dias+' días)':(x.tipo==='Aditiva'?'+ ':'- ')+money(x.monto)]),{4:R});
+      const pr=[];if(a.n)pr.push(['Monto original',money(c.monto)],['Aditivas',money(a.add)],['Deductivas',money(a.ded)],['Monto total actualizado',money(e.monto)],['Anticipo actualizado',money(e.anticipo)],['Fondo de garantía actualizado',money(e.fondo)]);
+      if(a.nt)pr.push(['Término original',fdate(c.fin)],['Días ampliados',String(ctDiff(c.fin,fe))],['Término vigente',fdate(fe)]);
+      info(pr);}
+  }
+  sec('Saldos (calculados sobre el monto vigente)');
+  if(!c)vacio('Requiere contrato.');else{const t=facSum(p),e=cEff(p);
+    tbl(['Concepto','Vigente','Aplicado','Saldo'],[['Por cobrar (monto neto facturado)',money(e.monto),money(t.neto),money(r2(e.monto-t.neto))],['Anticipo por amortizar',money(e.anticipo),money(t.ant),money(r2(e.anticipo-t.ant))],['Fondo de garantía por retener',money(e.fondo),money(t.fg),money(r2(e.fondo-t.fg))]],{1:R,2:R,3:R});}
+  sec('Fianzas');
+  if(!(p.fianzas||[]).length)vacio('Sin fianzas registradas.');else tbl(['Tipo','Afianzadora','Póliza','Inicio','Término','Monto','Estado','Archivo'],p.fianzas.map(f=>[f.tipo,f.afianzadora,f.poliza||'-',fdate(f.ini),fdate(f.fin),money(f.monto),fiaEst(f)[0],fn(f.file)]),{5:R});
+  sec('Facturas y estimaciones');
+  if(!(p.facturas||[]).length)vacio('Sin facturas ni estimaciones.');else{
+    tbl(['Documento','Fecha','Monto neto','Anticipo amort.','Fondo garantía','Descuenta','Archivo'],p.facturas.slice().sort((x,z)=>String(x.fecha).localeCompare(String(z.fecha))).map(f=>[f.tipo+' '+f.folio+(f.nota?'\n'+f.nota:''),fdate(f.fecha),money(f.neto),money(f.ant),money(f.fg),f.cuenta?'Sí':'No',fn(f.file)]),{2:R,3:R,4:R});
+    const t=facSum(p);doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.text(pdfT('Suma de lo que descuenta - Neto: '+money(t.neto)+'   Anticipo amortizado: '+money(t.ant)+'   Fondo de garantía: '+money(t.fg)),14,y-2);y+=6;}
+  sec('SIROC (IMSS)');
+  const sr=p.siroc||{},g=sr.reg;
+  if(!g)vacio('La obra aún no está registrada en SIROC.');else{
+    info([['Folio de registro',g.folio],['Registro patronal',g.patronal||'-'],['Fecha de registro',fdate(g.fReg)],['Inicio de obra',fdate(g.fIni)],['Terminación estimada',fdate(g.fTerm)],['Plazo para avisos',sirocPlazo(p)+' días naturales'],['Acuse',fn(g.file)],['Cargado',who(g.uid,g.t)],['Límite de registro',(sirocLim(p,'ini')?fdate(sirocLim(p,'ini')):'-')+' ('+sirocEst(p,'ini')[0]+')'],['Límite aviso de terminación',(sirocLim(p,'fin')?fdate(sirocLim(p,'fin')):'-')+' ('+sirocEst(p,'fin')[0]+')']]);}
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Avisos presentados',14,y);y+=3;
+  if(!(sr.avisos||[]).length){y+=3;vacio('Sin avisos registrados.');}else tbl(['Aviso','Fecha','Folio / acuse','Archivo'],sr.avisos.map(a=>[a.tipo+(a.nota?'\n'+a.nota:''),fdate(a.fecha),a.folio||'-',fn(a.file)]));
+  if(y>H-40){doc.addPage();y=20;}doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Pagos de seguro social',14,y);y+=3;
+  if(!(sr.pagos||[]).length){y+=3;vacio('Sin pagos registrados.');}else tbl(['Periodo pagado','Fecha de pago','Monto','Comprobante'],sr.pagos.slice().sort((x,z)=>String(x.desde).localeCompare(String(z.desde))).map(x=>[perLbl(x)+(x.nota?'\n'+x.nota:''),fdate(x.fPago),x.monto==null?'-':money(x.monto),fn(x.file)]),{2:R});
+  if(y>H-40){doc.addPage();y=20;}doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Trabajadores asignados a la obra',14,y);y+=3;
+  if(!(sr.trab||[]).length){y+=3;vacio('Sin trabajadores asignados.');}else tbl(['Trabajador','Situación IMSS','Alta en obra','Salida de obra'],sr.trab.slice().sort((x,z)=>(x.fBaja?1:0)-(z.fBaja?1:0)||String(x.nombre).localeCompare(String(z.nombre),'es')).map(w=>{const e=empById(w.empId);return [(e&&e.nombre)||w.nombre||'-',e?(()=>{const v=SIT_LAB[sitOf(e)];return Array.isArray(v)?v[0]:(v||sitOf(e));})():'Perfil eliminado de Nómina',fdate(w.fAlta),w.fBaja?fdate(w.fBaja):'-'];}));
+  sec('Alertas');
+  if(!(p.alertas||[]).length)vacio('Sin alertas.');else tbl(['Alerta','Se activa','Evento'],p.alertas.map(a=>{const f=alFecha(a,p),e=alEvento(a,p);return [AL_TIPOS[a.tipo]+(a.tipo!=='fecha'?' · '+a.dias+' día(s)':'')+(a.nota?'\n'+a.nota:''),f?fdate(f):'-',e?fdate(e):'-'];}));
+  sec('Historial');
+  if(!(p.hist||[]).length)vacio('Sin movimientos.');else tbl(['Fecha','Usuario','Movimiento'],p.hist.slice().sort((x,z)=>x.t-z.t).map(m=>[fstamp(m.t),nm(m.uid)||m.rol||'-',m.txt]),{0:{cellWidth:34},1:{cellWidth:34}});
+  pdfFoot(doc);return doc;
+}
+Object.assign(A,{
+  async pypdf(el){const p=proyById(el.dataset.id);if(!p||S.role!=='administracion')return;
+    try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
+      if(!dl){toast('La descarga no está disponible aquí. Abra la app desde su enlace publicado.');return;}
+      const ids=[p.uid];(p.hist||[]).forEach(m=>ids.push(m.uid));[p.contrato,p.siroc&&p.siroc.reg].forEach(x=>x&&ids.push(x.uid));await loadNames(ids.filter(Boolean));
+      const doc=proyPdf(p);await dl.save({filename:'reporte-proyecto-'+String(p.nombre).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+todayISO()+'.pdf',data:doc.output('blob')});
+    }catch(e){toast('No se pudo generar el PDF: '+((e&&e.message)||e));}}
+});
+
 /* ───────── eventos ───────── */
 document.addEventListener('click',e=>{
   if(S.nOpen&&!e.target.closest('#npop')&&!e.target.closest('#bell')){S.nOpen=false;bellRender();}
@@ -3641,6 +4292,8 @@ document.addEventListener('input',e=>{
   if(el.id==='bit-q'){S.bq=el.value;const b=$('bit-body');if(b)b.innerHTML=bitBody();return;}
   if(el.id==='cr-q'||el.id==='cr-from'||el.id==='cr-to'){const c=S.cr;if(el.id==='cr-q')c.q=el.value;else if(el.id==='cr-from')c.from=el.value;else c.to=el.value;const b=$('cr-body');if(b)b.innerHTML=crBody();return;}
   if(el.id==='tf-q'){S.tf.q=el.value;const b=$('tf-body');if(b)b.innerHTML=todasBody();return;}
+  if(el.id&&el.id.indexOf('ct-')===0){ctCalc();return;}
+  if(el.id==='py-q'){S.py.q=el.value;render();const n=$('py-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='al-q'){S.al.q=el.value;render();const n=$('al-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='emp-q'){S.empQ=el.value;const b=$('emp-body');if(b)b.innerHTML=empBody();return;}
   if(el.dataset&&(el.dataset.nh||el.dataset.nf)){nomInput(el);return;}
@@ -3686,6 +4339,7 @@ async function boot(){
     try{provColl=db.collection('proveedores');}catch(e){provColl=null;}
     try{empColl=db.collection('empleados');}catch(e){empColl=null;}
     try{nomColl=db.collection('nominas');}catch(e){nomColl=null;}
+    try{proyColl=db.collection('proyectos');}catch(e){proyColl=null;}
     try{altasColl=db.collection('altas_trabajadores');expColl=db.collection('expedientes_trabajadores');}catch(e){altasColl=null;expColl=null;}
     try{repColl=db.collection('reposiciones');}catch(e){repColl=null;}
     try{docsColl=db.collection('documentos');notifColl=db.collection('notificaciones');lecColl=db.collection('notif_lecturas');}catch(e){docsColl=null;notifColl=null;lecColl=null;}
