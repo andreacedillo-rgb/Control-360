@@ -1220,7 +1220,7 @@ function startData(R){
   if(coll)sub(own(coll),sn=>{clearTimeout(t);if(sn){S.reqs=rows(sn);sortReqs();snapAll('r',S.reqs);}S.ready=true;safeRender();});
   if(auditColl)sub(auditColl,sn=>{if(sn)S.audit=rows(sn);const b=$('rc-audit');if(b)b.innerHTML=auditHtml();});
   if(provColl)sub(provColl,sn=>{if(sn){S.provs=rows(sn);sortProvs();}safeRender();});
-  if(altasColl&&(R==='administracion'||R==='residente'||R==='direccion'))sub(own(altasColl),sn=>{if(sn){S.altas=rows(sn);S.altas.sort((a,b)=>(b.creado||0)-(a.creado||0));}safeRender();});
+  if(altasColl&&(R==='administracion'||R==='residente'||R==='direccion'))sub(own(altasColl),sn=>{if(sn){S.altas=rows(sn).filter(a=>!a.oculta);S.altas.sort((a,b)=>(b.creado||0)-(a.creado||0));}safeRender();});
   if(proyColl&&R==='administracion')sub(proyColl,sn=>{if(sn){S.proys=rows(sn);S.proys.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
   if(expColl&&(R==='administracion'||R==='direccion'))sub(expColl,sn=>{if(sn)S.exps=rows(sn);safeRender();});
   if(empColl&&(R==='administracion'||R==='residente'||R==='sistemas'||R==='direccion'))sub(empColl,sn=>{if(sn){S.emps=rows(sn);S.emps.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));}safeRender();});
@@ -3389,21 +3389,27 @@ async function altaApplyFiles(a,nf){
     const prev=a.docs&&a.docs[k];a.docs=a.docs||{};a.docs[k]={file:up,t:Date.now(),uid:myId};ah(a,(prev?'Sustituyó':'Cargó')+' '+lbl+': '+nf[k].name);}
   return '';
 }
+function altaDupe(nombre,exId){return S.altas.find(x=>!esBaja(x)&&x.creatorId===myId&&x.id!==exId&&(x.estado==='borrador'||x.estado==='pendiente'||x.estado==='devuelta')&&normQ(x.nombre)===normQ(nombre));}
+function altaDupeMsg(d){return 'Ya tiene una solicitud de alta para este trabajador ('+d.folio+', '+(d.estado==='borrador'?'borrador':d.estado==='pendiente'?'pendiente de revisión':'devuelta para corrección')+'). Ábrala desde la lista para corregirla o enviarla; no se crea una segunda.';}
 function altaForm(a){
-  const nueva=!a;
+  const nueva=!a,nw=a?null:{id:rid(),folio:'ALT-'+code()};
   modal({title:nueva?'Solicitar alta de trabajador':'Corregir solicitud '+a.folio,wide:true,html:altaFormHtml(a,false),ok:'ENVIAR SOLICITUD DE ALTA',noFocus:false,
    onOk:async root=>{
-    const c=await altaCollect(root,a||{docs:{}},true);if(c.err)return c.err;
-    const x=a?clone(a):{id:rid(),folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
-    if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada')||(x.creatorId!==myId))return 'Esta solicitud ya no admite cambios.';
-    const er=await altaApplyFiles(x,c.nf);if(er)return er;
+    if(curModal&&curModal.busy)return 'Procesando… espere un momento.';
+    const prev=a||altaById(nw.id)||null;
+    const c=await altaCollect(root,prev||{docs:{}},true);if(c.err)return c.err;
+    const dp=altaDupe(c.nombre,prev?prev.id:nw.id);if(dp)return altaDupeMsg(dp);
+    if(curModal)curModal.busy=true;
+    const x=prev?clone(prev):{id:nw.id,folio:nw.folio,creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
+    if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada')||(x.creatorId!==myId)){if(curModal)curModal.busy=false;return 'Esta solicitud ya no admite cambios.';}
+    const er=await altaApplyFiles(x,c.nf);if(er){if(curModal)curModal.busy=false;return er;}
     const re=x.estado==='devuelta'||x.estado==='rechazada';
     x.nombre=c.nombre;x.obra=c.obra;x.estado='pendiente';x.enviado=Date.now();x.fechaSol=x.fechaSol||todayISO();x.solicitante=(S.me&&S.me.nombre)||S.myName||'';
     ah(x,re?'Reenvió la solicitud corregida a Administración':'Envió la solicitud de alta a Administración');
     await saveAlta(x);altaNotify(x,'alta_env',re?'Solicitud de alta corregida y reenviada':'Nueva solicitud de alta',re?'media':'alta',true);
     return true;},
    extra:null});
-  if(curModal)curModal.altaDocs=(a&&a.docs)||{};
+  if(curModal){curModal.altaDocs=(a&&a.docs)||{};curModal.altaNew=nw;}
   const mb=document.querySelector('#modal .mb-f');
   if(mb&&!document.getElementById('al-draft')){const b=document.createElement('button');b.className='btn';b.id='al-draft';b.type='button';b.textContent='Guardar borrador';b.setAttribute('data-act','aldraft');b.dataset.id=a?a.id:'';mb.insertBefore(b,mb.firstChild);}
 }
@@ -3536,7 +3542,7 @@ function altaDetail(a){
   h+='<div class="card"><div class="grid"><div><span class="muted">Obra o proyecto</span><br><b>'+esc(a.obra||'—')+'</b></div><div><span class="muted">Residente que solicita</span><br><b>'+esc(a.solicitante||nm(a.creatorId)||'—')+'</b></div><div><span class="muted">Fecha de solicitud</span><br><b>'+fdate(a.fechaSol||isoOf(a.creado))+'</b></div>'+(a.estado==='aceptada'?'<div><span class="muted">Situación laboral</span><br>'+sitPillA(a,e)+'</div>':'')+'</div>'+
    (a.dec&&(a.estado!=='pendiente')?'<div class="note '+(a.dec.res==='aceptada'?'':'warn')+'" style="margin-top:10px"><b>'+(a.dec.res==='aceptada'?'Aceptada':a.dec.res==='rechazada'?'Rechazada':'Devuelta para corrección')+' por '+esc(nm(a.dec.uid)||'Administración')+'</b> · '+fstamp(a.dec.t)+(a.dec.txt?'<br>'+esc(a.dec.txt):'')+'</div>':'')+'</div>';
   const mine=R==='residente'&&a.creatorId===myId&&(a.estado==='borrador'||a.estado==='devuelta'||a.estado==='rechazada');
-  h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+
+  h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+(mine&&a.estado==='borrador'?'<button class="btn danger" data-act="aldesc" data-id="'+a.id+'">Eliminar borrador</button>':'')+
    (rhAdm()&&a.estado==='pendiente'?'<button class="btn primary" data-act="aldec" data-k="aceptar" data-id="'+a.id+'">Aceptar solicitud</button><button class="btn" data-act="aldec" data-k="devolver" data-id="'+a.id+'">Devolver para corrección</button><button class="btn danger" data-act="aldec" data-k="rechazar" data-id="'+a.id+'">Rechazar solicitud</button>':'')+
    (rhView()&&a.estado==='aceptada'&&a.empId?'<button class="btn" data-act="alexp" data-id="'+a.empId+'">Ver expediente del trabajador</button>':'')+'</div>';
   if(esBaja(a))h+='<div class="card" style="margin-top:12px"><div class="grid"><div><span class="muted">Fecha propuesta de baja</span><br><b>'+fdate(a.fMov)+'</b></div><div class="f span2"><span class="muted">Justificación del residente</span><b style="white-space:pre-wrap">'+esc(a.motivo||'')+'</b></div></div></div>';
@@ -3573,15 +3579,22 @@ function expDetail(e){
 }
 Object.assign(A,{
   alnew(){if(S.role==='residente')altaForm(null);},
+  aldesc(el){const a=altaById(el.dataset.id);if(!a||a.creatorId!==myId||a.estado!=='borrador')return;
+    modal({title:'Eliminar borrador '+a.folio,ok:'Eliminar borrador',html:'<p style="margin:0">¿Eliminar el borrador de <b>'+esc(a.nombre||'sin nombre')+'</b>? Solo se pueden eliminar borradores que no se han enviado.</p>',
+     onOk:async()=>{const x=altaById(a.id);if(!x||x.estado!=='borrador')return 'Esta solicitud ya no es un borrador.';const y=clone(x);y.oculta=true;ah(y,'Eliminó el borrador');await saveAlta(y);S.altas=S.altas.filter(z=>!z.oculta);S.al.open=null;render();return true;}});},
   alnewb(){if(S.role==='residente')bajaForm(null);},
   aldir(){if(rhAdm())altaDirecta();},
   alfix(el){const a=altaById(el.dataset.id);if(a&&a.creatorId===myId){if(esBaja(a))bajaForm(a);else altaForm(a);}},
   aldraft(el){
-    const root=document.querySelector('#modal');const id=el.dataset.id;const a=id?altaById(id):null;
-    (async()=>{const c=await altaCollect(root,a||{docs:{}},false);const err=$('m-err');if(c.err){if(err)err.textContent=c.err;return;}
-      const x=a?clone(a):{id:rid(),folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
-      if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada'))return;
-      const er=await altaApplyFiles(x,c.nf);if(er){if(err)err.textContent=er;return;}
+    const root=document.querySelector('#modal');const id=el.dataset.id;const nw=curModal&&curModal.altaNew;const a=id?altaById(id):(nw?altaById(nw.id):null);
+    if(curModal&&curModal.busy)return;
+    (async()=>{const err=$('m-err');const c=await altaCollect(root,a||{docs:{}},false);if(c.err){if(err)err.textContent=c.err;return;}
+      const dp=altaDupe(c.nombre,a?a.id:(nw?nw.id:''));if(dp){if(err)err.textContent=altaDupeMsg(dp);return;}
+      if(curModal)curModal.busy=true;el.disabled=true;const mo=$('m-ok');if(mo)mo.disabled=true;
+      const fail=t=>{if(curModal)curModal.busy=false;el.disabled=false;if(mo)mo.disabled=false;if(err)err.textContent=t;};
+      const x=a?clone(a):{id:nw?nw.id:rid(),folio:nw?nw.folio:'ALT-'+code(),creatorId:myId,creado:Date.now(),estado:'borrador',docs:{},hist:[],origen:'residente',fechaSol:todayISO()};
+      if(!(x.estado==='borrador'||x.estado==='devuelta'||x.estado==='rechazada')){fail('Esta solicitud ya no admite cambios.');return;}
+      const er=await altaApplyFiles(x,c.nf);if(er){fail(er);return;}
       x.nombre=c.nombre;x.obra=c.obra;x.solicitante=(S.me&&S.me.nombre)||S.myName||'';if(!a)ah(x,'Creó el borrador de la solicitud');else ah(x,'Guardó cambios en el borrador');
       await saveAlta(x);closeModal();toast('Borrador guardado.');})();
   },
