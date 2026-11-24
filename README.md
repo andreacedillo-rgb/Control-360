@@ -167,3 +167,18 @@ Guardar un borrador y enviarlo ya no crea dos solicitudes: ambas acciones usan e
 
 ### Planos y archivos CAD
 Todos los campos de carga de documentos (contratos, fianzas, SIROC, facturas, aditivas, expedientes, etc.) aceptan además **DWG, DXF, DWF, DWFX, DWT, DGN, RVT, IFC y SKP** (límite 50 MB por plano; 20 MB para el resto). El bucket de Supabase no restringe tipos de archivo, no requiere migración. Si un plano pesa más de 50 MB, súbalo comprimido en ZIP o revise el límite global en Supabase → Storage → Settings.
+
+### Calendario para Auditor
+El perfil Auditor tiene la pestaña **Calendario** (solo lectura): fechas en que se requiere el material de todas las requisiciones enviadas y entregas compromiso de todas las OC de Compras, con sus tablas de próximos requerimientos y entregas. No ve los hitos de proyectos (solo Administración).
+
+## Compras: reprogramar la fecha de llegada (con o sin OC)
+- Compras ve el botón **Fecha de llegada** en cualquier partida no rechazada y no recibida por completo, **con o sin OC y con o sin paquetería**.
+- Pide la nueva fecha y el **motivo** (obligatorio). Aplica solo a esa partida; conserva la fecha original, marca REPROGRAMADA y deja registro en el historial.
+- Con OC se actualiza la entrega compromiso; sin OC se guarda como "Llegada programada" (por defecto, la fecha requerida de la requisición).
+- El calendario (incluido el del Auditor) refleja las fechas nuevas. No requiere migración.
+
+## Sistemas: anuncios con confirmación de enterado
+- Sistemas → **Seguridad → Anuncios**: «Nuevo anuncio» con título, mensaje y destinatarios (todos, o solo algunos por perfil y/o usuarios en particular).
+- El destinatario ve el anuncio **a pantalla completa, en rojo**, y no puede usar la plataforma ni cerrarlo hasta pulsar **ENTERADO**. Si hay varios, se muestran uno por uno.
+- Sistemas ve cuántos confirmaron (y quién y cuándo) y quién falta; puede **retirar** un anuncio. El envío queda en la bitácora.
+- **Requiere migración:** ejecutar `supabase/migrations/009_anuncios.sql` en Supabase → SQL Editor (nuevas colecciones `anuncios` y `anuncios_enterados`).

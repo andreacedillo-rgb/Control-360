@@ -155,6 +155,16 @@ td .rej{font-size:12px;color:var(--bad);margin-top:2px}
 .grp td{padding:8px 10px}
 
 /* panel lateral */
+.anun{}#anun{position:fixed;inset:0;z-index:300;background:rgba(120,10,10,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.anun-box{background:#fff;border:8px solid #C62828;border-radius:18px;max-width:900px;width:100%;padding:36px 32px;text-align:center;box-shadow:0 20px 80px rgba(0,0,0,.6);animation:anpulse 1.6s ease-in-out infinite}
+.anun-tag{display:inline-block;background:#C62828;color:#fff;font-weight:800;letter-spacing:.12em;padding:8px 18px;border-radius:999px;font-size:15px}
+.anun-box h1{font-size:clamp(28px,5vw,52px);line-height:1.1;margin:18px 0 14px;color:#8E0000}
+.anun-txt{font-size:clamp(18px,2.6vw,28px);line-height:1.4;color:#1b1b1b;margin:0 0 18px;text-align:left;white-space:normal}
+.anun-by{color:#666;font-size:14px;margin-bottom:22px}
+.anun-btn{background:#C62828;color:#fff;border:0;border-radius:14px;font-size:clamp(22px,3vw,34px);font-weight:800;padding:18px 56px;cursor:pointer;letter-spacing:.06em}
+.anun-btn:hover{background:#9f1f1f}.anun-hint{color:#8E0000;font-size:13px;margin:12px 0 0}
+@keyframes anpulse{0%,100%{box-shadow:0 20px 80px rgba(0,0,0,.6)}50%{box-shadow:0 0 0 10px rgba(255,255,255,.35),0 20px 80px rgba(0,0,0,.6)}}
+@media (prefers-reduced-motion:reduce){.anun-box{animation:none}}
 .ov{position:fixed;inset:0;background:rgba(10,20,25,.5);z-index:40;display:none}
 .ov.on{display:block}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(1500px,100%);background:var(--bg);z-index:41;display:none;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.25)}
@@ -333,9 +343,9 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 
 const ROLES={residente:'Residente',auditor:'Auditor',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
-  sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['bitacora','Bitácora de seguridad'],['notif','Notificaciones']],
+  sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['anuncios','Anuncios'],['bitacora','Bitácora de seguridad'],['notif','Notificaciones']],
   residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
-  auditor:[['revisar','Por auditar'],['todas','Todas'],['rep','Reportes'],['notif','Notificaciones']],
+  auditor:[['revisar','Por auditar'],['todas','Todas'],['cal','Calendario'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
   direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']],
   administracion:[['proy','Proyectos'],['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['notif','Notificaciones']]
@@ -425,6 +435,9 @@ async function loadNames(ids){
 const nm=id=>S.names[id]||'Usuario';
 
 /* elegibilidad de partidas por rol */
+const llegOk=(r,l)=>S.role==='compras'&&!!r&&!!l&&r.estado!=='borrador'&&l.auth!=='rechazada'&&(!l.recibido||recFalta(l)>1e-9);
+const llegFecha=(r,l)=>(l.oc&&l.oc!=='NA')?l.oc.fecha:((l.entrega&&l.entrega.fecha)||r.fechaReq||'');
+const llegObj=l=>(l.oc&&l.oc!=='NA')?l.oc:l.entrega;
 const elegCompras=l=>l.auth==='autorizada'&&!l.oc&&!l.bodega&&excOk(l);
 const recQ=l=>l.recibido?Number(l.recibido.cant)||0:0;
 const recFalta=l=>Math.max(0,r2(Number(l.cant)-recQ(l)));
@@ -445,7 +458,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','depurar','bitacora']],['Avisos',['notif']]];
+const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','anuncios','depurar','bitacora']],['Avisos',['notif']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=TABS[S.role].filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -480,6 +493,7 @@ function render(){
   renderDrawer();
   refreshProvList();refreshObras();
   const tp=document.querySelector('.top');if(tp)document.documentElement.style.setProperty('--topH',tp.offsetHeight+'px');
+  try{anuncioOverlay();}catch(e){}
 }
 let pendingRender=false;
 function safeRender(){
@@ -543,6 +557,7 @@ function viewHtml(){
   if(!TABS[R]||!TABS[R].some(t=>t[0]===k))return '';
   if(k==='notif')return notifHtml();
   if(k==='repos')return repView();
+  if(R==='sistemas'&&k==='anuncios')return anunciosHtml();
   if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
   if(k==='proy'&&R==='administracion')return proyHtml();
   if(k==='altas'&&(R==='residente'||R==='administracion'||R==='direccion'))return altasHtml();
@@ -1200,14 +1215,14 @@ const APP_URL='https://claude.ai/artifact/1GC995gxqRDHSkft5HcWhA';
 const PERFILES={direccion:'Dirección',auditor:'Auditor',compras:'Compras',administracion:'Administración',residente:'Líder de proyecto (Residente)',sistemas:'Sistemas'};
 const PERFIL_ORDER=['direccion','auditor','compras','administracion','residente','sistemas'];
 const PERFIL_ACC={auditor:'Valida conceptos, cantidades y justificación de las requisiciones antes de Compras; puede rechazar partidas o devolver al residente. No cotiza.',direccion:'Acceso general a gestión, supervisión, autorización y reportes.',compras:'Requisiciones, proveedores, compras y funciones de su departamento.',administracion:'Gastos, nóminas, proveedores, pagos y funciones administrativas.',residente:'Solo sus propias solicitudes, requisiciones, gastos y nóminas.',sistemas:'Exclusivo: usuarios, credenciales y permisos. Sin acceso a información operativa.'};
-const BIT_LBL={alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros',expediente:'Consulta de expedientes laborales'};
+const BIT_LBL={anuncio:'Anuncio enviado',alta:'Creación de usuario',perfil:'Cambio de perfil',activar:'Activación',desactivar:'Desactivación',reset:'Restablecimiento de acceso',acceso:'Acceso',proveedor_baja:'Proveedor eliminado',eliminar:'Eliminación de registros',expediente:'Consulta de expedientes laborales'};
 S.auth='loading';S.users=[];S.bit=[];S.rec=null;S.me=null;S.isOwner=false;S.usersLoaded=false;S.usersFull=false;S.accessSig='';S.myEmail='';S.myName='';S.uq='';S.uEst='';S.bq='';S.bA='';
 S.ownerRole=S.role;
 const isSelf=u=>!!u&&((u.uid&&u.uid===myId)||(S.myEmail&&String(u.email).toLowerCase()===S.myEmail));
 function stopData(){
   dataEpoch++;
   unsubs.forEach(u=>{try{if(typeof u==='function')u();}catch(e){}});unsubs=[];
-  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.reps=[];S.altas=[];S.exps=[];S.proys=[];
+  S.reqs=[];S.provs=[];S.emps=[];S.noms=[];S.audit=[];S.docs=[];S.notifs=[];S.lect={};S.anuncios=[];S.anEnt=[];S.reps=[];S.altas=[];S.exps=[];S.proys=[];
 }
 function sub(q,fn){
   const ep=dataEpoch;
@@ -1228,6 +1243,8 @@ function startData(R){
   if(repColl)sub(own(repColl),sn=>{if(sn){S.reps=rows(sn);S.reps.sort((a,b)=>(b.creado||0)-(a.creado||0));snapAll('p',S.reps);}safeRender();});
   if(docsColl&&R!=='sistemas'){let q=docsColl;if(R==='residente'){try{q=docsColl.where('creatorReqId','==',myId);}catch(e){q=docsColl;}}sub(q,sn=>{if(sn)S.docs=rows(sn);safeRender();});}
   if(notifColl){let q=notifColl;try{if(R==='residente')q=q.where('uid','==',myId);q=q.orderBy('t','desc').limit(400);}catch(e){}sub(q,sn=>{if(sn)S.notifs=rows(sn);safeRender();});}
+  if(anColl)sub(anColl,sn=>{if(sn)S.anuncios=rows(sn);safeRender();});
+  if(anEntColl){let q=anEntColl;try{if(R!=='sistemas')q=q.where('uid','==',anKey());}catch(e){}sub(q,sn=>{if(sn)S.anEnt=rows(sn);safeRender();});}
   if(lecColl){let q=lecColl;try{q=lecColl.where('uid','==',myId);}catch(e){}sub(q,sn=>{const a=sn?rows(sn):[];const mine=a.find(x=>x.id===myId)||a[0];S.lect=(mine&&mine.m)||{};safeRender();});}
 }
 function subUsers(full){
@@ -1971,14 +1988,15 @@ function ocEvents(){
   const m={};
   V().forEach(r=>L(r).forEach(l=>{
     if(l.oc&&l.oc!=='NA'){
-      const e=m[l.oc.folio]=m[l.oc.folio]||{folio:l.oc.folio,fecha:l.oc.fecha,proveedor:l.oc.prov||l.proveedor||'',rid:r.id,obra:r.obra,total:0};
+      const e=m[l.oc.folio+'|'+l.oc.fecha]=m[l.oc.folio+'|'+l.oc.fecha]||{folio:l.oc.folio,fecha:l.oc.fecha,proveedor:l.oc.prov||l.proveedor||'',rid:r.id,obra:r.obra,total:0};
       e.total+=Number(l.total)||0;
     }
   }));
   return Object.values(m);
 }
 function reqEvents(){
-  return V().filter(r=>r.fechaReq).map(r=>({rid:r.id,folio:r.folio,fecha:r.fechaReq,obra:r.obra||'',sol:r.solicitante||'',est:statusOf(r)[0],n:L(r).length,total:reqTotal(r)}));
+  const ex=[];V().forEach(r=>L(r).forEach(l=>{if(!(l.oc&&l.oc!=='NA')&&l.entrega&&l.entrega.fecha)ex.push({rid:r.id,folio:r.folio+' · '+l.clave+' (llegada reprogramada)',fecha:l.entrega.fecha,obra:r.obra||'',sol:r.solicitante||'',est:statusOf(r)[0],n:1,total:Number(l.total)||0});}));
+  return ex.concat(V().filter(r=>r.fechaReq).map(r=>({rid:r.id,folio:r.folio,fecha:r.fechaReq,obra:r.obra||'',sol:r.solicitante||'',est:statusOf(r)[0],n:L(r).length,total:reqTotal(r)})));
 }
 function calHtml(){
   const d=S.cal,y=d.getFullYear(),m=d.getMonth();
@@ -2059,7 +2077,7 @@ function drawerLines(r){
     (l.auth==='rechazada'&&l.motivo?'<div class="rej">Motivo: '+esc(l.motivo)+'</div>':'')+(l.obs&&(r.estado==='devuelta'||okAudit(r))?'<div class="rej">Observación de '+esc(l.obs.por||'Auditoría')+(l.obs.rech?' (partida rechazada)':'')+': '+esc(l.obs.txt)+'</div>':'')+
     (l.pagoInfo&&l.pagoInfo.comprobante&&!(l.abonos&&l.abonos.length)?'<div class="sub">Comprobante ('+fdate(l.pagoInfo.fecha)+'): '+fileLink(l.pagoInfo.comprobante)+'</div>':'')+
     (l.abonos&&l.abonos.length?'<div class="sub">Abonos: '+l.abonos.map(a=>money(a.monto)+' ('+fdate(a.fecha)+(a.comprobante?', '+fileLink(a.comprobante):'')+')').join(' · ')+'</div>':'')+
-    (l.oc&&l.oc!=='NA'?'<div class="sub">Entrega compromiso: '+fdate(l.oc.fecha)+'</div>':'')+
+    (l.oc&&l.oc!=='NA'?'<div class="sub">Entrega compromiso: '+fdate(l.oc.fecha)+(l.oc.fechaOrig&&l.oc.fechaOrig!==l.oc.fecha?' <span class="pill t-warn">REPROGRAMADA · original '+fdate(l.oc.fechaOrig)+'</span>':'')+'</div>':(l.entrega&&l.entrega.fecha?'<div class="sub">Llegada programada: '+fdate(l.entrega.fecha)+(l.entrega.fechaOrig&&l.entrega.fechaOrig!==l.entrega.fecha?' <span class="pill t-warn">REPROGRAMADA · original '+fdate(l.entrega.fechaOrig)+'</span>':'')+'</div>':''))+
     '</td><td class="num">'+chg(l.orig&&l.orig.cant,l.cant,String)+'</td><td class="num">'+chg(l.orig&&l.orig.pu,l.pu,money)+'</td><td class="num">'+chg(l.orig&&l.orig.total,l.total,money)+'</td><td>'+provCell(l)+'</td><td>'+lineChips(l)+'</td><td><div class="row" style="flex-wrap:nowrap">'+lineActions(r,l)+'</div></td></tr>';
   });
   return h+'</tbody></table></div>';
@@ -2587,6 +2605,7 @@ function lineActions(r,l){
   if(excCan(r,l))h+='<button class="btn sm ok" data-act="excaut" data-id="'+r.id+'" data-l="'+l.id+'">Autorizar excepción</button><button class="btn sm danger" data-act="excrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar excepción</button>';
   if(okAudit(r)){if(l.auth==='pendiente')h+='<button class="btn sm" data-act="audobs" data-id="'+r.id+'" data-l="'+l.id+'">'+(l.obs?'Editar observación':'Observar')+'</button><button class="btn sm danger" data-act="audrech" data-id="'+r.id+'" data-l="'+l.id+'">Rechazar</button>';else if(l.rechPor==='auditor')h+='<button class="btn sm" data-act="audundo" data-id="'+r.id+'" data-l="'+l.id+'">Deshacer</button>';}
   if(paqOk(r,l))h+='<button class="btn sm" data-act="paqedit" data-id="'+r.id+'" data-l="'+l.id+'">Paquetería</button>';
+  if(llegOk(r,l))h+='<button class="btn sm" data-act="llegada" data-id="'+r.id+'" data-l="'+l.id+'">Fecha de llegada</button>';
   if(canEdit(r,l))h+='<button class="btn sm" data-act="editlinea" data-id="'+r.id+'" data-l="'+l.id+'">Editar</button>';
   if(S.role==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')){
     if(l.auth==='pendiente'&&!excOk(l))h+='';
@@ -2804,6 +2823,22 @@ const A={
         lh(l,'Paquetería ESTIMADO ajustada de '+money(antes)+' a '+money(nv)+' (dentro del límite de '+money(PAQ_LIM)+'): liberada'+(t?' · '+t:''));
         hist(r,'ajustó la paquetería de la partida '+l.clave+' de '+money(antes)+' a '+money(nv)+' (dentro del límite; liberada)'+(t?' · '+t:''));
       }
+      await save(r);return true;}});
+  },
+  llegada(el){
+    const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!llegOk(r,l))return;
+    const tieneOC=!!(l.oc&&l.oc!=='NA'),cur=llegFecha(r,l),o=llegObj(l);
+    modal({title:'Reprogramar llegada · '+l.clave,html:'<p class="muted" style="margin:0">'+(tieneOC?'Partida con OC <b>'+esc(l.oc.folio)+'</b>':'Partida sin OC todavía')+(paqM(l)>0?' · incluye paquetería':'')+'. Fecha actual: <b>'+(cur?fdate(cur):'sin fecha')+'</b>'+(o&&o.fechaOrig&&o.fechaOrig!==cur?' · original: '+fdate(o.fechaOrig):'')+'. El cambio aplica solo a esta partida.</p><div class="f"><label for="m-fl">Nueva fecha de llegada <i>*</i></label><input type="date" id="m-fl" value="'+esc(cur||'')+'"></div><div class="f"><label for="m-txt">Motivo del cambio <i>*</i></label><textarea id="m-txt" placeholder="Ej. retraso del proveedor o de la paquetería, nueva guía de rastreo"></textarea></div>',ok:'Guardar fecha',onOk:async root=>{
+      const f=root.querySelector('#m-fl').value,t=root.querySelector('#m-txt').value.trim();
+      if(!f)return 'Elija la nueva fecha de llegada.';if(!t)return 'Escriba el motivo del cambio.';
+      if(!llegOk(r,l))return 'La partida ya no admite cambio de fecha.';
+      const ant=llegFecha(r,l);if(f===ant)return 'La fecha no cambió.';
+      let ob;if(l.oc&&l.oc!=='NA')ob=l.oc;else ob=l.entrega=l.entrega||{};
+      if(!ob.fechaOrig)ob.fechaOrig=ant||f;
+      ob.fecha=f;ob.cambios=(ob.cambios||[]).concat([{de:ant,a:f,t:Date.now(),uid:myId,just:t}]);
+      const ctx=(l.oc&&l.oc!=='NA')?' (OC '+l.oc.folio+')':' (sin OC)';
+      lh(l,'Compras: llegada reprogramada de '+(ant?fdate(ant):'sin fecha')+' a '+fdate(f)+' · '+t);
+      hist(r,'reprogramó la llegada de la partida '+l.clave+ctx+' de '+(ant?fdate(ant):'sin fecha')+' a '+fdate(f)+' · '+t);
       await save(r);return true;}});
   },
   audliberar(el){const r=reqById(el.dataset.id);if(!okAudit(r))return;if(!L(r).some(l=>l.auth==='pendiente')){toast('No hay partidas pendientes que liberar.');return;}
@@ -3114,9 +3149,9 @@ const A={
     const mkP=(razon,alias,rfc,clabe,banco)=>{let q=S.provs.find(x=>x.rfc===rfc);if(!q){q={id:rid(),razon:razon,alias:alias,rfc:rfc,csf:{name:'constancia-situacion-fiscal.pdf',url:null},bdoc:null,titular:razon,banco:banco,clabe:clabe,depto:'compras',uid:myId,creado:Date.now(),activo:true,hist:[{t:Date.now(),uid:myId,rol:'Compras',txt:'Creó el proveedor “'+alias+'” (ejemplo)',tipo:'alta'}]};saveProv(q);}return q;};
     const P1=mkP('Vidrios del Sureste SA de CV','Vidrios del Sureste','VSU120304AB1','012180001234567891','BBVA'),P2=mkP('Aluminios Mérida SA de CV','Aluminios Mérida','AME090815CD2','014180005555666677','Santander'),P3=mkP('Selladores Industriales SA de CV','Selladores Industriales','SIN100220EF3','072180009999888871','Banorte');
     const mk=(clave,concepto,cant,pu,prov,just)=>({id:rid(),clave:clave,concepto:concepto,unidad:'pza',cant:cant,pu:pu,total:r2(cant*pu),proveedor:prov.alias,provId:prov.id,provSnap:snapProv(prov),justificacion:just,cot:null,auth:'pendiente',oc:null,pago:'pendiente'});
-    const r={id:rid(),folio:'REQ-'+code(),creatorId:myId,estado:'auditoria',obra:'Ejemplo · Fachada suspendida',solicitante:'Residente de obra',fechaSol:todayISO(),fechaReq:addDays(todayISO(),10),creado:Date.now(),
-      lineas:[mk('VID-TEM-10','Vidrio templado 10 mm claro',24,1850,P1,'Piezas para módulos del nivel 4'),mk('PER-AL-3','Perfil de aluminio cuerpo 3 pulgadas',60,420,P2,'Reposición por corte de montantes'),mk('SEL-SIL','Sellador de silicón estructural',30,185,P3,'Sellado perimetral de cristales')],hist:[]};
-    hist(r,'creó la requisición de ejemplo y la envió a Auditoría');S.tab=TABS[S.role][0][0];save(r);
+    const r={id:rid(),folio:'REQ-'+code(),creatorId:myId,estado:(S.role==='compras'?'compras':S.role==='direccion'?'direccion':'auditoria'),obra:'Ejemplo · Fachada suspendida',solicitante:'Residente de obra',fechaSol:todayISO(),fechaReq:addDays(todayISO(),10),creado:Date.now(),
+      lineas:[(()=>{const x=mk('VID-TEM-10','Vidrio templado 10 mm claro',24,1850,P1,'Piezas para módulos del nivel 4 (incluye paquetería)');x.paq={monto:350,estimado:true};x.total=lt(x);return x;})(),mk('PER-AL-3','Perfil de aluminio cuerpo 3 pulgadas',60,420,P2,'Reposición por corte de montantes'),mk('SEL-SIL','Sellador de silicón estructural',30,185,P3,'Sellado perimetral de cristales')],hist:[]};
+    hist(r,'creó la requisición de ejemplo'+(S.role==='compras'?' directamente en la bandeja de Compras':S.role==='direccion'?' directamente en la bandeja de Dirección':' y la envió a Auditoría'));S.tab=TABS[S.role][0][0];save(r);toast('Requisición de ejemplo cargada.');
   }
 };
 
@@ -4252,6 +4287,79 @@ Object.assign(A,{
     }catch(e){toast('No se pudo generar el PDF: '+((e&&e.message)||e));}}
 });
 
+/* ───────── anuncios (Sistemas → usuarios) ───────── */
+let anColl=null,anEntColl=null;
+S.anuncios=[];S.anEnt=[];S.anSel=null;
+const anKey=()=>S.mode==='local'?'local:'+S.role:(myId+(S.auth==='owner'?':'+S.role:''));
+const anIsDest=a=>{if(!a||a.activo===false)return false;const d=a.dest||{};if(d.todos)return true;if((d.roles||[]).indexOf(S.role)>=0)return true;return !!(S.me&&S.me.id&&(d.uids||[]).indexOf(S.me.id)>=0);};
+const anSeen=a=>(S.anEnt||[]).some(e=>e.aid===a.id&&e.uid===anKey());
+const anPend=()=>(S.anuncios||[]).filter(a=>anIsDest(a)&&!anSeen(a)).sort((a,b)=>(a.creado||0)-(b.creado||0));
+function anRecips(a){const d=a.dest||{};return (S.users||[]).filter(u=>u.activo&&(d.todos||(d.roles||[]).indexOf(u.perfil)>=0||(d.uids||[]).indexOf(u.id)>=0));}
+function anDestTxt(a){const d=a.dest||{};if(d.todos)return 'Todos los usuarios';const p=(d.roles||[]).map(r=>PERFILES[r]||r),n=(d.uids||[]).length;return [p.length?'Perfiles: '+p.join(', '):'',n?n+' usuario(s) en particular':''].filter(Boolean).join(' · ')||'—';}
+function anuncioOverlay(){
+  let el=document.getElementById('anun');
+  const ok=(S.auth==='ok'||S.auth==='owner'||S.mode==='local')&&S.ready;
+  const pend=ok?anPend():[];
+  if(!pend.length){if(el){el.remove();document.body.style.overflow='';}return;}
+  const a=pend[0];
+  if(!el){el=document.createElement('div');el.id='anun';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','anun-t');document.body.appendChild(el);}
+  const sig=a.id+'|'+pend.length;if(el.dataset.sig===sig)return;el.dataset.sig=sig;
+  document.body.style.overflow='hidden';
+  el.innerHTML='<div class="anun-box"><div class="anun-tag">ANUNCIO IMPORTANTE'+(pend.length>1?' · '+pend.length+' pendientes':'')+'</div><h1 id="anun-t">'+esc(a.titulo)+'</h1><div class="anun-txt">'+esc(a.texto).replace(/\n/g,'<br>')+'</div><div class="anun-by">Enviado por '+esc(a.porNombre||'Sistemas')+' · '+fstamp(a.creado)+'</div><button class="anun-btn" id="anun-ok" data-act="anenterado" data-id="'+esc(a.id)+'">ENTERADO</button><p class="anun-hint">Debe confirmar que está enterado para continuar.</p></div>';
+  const b=document.getElementById('anun-ok');if(b)b.focus();
+}
+document.addEventListener('change',e=>{if(e.target&&e.target.name==='an-d'){const g=document.getElementById('an-alg');if(g)g.style.display=e.target.value==='algunos'?'block':'none';}});
+document.addEventListener('keydown',e=>{const el=document.getElementById('anun');if(!el)return;if(e.key==='Tab'){e.preventDefault();const b=document.getElementById('anun-ok');if(b)b.focus();}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();}},true);
+async function anSave(coll,o){const ref=coll.doc(o.id);let err=null;try{await ref.set(o);}catch(e1){err=e1;try{await ref.update(o);err=null;}catch(e2){err=e2;}}if(err)setTimeout(()=>toast('No se pudo guardar en la base compartida: '+((err&&(err.message||err.code))||String(err))),50);}
+function anunciosHtml(){
+  const list=(S.anuncios||[]).slice().sort((a,b)=>(b.creado||0)-(a.creado||0));
+  let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>Anuncios a usuarios</b><div class="muted" style="font-size:13px">El anuncio aparece a pantalla completa y el usuario no puede usar la plataforma hasta pulsar «Enterado».</div></div><button class="btn primary" data-act="annew">Nuevo anuncio</button></div></div>';
+  if(!list.length)return h+'<div class="empty"><b>Aún no ha enviado anuncios</b></div>';
+  h+='<div class="card" style="overflow:auto"><table><thead><tr><th>Fecha</th><th>Título</th><th>Destinatarios</th><th>Enterados</th><th>Estado</th><th></th></tr></thead><tbody>';
+  list.forEach(a=>{const rec=anRecips(a),ent=(S.anEnt||[]).filter(e=>e.aid===a.id);
+    const tot=S.mode==='local'?'':' de '+rec.length;
+    h+='<tr><td>'+fstamp(a.creado)+'</td><td><b>'+esc(a.titulo)+'</b></td><td>'+esc(anDestTxt(a))+'</td><td><b>'+ent.length+'</b>'+tot+'</td><td>'+(a.activo===false?'<span class="pill">Retirado</span>':'<span class="pill t-warn">Vigente</span>')+'</td><td><button class="btn sm" data-act="anver" data-id="'+esc(a.id)+'">Ver detalle</button>'+(a.activo===false?'':' <button class="btn sm danger" data-act="anretirar" data-id="'+esc(a.id)+'">Retirar</button>')+'</td></tr>';});
+  return h+'</tbody></table></div>';
+}
+Object.assign(A,{
+  annew(){
+    const us=(S.users||[]).filter(u=>u.activo).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
+    modal({title:'Nuevo anuncio',wide:true,ok:'Enviar anuncio',html:
+     '<div class="f"><label for="an-t">Título <i>*</i></label><input id="an-t" maxlength="120" autocomplete="off" placeholder="Ej. Cambio en el proceso de requisiciones"></div>'+
+     '<div class="f"><label for="an-x">Mensaje <i>*</i></label><textarea id="an-x" rows="5" maxlength="2000" placeholder="Escriba el anuncio"></textarea></div>'+
+     '<div class="f"><label>Destinatarios <i>*</i></label><label class="chk"><input type="radio" name="an-d" value="todos" checked> Todos los usuarios</label><label class="chk"><input type="radio" name="an-d" value="algunos"> Solo algunos</label></div>'+
+     '<div id="an-alg" style="display:none"><div class="f"><label>Por perfil</label><div class="row" style="flex-wrap:wrap">'+PERFIL_ORDER.map(r=>'<label class="chk"><input type="checkbox" data-anr="'+r+'"> '+esc(PERFILES[r])+'</label>').join('')+'</div></div>'+
+     (us.length?'<div class="f"><label>O usuarios en particular</label><div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px">'+us.map(u=>'<label class="chk" style="display:block"><input type="checkbox" data-anu="'+esc(u.id)+'"> '+esc(u.nombre)+' <span class="muted">· '+esc(PERFILES[u.perfil]||u.perfil)+'</span></label>').join('')+'</div></div>':'')+'</div>',
+     onOk:async root=>{
+      const t=root.querySelector('#an-t').value.trim(),x=root.querySelector('#an-x').value.trim();
+      if(!t)return 'Escriba el título.';if(!x)return 'Escriba el mensaje.';
+      const todos=root.querySelector('input[name=an-d]:checked').value==='todos';
+      const roles=[...root.querySelectorAll('[data-anr]:checked')].map(e=>e.dataset.anr),uids=[...root.querySelectorAll('[data-anu]:checked')].map(e=>e.dataset.anu);
+      if(!todos&&!roles.length&&!uids.length)return 'Seleccione al menos un perfil o usuario.';
+      const a={id:rid(),titulo:t,texto:x,dest:{todos:todos,roles:todos?[]:roles,uids:todos?[]:uids},creado:Date.now(),por:myId,porNombre:(S.me&&(S.me.nombre||S.me.email))||'Sistemas',activo:true};
+      S.anuncios.push(a);if(anColl)await anSave(anColl,a);
+      try{bitWrite({accion:'anuncio',txt:'Envió el anuncio «'+t+'» a: '+anDestTxt(a)});}catch(e){}
+      toast('Anuncio enviado.');render();return true;}});
+  },
+  async anenterado(el){
+    const a=(S.anuncios||[]).find(x=>x.id===el.dataset.id);if(!a||anSeen(a))return;
+    const k=anKey();const e={id:a.id+'_'+k.replace(/[^\w-]/g,'_'),aid:a.id,uid:k,nombre:(S.me&&(S.me.nombre||S.me.email))||ROLES[S.role]||'',perfil:S.role,t:Date.now()};
+    S.anEnt.push(e);anuncioOverlay();if(anEntColl)await anSave(anEntColl,e);render();
+  },
+  anver(el){
+    const a=(S.anuncios||[]).find(x=>x.id===el.dataset.id);if(!a)return;
+    const ent=(S.anEnt||[]).filter(e=>e.aid===a.id),rec=anRecips(a);
+    const done=new Set(ent.map(e=>e.uid));
+    const pend=rec.filter(u=>!(u.uid&&done.has(u.uid))&&!done.has(u.id));
+    modal({title:a.titulo,wide:true,ok:'Cerrar',html:'<p style="white-space:pre-wrap;margin-top:0">'+esc(a.texto)+'</p><p class="muted">'+esc(anDestTxt(a))+' · enviado '+fstamp(a.creado)+'</p><h4>Enterados ('+ent.length+')</h4>'+
+      (ent.length?'<ul>'+ent.sort((x,y)=>x.t-y.t).map(e=>'<li>'+esc(e.nombre||e.uid)+' <span class="muted">· '+esc(ROLES[e.perfil]||e.perfil||'')+' · '+fstamp(e.t)+'</span></li>').join('')+'</ul>':'<p class="muted">Nadie ha confirmado todavía.</p>')+
+      (S.mode==='local'?'':'<h4>Pendientes ('+pend.length+')</h4>'+(pend.length?'<ul>'+pend.map(u=>'<li>'+esc(u.nombre)+' <span class="muted">· '+esc(PERFILES[u.perfil]||u.perfil)+'</span></li>').join('')+'</ul>':'<p class="muted">Todos confirmaron.</p>')),onOk:()=>true});
+  },
+  anretirar(el){
+    const a=(S.anuncios||[]).find(x=>x.id===el.dataset.id);if(!a)return;
+    modal({title:'Retirar anuncio',html:'<p>El anuncio «<b>'+esc(a.titulo)+'</b>» dejará de mostrarse a quienes aún no lo han confirmado. El registro de enterados se conserva.</p>',ok:'Retirar',onOk:async()=>{a.activo=false;if(anColl)await anSave(anColl,a);render();return true;}});
+  }
+});
 /* ───────── eventos ───────── */
 document.addEventListener('click',e=>{
   if(S.nOpen&&!e.target.closest('#npop')&&!e.target.closest('#bell')){S.nOpen=false;bellRender();}
@@ -4355,6 +4463,7 @@ async function boot(){
     try{empColl=db.collection('empleados');}catch(e){empColl=null;}
     try{nomColl=db.collection('nominas');}catch(e){nomColl=null;}
     try{proyColl=db.collection('proyectos');}catch(e){proyColl=null;}
+    try{anColl=db.collection('anuncios');anEntColl=db.collection('anuncios_enterados');}catch(e){anColl=null;anEntColl=null;}
     try{altasColl=db.collection('altas_trabajadores');expColl=db.collection('expedientes_trabajadores');}catch(e){altasColl=null;expColl=null;}
     try{repColl=db.collection('reposiciones');}catch(e){repColl=null;}
     try{docsColl=db.collection('documentos');notifColl=db.collection('notificaciones');lecColl=db.collection('notif_lecturas');}catch(e){docsColl=null;notifColl=null;lecColl=null;}
