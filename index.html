@@ -1709,7 +1709,8 @@ function ndiffRep(o,n){
 /* ───────── documentos adjuntos ───────── */
 let docsColl=null,notifColl=null,lecColl=null;
 const DOC_TIPOS=['Comprobante de pago','Factura','Cotización','Otro documento'];
-const DOC_EXT=/\.(pdf|png|jpe?g|gif|webp|heic|bmp|tiff?|docx?|xlsx?|csv|pptx?|txt|odt|ods|rtf)$/i;
+const DOC_EXT=/\.(pdf|png|jpe?g|gif|webp|heic|bmp|tiff?|docx?|xlsx?|csv|pptx?|txt|odt|ods|rtf|dwg|dxf|dwf|dwfx|dwt|dgn|rvt|ifc|skp)$/i;
+const CAD_EXT=/\.(dwg|dxf|dwf|dwfx|dwt|dgn|rvt|ifc|skp)$/i;
 S.docs=[];S.notifs=[];S.lect={};S.nf={est:'',pri:'',mod:''};S.nOpen=false;S.docVer=new Set();
 const SNAP={};
 const snapPut=(k,o)=>{SNAP[k]={u:o.upd||0,j:JSON.stringify(o)};};
@@ -1735,8 +1736,9 @@ function docsHtml(r){
 function docFilesCheck(files){
   if(!files||!files.length)return 'Seleccione al menos un archivo.';
   for(const f of files){
-    if(!DOC_EXT.test(f.name))return 'Formato no permitido: '+f.name+'. Use PDF, imágenes, Word, Excel, PowerPoint, CSV o texto.';
-    if(f.size>20*1024*1024)return 'El archivo '+f.name+' excede 20 MB.';
+    if(!DOC_EXT.test(f.name))return 'Formato no permitido: '+f.name+'. Use PDF, imágenes, Word, Excel, PowerPoint, CSV, texto o planos (DWG, DXF, DWF, DGN, RVT, IFC, SKP).';
+    const mb=CAD_EXT.test(f.name)?50:20;
+    if(f.size>mb*1024*1024)return 'El archivo '+f.name+' excede '+mb+' MB.';
   }
   return '';
 }
@@ -3162,7 +3164,7 @@ function payModal(tipo){
 
 
 /* ───────── acciones documentos y notificaciones ───────── */
-const DOC_ACCEPT='.pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.bmp,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.odt,.ods,.rtf';
+const DOC_ACCEPT='.pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.bmp,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.odt,.ods,.rtf,.dwg,.dxf,.dwf,.dwfx,.dwt,.dgn,.rvt,.ifc,.skp';
 Object.assign(A,{
   bellopen(el,e){if(e)e.stopPropagation();S.nOpen=!S.nOpen;bellRender();},
   nver(){S.nOpen=false;S.tab='notif';S.open=null;S.nv=null;S.nd=null;S.navG=undefined;S.navTab=undefined;render();},

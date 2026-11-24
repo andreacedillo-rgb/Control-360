@@ -164,3 +164,6 @@ No requieren migración nueva: se guardan dentro del documento del proyecto (col
 
 ### Borradores sin duplicados (solicitudes de alta)
 Guardar un borrador y enviarlo ya no crea dos solicitudes: ambas acciones usan el mismo folio. No se permite una segunda solicitud de alta del mismo trabajador (mismo nombre) mientras haya una en borrador, pendiente o devuelta. Se bloquea el doble clic. El residente puede **Eliminar borrador** (solo borradores sin enviar; no requiere migración, se oculta del listado y queda en el historial).
+
+### Planos y archivos CAD
+Todos los campos de carga de documentos (contratos, fianzas, SIROC, facturas, aditivas, expedientes, etc.) aceptan además **DWG, DXF, DWF, DWFX, DWT, DGN, RVT, IFC y SKP** (límite 50 MB por plano; 20 MB para el resto). El bucket de Supabase no restringe tipos de archivo, no requiere migración. Si un plano pesa más de 50 MB, súbalo comprimido en ZIP o revise el límite global en Supabase → Storage → Settings.
