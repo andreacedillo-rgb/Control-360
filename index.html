@@ -4446,10 +4446,33 @@ function tarElimHtml(){
   const l=(S.tareas||[]).filter(t=>t.cancelada).sort((a,b)=>(b.canceladaT||0)-(a.canceladaT||0));if(!l.length||!tarAdm())return '';
   return '<div class="card" style="margin-top:14px"><b>Registro de tareas eliminadas ('+l.length+')</b><div class="tw"><table><thead><tr><th>Folio</th><th>Tarea</th><th>Responsable</th><th>Eliminada por</th><th>Fecha</th><th>Motivo</th></tr></thead><tbody>'+l.map(t=>'<tr><td class="mono">'+esc(t.folio)+'</td><td>'+esc(t.titulo)+'<div class="sub">'+esc(t.proyecto||'')+'</div></td><td>'+esc(t.asigNom||'—')+'</td><td>'+esc(t.canceladaNom||'')+'</td><td>'+(t.canceladaT?fstamp(t.canceladaT):'')+'</td><td>'+esc(t.canceladaMotivo||'')+'</td></tr>').join('')+'</tbody></table></div></div>';
 }
+function tarPdf(g){
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No se cargó el generador de PDF. Revise su conexión y recargue la página.');
+  const doc=new J({orientation:'landscape',unit:'mm',format:'letter'});
+  if(typeof doc.autoTable!=='function')throw new Error('No se cargó el generador de tablas del PDF. Recargue la página.');
+  const pend=tarVis().filter(t=>t.estado!=='terminada');
+  const key=t=>g==='obra'?(t.proyecto||'Sin obra'):(t.asigNom||PERFILES[t.asigPerfil]||'Sin responsable');
+  const grupos={};pend.forEach(t=>{(grupos[key(t)]=grupos[key(t)]||[]).push(t);});
+  const names=Object.keys(grupos).sort((a,b)=>a.localeCompare(b,'es'));
+  const ven=pend.filter(t=>tarEst(t)[0]==='VENCIDO').length;
+  let y=pdfHead(doc,'Tareas pendientes por '+(g==='obra'?'obra':'persona'),pend.length+' pendiente(s) · '+ven+' vencida(s) · corte al '+fdate(tarHoy()));
+  const H=doc.internal.pageSize.getHeight();
+  if(!pend.length){doc.setFontSize(11);doc.text('No hay tareas pendientes.',14,y+4);}
+  names.forEach(n=>{const l=grupos[n].sort((a,b)=>String(a.fEnt||'9999').localeCompare(String(b.fEnt||'9999')));
+    if(y>H-40){doc.addPage();y=20;}
+    doc.setTextColor(11,95,122);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(pdfT(n+'  ('+l.length+' pendiente'+(l.length===1?'':'s')+', '+l.filter(t=>tarEst(t)[0]==='VENCIDO').length+' vencida(s))'),14,y);doc.setDrawColor(11,95,122);doc.line(14,y+1.5,265,y+1.5);doc.setTextColor(20,35,43);y+=4;
+    doc.autoTable({startY:y,head:[['Folio','Tarea',g==='obra'?'Responsable':'Obra','Estado','Solicitada','Entrega','Estado actual','Atraso (d)']],
+      body:l.map(t=>{const e=tarEst(t),at=tarAtraso(t);return [t.folio,t.titulo+(t.mod?'\n[Solicita modificación]':''),g==='obra'?(t.asigNom||'-'):(t.proyecto||'-'),TAR_ST[t.estado]||t.estado,t.fSol?fdate(t.fSol):'-',t.fEnt?fdate(t.fEnt):'s/fecha',e[0],at?String(at):'-'].map(pdfT);}),
+      styles:{fontSize:8.5,cellPadding:2,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[11,95,122],textColor:255},alternateRowStyles:{fillColor:[245,248,249]},
+      columnStyles:{0:{cellWidth:28},1:{cellWidth:75},7:{halign:'right'}},margin:{left:14,right:14},
+      didParseCell:d=>{if(d.section==='body'&&d.column.index===6&&d.cell.raw==='VENCIDO'){d.cell.styles.textColor=[198,40,40];d.cell.styles.fontStyle='bold';}}});
+    y=doc.lastAutoTable.finalY+9;});
+  pdfFoot(doc);return doc;
+}
 function tareasHtml(){
   const adm=tarAdm(),all=tarVis();
   const proy=[...new Set(all.map(t=>t.proyecto).filter(Boolean))].sort(),resp=[...new Set(all.map(t=>t.asigNom||t.asigPerfil).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es'));
-  let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>'+(adm?'Tareas asignadas':'Seguimiento de tareas (consulta)')+'</b><div class="muted" style="font-size:13px">'+(adm?'Cree la tarea y asígnela a cualquier usuario; a él le aparece en «Tareas asignadas». El usuario puede marcarla terminada o solicitar una modificación de fecha.':'Vista de solo lectura.')+'</div></div>'+(adm?'<button class="btn primary" data-act="tarnew">Nueva tarea</button>':'')+'</div></div>';
+  let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>'+(adm?'Tareas asignadas':'Seguimiento de tareas (consulta)')+'</b><div class="muted" style="font-size:13px">'+(adm?'Cree la tarea y asígnela a cualquier usuario; a él le aparece en «Tareas asignadas». El usuario puede marcarla terminada o solicitar una modificación de fecha.':'Vista de solo lectura.')+'</div></div>'+'<div class="row"><button class="btn" data-act="tarpdf" data-g="obra">Reporte PDF por obra</button><button class="btn" data-act="tarpdf" data-g="persona">Reporte PDF por persona</button>'+(adm?'<button class="btn primary" data-act="tarnew">Nueva tarea</button>':'')+'</div></div></div>';
   h+=tarResumen(all);
   h+='<div class="card"><div class="grid"><div class="f"><label for="tq">Buscar</label><input id="tq" type="search" placeholder="Tarea, folio, proyecto…" value="'+esc(S.tq)+'" autocomplete="off"></div><div class="f"><label for="tp">Proyecto</label><select id="tp"><option value="">Todos</option>'+proy.map(x=>'<option'+(S.tp===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div><div class="f"><label for="tr">Responsable</label><select id="tr"><option value="">Todos</option>'+resp.map(x=>'<option'+(S.tr===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div><div class="f"><label for="te">Estado</label><select id="te">'+[['','Todos'],['VENCIDO','Vencidas'],['VIGENTE','Vigentes'],['TERMINADO','Terminadas'],['TERMINADO EN DESTIEMPO','Terminadas en destiempo'],['SOL','Con solicitud de modificación']].map(o=>'<option value="'+o[0]+'"'+(S.te===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></div></div></div>';
   return h+tarTabla(tarFiltradas(),adm)+tarElimHtml();
@@ -4528,6 +4551,11 @@ function tarForm(t){
 }
 Object.assign(A,{
   tarnew(){if(tarAdm())tarForm(null);},
+  async tarpdf(el){const g=el.dataset.g==='persona'?'persona':'obra';
+    try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
+      if(!dl){toast('La descarga no está disponible aquí. Abra la app desde su enlace publicado.');return;}
+      const doc=tarPdf(g);await dl.save({filename:'tareas-pendientes-por-'+g+'-'+todayISO()+'.pdf',data:doc.output('blob')});toast('Reporte generado.');
+    }catch(e){toast('No se pudo generar el PDF: '+((e&&e.message)||e));}},
   tarelim(el){const t=(S.tareas||[]).find(x=>x.id===el.dataset.id);if(!t||!tarEsCreador(t))return;
     modal({title:'Eliminar tarea · '+t.folio,ok:'Eliminar tarea',html:'<p style="margin-top:0">La tarea «<b>'+esc(t.titulo)+'</b>» asignada a <b>'+esc(t.asigNom||'—')+'</b> dejará de aparecer en las listas y en el calendario. <b>Solo quedará su registro</b> (quién la eliminó, cuándo y por qué).</p><div class="f"><label for="te-m">Motivo (obligatorio)</label><textarea id="te-m" rows="2" maxlength="300"></textarea></div><div id="m-err" class="err" role="alert"></div>',
      onOk:async root=>{const m=root.querySelector('#te-m').value.trim();if(m.length<3)return 'Escriba el motivo de la eliminación.';
