@@ -4564,12 +4564,11 @@ function tareaAviso(){
   const sig=n+'|'+ven+'|'+key;if(el&&el.dataset.sig===sig)return;
   if(!el){el=document.createElement('div');el.id='tarav';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','tarav-t');document.body.appendChild(el);}
   el.dataset.sig=sig;
-  el.innerHTML='<div class="tarav-box"><div class="anun-tag" style="background:#E65100">TAREAS ASIGNADAS</div><h1 id="tarav-t">TIENES '+n+(n===1?' TAREA ASIGNADA':' TAREAS ASIGNADAS')+'</h1>'+(ven?'<div class="tarav-ven">'+ven+(ven===1?' está vencida':' están vencidas')+'</div>':'')+'<div class="tarav-sub">'+(n-ven)+' por entregar</div><button class="anun-btn" id="tarav-ok" data-act="tarrev" style="background:#E65100">REVISAR</button><div><button class="btn" data-act="tarlater" style="margin-top:16px">Ver después</button></div></div>';
+  el.innerHTML='<div class="tarav-box"><div class="anun-tag" style="background:#E65100">TAREAS ASIGNADAS</div><h1 id="tarav-t">TIENES '+n+(n===1?' TAREA ASIGNADA':' TAREAS ASIGNADAS')+'</h1>'+(ven?'<div class="tarav-ven">'+ven+(ven===1?' está vencida':' están vencidas')+'</div>':'')+'<div class="tarav-sub">'+(n-ven)+' por entregar</div><button class="anun-btn" id="tarav-ok" data-act="tarrev" style="background:#E65100">REVISAR</button></div>';
   const b=document.getElementById('tarav-ok');if(b)b.focus();
 }
 Object.assign(A,{
-  tarrev(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();S.navG='Tareas';S.tab='tareasm';S.navTab='tareasm';S.open=null;render();},
-  tarlater(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();}
+  tarrev(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();S.navG='Tareas';S.tab='tareasm';S.navTab='tareasm';S.open=null;render();}
 });
 /* ───────── eventos ───────── */
 document.addEventListener('click',e=>{
