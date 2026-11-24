@@ -187,3 +187,31 @@ El perfil Auditor tiene la pestaña **Calendario** (solo lectura): fechas en que
 - El residente **siempre** debe cargar los seis documentos para enviar una solicitud de alta.
 - **Solo Administración** puede registrar un **alta directa con documentos faltantes**: debe escribir el **motivo de la excepción**. Queda en el historial y el expediente muestra el aviso «Alta con excepción de documentos» con los pendientes, que Administración puede cargar después desde el expediente.
 - No requiere migración.
+
+## Tareas asignadas (Auditor → cualquier usuario)
+- **Auditor → «Tareas (asignar)»:** crea la tarea (proyecto, tarea, notas, tiempo de ejecución, fecha de solicitud y de entrega) y la asigna a **cualquier usuario**. Ve el resumen (vencidas, vigentes, detenidas, terminadas, con solicitud), filtra por proyecto/responsable/estado y busca. Puede editar (cambios de fecha, responsable o estado piden motivo y quedan en el historial; se conserva la fecha original) y **resolver solicitudes de modificación** (aprobar o rechazar con motivo).
+- **Todos los perfiles → «Tareas asignadas»:** el usuario ve sus tareas, con insignia de pendientes/vencidas. Puede **marcarla como terminada** (queda la fecha real; si es posterior a la programada aparece «Terminado en destiempo») o **solicitar una modificación** (nueva fecha y motivo) que el Auditor aprueba o rechaza.
+- **Vencido / Vigente** se calculan solos con la fecha de entrega; sin fecha = «s/fecha» (vigente).
+- **Dirección** tiene además «Seguimiento de tareas» (solo lectura).
+- Hay notificaciones al asignar, al terminar, al solicitar modificación y al resolverla.
+- **Requiere migración:** `supabase/migrations/010_tareas.sql` (colección `tareas`, y permite al Auditor leer la lista de usuarios para asignar).
+
+### Adjuntos en tareas
+- El Auditor puede adjuntar documentos al crear la tarea o después; quien recibe la tarea puede adjuntar mientras no esté terminada. Ambos ven todos los adjuntos (quién los subió y cuándo). El Auditor puede quitar cualquiera; cada usuario, los suyos. Todo queda en el historial.
+- Formatos: PDF, imágenes, Word, Excel, PowerPoint, CSV, texto y planos (DWG, DXF…); 20 MB por archivo (planos 50 MB).
+- Cambia `js/supabase-adapter.js` (carpeta `tareas/` en el almacenamiento): hay que subir también esa carpeta `js` a GitHub. No requiere otra migración.
+
+### Aviso «TIENES X tareas asignadas» y «Ver como» usuario
+- Al entrar, si el usuario tiene tareas sin terminar aparece un aviso grande **«TIENES X TAREAS ASIGNADAS»** (con cuántas están vencidas) y el botón **REVISAR**, que lo lleva a *Tareas → Tareas asignadas*. «Ver después» lo cierra solo por esa sesión. Si hay un anuncio de Sistemas pendiente, ese sale primero.
+- El selector **«Ver como»** (visible para el propietario) ahora lista, además de los perfiles, a los **usuarios** dados de alta (p. ej. Julio Estrada) para ver exactamente lo que ve esa persona: sus tareas, avisos y anuncios dirigidos a ella. En el artefacto de prueba hay un usuario demo.
+- Corrección: los anuncios dirigidos a «usuarios en particular» ahora identifican correctamente al usuario.
+- No requiere migración.
+
+### Tareas en el calendario
+- Las tareas con fecha de entrega aparecen en el **Calendario** (y en «OC y entregas» de Compras): rosa = pendiente, **rojo = vencida**, verde tachada = terminada. Cada usuario ve **sus** tareas; Auditor y Dirección ven **todas**. Un clic abre el detalle y lleva a Tareas.
+- Debajo del calendario, la tabla «Tareas por entregar». No requiere migración.
+
+## Quién puede asignar tareas (restricción)
+Por el momento solo pueden **crear, editar y resolver solicitudes de modificación** de tareas: el perfil **Auditor** y la cuenta **julio.estrada@catraar.com** (pestaña "Tareas (asignar)"). Todos los demás ven únicamente "Tareas asignadas" (marcar terminada, solicitar modificación, adjuntar).
+- En la app: constante `TAR_ASIGNA` en `index.html`.
+- En la base de datos: función `c360_asigna_tareas()` en `supabase/migrations/010_tareas.sql` (agregue ahí otros correos en minúsculas). Si ya ejecutó la 010, vuelva a ejecutarla completa; es segura de repetir.
