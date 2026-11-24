@@ -3405,20 +3405,21 @@ function altaNotify(a,ev,titulo,prio,toAdmin,motivo){
 /* ── formulario de solicitud / alta directa ── */
 function altaFormHtml(a,directa){
   const v=a||{nombre:'',obra:'',docs:{}};
-  let h='<p class="muted" style="margin:0;font-size:13px">Los seis documentos son obligatorios para '+(directa?'registrar el alta':'enviar la solicitud')+'. Se conservan en el expediente del trabajador. Formatos: PDF, imágenes u Office; máximo 20 MB por archivo.</p>'+
+  let h='<p class="muted" style="margin:0;font-size:13px">'+(directa?'Los seis documentos son obligatorios. <b>Solo Administración puede registrar un alta con excepción de documentos</b>: si falta alguno, deberá indicar el motivo y el expediente quedará marcado hasta completarlo.':'Los seis documentos son obligatorios para enviar la solicitud. Solo Administración puede dar de alta con excepción de documentos.')+' Se conservan en el expediente del trabajador. Formatos: PDF, imágenes u Office; máximo 20 MB por archivo.</p>'+
    '<div class="grid"><div class="f span2"><label for="al-n">Nombre completo del trabajador <i>*</i></label><input id="al-n" value="'+esc(v.nombre)+'" autocomplete="off"></div>'+
    '<div class="f"><label for="al-o">Obra o proyecto <i>*</i></label><input id="al-o" value="'+esc(v.obra)+'" list="obras" autocomplete="off"></div>'+
    (directa?'<div class="f"><label for="al-s">Sueldo base diario <i>*</i></label><input id="al-s" type="number" min="0" step="any" inputmode="decimal"></div>':'')+'</div>';
   h+='<div class="tw"><table><thead><tr><th>Documento</th><th>Archivo cargado</th><th>Cargar / sustituir</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(v.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b> <i style="color:var(--bad,#b42318)">*</i></td><td id="al-st-'+d[0]+'">'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td><input type="file" id="al-f-'+d[0]+'" accept="'+DOC_ACCEPT+'" aria-label="'+esc(d[1])+'"></td></tr>';}).join('')+'</tbody></table></div>';
+  if(directa)h+='<div class="f" style="margin-top:10px"><label for="al-exc">Motivo de la excepción <span class="muted">(obligatorio si falta algún documento)</span></label><textarea id="al-exc" maxlength="600" placeholder="Ej. el trabajador entregará el acta de nacimiento la próxima semana"></textarea></div>';
   return h;
 }
-async function altaCollect(root,a,exigir){
+async function altaCollect(root,a,exigir,docsOpc){
   const nombre=root.querySelector('#al-n').value.trim(),obra=root.querySelector('#al-o').value.trim();
   if(!nombre)return {err:'Capture el nombre completo del trabajador.'};
   if(exigir&&!obra)return {err:'Indique la obra o proyecto asignado.'};
   const nf={};
   for(const d of ALTA_DOCS){const inp=root.querySelector('#al-f-'+d[0]);const f=inp&&inp.files&&inp.files[0];if(f){const ck=docFilesCheck([f]);if(ck)return {err:d[1]+': '+ck};nf[d[0]]=f;}}
-  if(exigir){const falta=ALTA_DOCS.filter(d=>!nf[d[0]]&&!(a.docs&&a.docs[d[0]]));if(falta.length)return {err:'Faltan documentos obligatorios: '+falta.map(d=>d[1]).join('; ')+'.'};}
+  if(exigir&&!docsOpc){const falta=ALTA_DOCS.filter(d=>!nf[d[0]]&&!(a.docs&&a.docs[d[0]]));if(falta.length)return {err:'Faltan documentos obligatorios: '+falta.map(d=>d[1]).join('; ')+'.'};}
   return {nombre:nombre,obra:obra,nf:nf};
 }
 async function altaApplyFiles(a,nf){
@@ -3472,7 +3473,10 @@ function bajaForm(a){
 function altaDirecta(){
   modal({title:'Registrar alta directa de trabajador',wide:true,html:altaFormHtml(null,true),ok:'REGISTRAR ALTA',
    onOk:async root=>{
-    const c=await altaCollect(root,{docs:{}},true);if(c.err)return c.err;
+    if(!rhAdm())return 'Solo Administración puede registrar altas directas.';
+    const c=await altaCollect(root,{docs:{}},true,true);if(c.err)return c.err;
+    const faltan=ALTA_DOCS.filter(d=>!c.nf[d[0]]),motExc=(root.querySelector('#al-exc')||{value:''}).value.trim();
+    if(faltan.length&&!motExc)return 'Faltan '+faltan.length+' documento(s): '+faltan.map(d=>d[1]).join('; ')+'. Escriba el motivo de la excepción para registrar el alta sin ellos.';
     const sueldo=Number(root.querySelector('#al-s').value);if(!(sueldo>0))return 'Capture el sueldo base diario (mayor a cero).';
     const dup=S.emps.find(e=>normQ(e.nombre)===normQ(c.nombre)&&e.situacion!=='baja'&&e.activo!==false&&normQ(e.obra||'')===normQ(c.obra));
     if(dup)return 'ALERTA DE DUPLICADO: ya existe un trabajador activo con ese nombre en la misma obra.';
@@ -3480,6 +3484,7 @@ function altaDirecta(){
     const er=await altaApplyFiles(x,c.nf);if(er)return er;
     x.nombre=c.nombre;x.obra=c.obra;x.enviado=Date.now();ah(x,'Registró el alta directamente (sin solicitud del residente)');
     x.dec={uid:myId,t:Date.now(),res:'aceptada',txt:'Alta directa por Administración'};
+    if(faltan.length){x.exc={faltan:faltan.map(d=>d[0]),motivo:motExc,uid:myId,t:Date.now()};ah(x,'ALTA CON EXCEPCIÓN DE DOCUMENTOS · faltan: '+faltan.map(d=>d[1]).join('; ')+' · motivo: '+motExc);}
     await altaAceptarCore(x,sueldo,'');return true;}});
 }
 async function altaAceptarCore(a,sueldo,linkId){
@@ -3491,8 +3496,8 @@ async function altaAceptarCore(a,sueldo,linkId){
   if(e.situacion!=='activo')e.situacion='pend_imss';e.activo=true;e.altaId=a.id;
   await saveEmp(e);
   let x=expById(e.id);x=x?clone(x):{id:e.id,creado:Date.now(),laborales:[],hist:[],altas:[]};
-  x.nombre=e.nombre;x.obra=e.obra;x.docs=clone(a.docs||{});x.fAcept=Date.now();x.aceptadoPor=myId;x.solicitadoPor=a.creatorId;x.solicitadoNom=a.solicitante||'';x.folioAlta=a.folio;x.altas=(x.altas||[]);if(x.altas.indexOf(a.id)<0)x.altas.push(a.id);
-  xh(x,'Alta aceptada internamente (solicitud '+a.folio+'). Pendiente de alta formal ante el IMSS.');
+  x.nombre=e.nombre;x.obra=e.obra;x.docs=clone(a.docs||{});if(a.exc)x.exc=clone(a.exc);x.fAcept=Date.now();x.aceptadoPor=myId;x.solicitadoPor=a.creatorId;x.solicitadoNom=a.solicitante||'';x.folioAlta=a.folio;x.altas=(x.altas||[]);if(x.altas.indexOf(a.id)<0)x.altas.push(a.id);
+  xh(x,'Alta aceptada internamente (solicitud '+a.folio+'). Pendiente de alta formal ante el IMSS.'+(a.exc?' CON EXCEPCIÓN DE DOCUMENTOS: '+a.exc.motivo:''));
   await saveExp(x);
   a.empId=e.id;a.estado='aceptada';ah(a,'Solicitud aceptada; expediente del trabajador '+(linkId?'vinculado':'creado'));
   await saveAlta(a);
@@ -3602,10 +3607,11 @@ function expDetail(e){
   let h='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="alback">← Volver</button><h2 class="sec" style="margin:0 auto 0 8px">Expediente · '+esc(e.nombre)+'</h2>'+sitPill(e)+'</div>';
   h+='<div class="card"><div class="grid"><div><span class="muted">Obra asignada</span><br><b>'+esc(e.obra||'—')+'</b></div><div><span class="muted">Sueldo base diario</span><br><b>'+money(e.sueldo)+'</b></div><div><span class="muted">Fecha de aceptación interna</span><br><b>'+(x.fAcept?fstamp(x.fAcept):'—')+'</b></div><div><span class="muted">Residente que solicitó</span><br><b>'+esc(x.solicitadoNom||nm(x.solicitadoPor)||'—')+'</b></div><div><span class="muted">Administrador que autorizó</span><br><b>'+esc(nm(x.aceptadoPor)||'—')+'</b></div><div><span class="muted">Folio de solicitud</span><br><b class="mono">'+esc(x.folioAlta||'—')+'</b></div></div>'+
    '<p class="muted" style="margin:10px 0 0;font-size:13px">La aceptación interna no equivale al alta formal ante el IMSS: la situación laboral cambia a «Activo» hasta cargar el acuse oficial de alta.</p></div>';
+  if(x.exc){const pend=ALTA_DOCS.filter(d=>!(x.docs&&x.docs[d[0]]));h+='<div class="note warn" style="margin-top:10px"><b>Alta con excepción de documentos</b> (autorizada por Administración '+fstamp(x.exc.t)+')<br>Motivo: '+esc(x.exc.motivo)+'<br>'+(pend.length?'<b>Pendientes ('+pend.length+'):</b> '+pend.map(d=>esc(d[1])).join('; ')+'.':'Ya se completaron todos los documentos.')+'</div>';}
   S.altas.filter(b=>esBaja(b)&&b.empId===e.id&&(b.estado==='pendiente'||(b.estado==='aceptada'&&sitOf(e)!=='baja'))).forEach(b=>{h+='<div class="note warn" style="margin-top:10px"><b>Solicitud de baja '+esc(b.folio)+' · '+esc(ALTA_EST[b.estado][0])+'</b> · fecha propuesta '+fdate(b.fMov)+'<br>'+esc(b.motivo||'')+'</div>';});
   h+='<div class="row" style="margin:12px 0">'+(rhAdm()?'<button class="btn" data-act="empedx" data-id="'+e.id+'">Editar datos de nómina</button>':'')+(rhAdm()?(sitOf(e)!=='activo'&&sitOf(e)!=='baja'?'<button class="btn primary" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar ALTA ante IMSS</button>':'')+(sitOf(e)!=='baja'?'<button class="btn danger" data-act="allab" data-k="BAJA" data-id="'+e.id+'">Registrar BAJA</button>':'<button class="btn" data-act="allab" data-k="ALTA" data-id="'+e.id+'">Cargar nueva ALTA ante IMSS</button>'):'')+'</div>';
   const sb=(kind,key,t,txt)=>rhAdm()?'<button class="btn sm" data-act="dsub" data-id="'+e.id+'" data-kind="'+kind+'" data-key="'+esc(key)+'" data-t="'+esc(t)+'">'+txt+'</button>':'';
-  h+='<h2 class="sec" style="margin:4px 0">Documentos de alta del trabajador ('+ALTA_DOCS.filter(d=>x.docs&&x.docs[d[0]]).length+' de 6)</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th><th></th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1])+docVer(y,d[1]):'<span class="muted">Falta (expediente anterior al módulo)</span>')+'</td><td>'+(y?fstamp(y.t)+'<div class="sub">'+esc(nm(y.uid)||'')+'</div>':'')+'</td><td>'+sb('doc',d[0],d[1],y?'Sustituir':'Cargar')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<h2 class="sec" style="margin:4px 0">Documentos de alta del trabajador ('+ALTA_DOCS.filter(d=>x.docs&&x.docs[d[0]]).length+' de 6)</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th><th></th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const y=(x.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(y?rhLink(y.file,d[1])+docVer(y,d[1]):'<span class="muted">'+(x.exc?'Falta (excepción autorizada)':'Falta (expediente anterior al módulo)')+'</span>')+'</td><td>'+(y?fstamp(y.t)+'<div class="sub">'+esc(nm(y.uid)||'')+'</div>':'')+'</td><td>'+sb('doc',d[0],d[1],y?'Sustituir':'Cargar')+'</td></tr>';}).join('')+'</tbody></table></div>';
   h+='<h2 class="sec" style="margin:12px 0 4px">DOCUMENTOS LABORALES (IMSS)</h2>'+((x.laborales||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha del movimiento</th><th>Fecha de carga</th><th>Usuario responsable</th><th>Archivo</th><th></th></tr></thead><tbody>'+x.laborales.map(m=>'<tr><td>'+pill(m.tipo,m.tipo==='ALTA'?'ok':'bad')+'</td><td>'+fdate(m.fMov)+'</td><td>'+fstamp(m.fCarga)+'</td><td>'+esc(nm(m.uid)||'')+'</td><td>'+rhLink(m.file,'Documento '+m.tipo)+docVer(m,'Documento '+m.tipo)+(m.obs?'<div class="sub">'+esc(m.obs)+'</div>':'')+'</td><td>'+sb('lab',m.id,m.tipo+' IMSS','Sustituir')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay documentos de alta o baja ante el IMSS.</p>');
   h+='<div class="row" style="margin:14px 0 4px;align-items:center"><h2 class="sec" style="margin:0 auto 0 0">Contratos, actas administrativas y otros documentos</h2>'+(rhAdm()?'<button class="btn primary" data-act="odoc" data-id="'+e.id+'">Agregar documento</button>':'')+'</div>'+((x.otros||[]).length?'<div class="tw"><table><thead><tr><th>Tipo</th><th>Fecha</th><th>Descripción</th><th>Archivo</th><th>Cargado por</th><th></th></tr></thead><tbody>'+x.otros.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).map(m=>'<tr><td>'+pill(m.tipo,'info')+'</td><td>'+fdate(m.fecha)+'</td><td>'+esc(m.nota||'')+'</td><td>'+rhLink(m.file,m.tipo)+docVer(m,m.tipo)+'</td><td>'+esc(nm(m.uid)||'')+'<div class="sub">'+fstamp(m.fCarga)+'</div></td><td>'+sb('otro',m.id,m.tipo,'Sustituir')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Aún no hay contratos, actas ni otros documentos.</p>');
   h+='<h2 class="sec" style="margin:12px 0 4px">Solicitudes de alta</h2>'+(al.length?'<div class="tw"><table><tbody>'+al.map(a=>'<tr><td class="mono">'+esc(a.folio)+'</td><td>'+fdate(a.fechaSol)+'</td><td>'+pill(ALTA_EST[a.estado][0],ALTA_EST[a.estado][1])+'</td><td><button class="btn sm" data-act="alopen" data-id="'+a.id+'">Abrir</button></td></tr>').join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">Sin solicitudes registradas.</p>');

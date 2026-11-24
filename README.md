@@ -182,3 +182,8 @@ El perfil Auditor tiene la pestaña **Calendario** (solo lectura): fechas en que
 - El destinatario ve el anuncio **a pantalla completa, en rojo**, y no puede usar la plataforma ni cerrarlo hasta pulsar **ENTERADO**. Si hay varios, se muestran uno por uno.
 - Sistemas ve cuántos confirmaron (y quién y cuándo) y quién falta; puede **retirar** un anuncio. El envío queda en la bitácora.
 - **Requiere migración:** ejecutar `supabase/migrations/009_anuncios.sql` en Supabase → SQL Editor (nuevas colecciones `anuncios` y `anuncios_enterados`).
+
+## Altas con excepción de documentos (solo Administración)
+- El residente **siempre** debe cargar los seis documentos para enviar una solicitud de alta.
+- **Solo Administración** puede registrar un **alta directa con documentos faltantes**: debe escribir el **motivo de la excepción**. Queda en el historial y el expediente muestra el aviso «Alta con excepción de documentos» con los pendientes, que Administración puede cargar después desde el expediente.
+- No requiere migración.
