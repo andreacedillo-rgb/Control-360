@@ -4412,6 +4412,7 @@ function tarAtraso(t){if(t.estado==='terminada'||!t.fEnt)return 0;const a=new Da
 const TAR_ST={asignada:'Asignada',proceso:'En proceso',programada:'Programada',detenida:'Detenida',terminada:'Terminada'};
 const tarMine=t=>{if(!t||t.cancelada)return false;if(S.mode==='local')return t.asigId?t.asigId===curId():t.asigPerfil===S.role;const em=curEmail();return (em&&String(t.asigEmail||'').toLowerCase()===em)||(curId()&&t.asigId===curId());};
 const tarVis=()=>(S.tareas||[]).filter(t=>!t.cancelada);
+const tarEsCreador=t=>!!t&&!t.cancelada&&tarAdm()&&!!t.creadoPor&&t.creadoPor===myId;
 function tarTh(t,txt){t.hist=(t.hist||[]).concat([{t:Date.now(),uid:myId,nom:(S.me&&(S.me.nombre||S.me.email))||ROLES[S.role]||'',txt:txt}]);}
 async function tarSave(t){if(!(S.tareas||[]).some(x=>x.id===t.id))S.tareas.push(t);if(tarColl)await anSave(tarColl,t);}
 function tarNotif(t,ev,titulo,desc,toAssignee,roles){
@@ -4435,19 +4436,23 @@ function tarTabla(l,adm){
   let h='<div class="card" style="overflow:auto"><table><thead><tr><th>Proyecto</th><th>Tarea</th><th>Responsable</th><th>Estado</th><th>Solicitud</th><th>Entrega programada</th><th>Estado actual</th><th>Entrega real</th><th></th></tr></thead><tbody>';
   l.forEach(t=>{const e=tarEst(t),at=tarAtraso(t);
     h+='<tr><td><b>'+esc(t.proyecto||'—')+'</b></td><td><b>'+esc(t.titulo)+'</b><div class="sub mono">'+esc(t.folio)+'</div>'+(t.notas?'<div class="sub">'+esc(t.notas)+'</div>':'')+(t.tiempo?'<div class="sub">Tiempo de ejecución: '+esc(t.tiempo)+'</div>':'')+(t.mod?'<div class="sub"><span class="pill t-warn">SOLICITA MODIFICACIÓN</span> '+(t.mod.fecha?'nueva fecha '+fdate(t.mod.fecha):'')+' · '+esc(t.mod.motivo)+'</div>':'')+'</td><td>'+esc(t.asigNom||PERFILES[t.asigPerfil]||'—')+'</td><td>'+esc(TAR_ST[t.estado]||t.estado)+'</td><td>'+(t.fSol?fdate(t.fSol):'—')+'</td><td>'+(t.fEnt?fdate(t.fEnt):'s/fecha')+(t.fEntOrig&&t.fEntOrig!==t.fEnt?'<div class="sub">original '+fdate(t.fEntOrig)+'</div>':'')+'</td><td><span class="pill '+(e[1]==='bad'?'t-bad':e[1]==='ok'?'t-ok':e[1]==='warn'?'t-warn':'')+'">'+e[0]+'</span>'+(e[0]==='VENCIDO'&&at?'<div class="sub" style="color:#C62828"><b>'+at+' día(s) de atraso</b></div>':'')+'</td><td>'+(t.fReal?fdate(t.fReal):'—')+'</td><td style="white-space:nowrap">'+
-      (adm?(t.mod?'<button class="btn sm primary" data-act="tarsol" data-id="'+t.id+'">Resolver solicitud</button> ':'')+'<button class="btn sm" data-act="taredit" data-id="'+t.id+'">Editar</button> ':'')+
+      (adm?(t.mod?'<button class="btn sm primary" data-act="tarsol" data-id="'+t.id+'">Resolver solicitud</button> ':'')+'<button class="btn sm" data-act="taredit" data-id="'+t.id+'">Editar</button> ':'')+(adm&&tarEsCreador(t)?'<button class="btn sm danger" data-act="tarelim" data-id="'+t.id+'">Eliminar</button> ':'')+
       '<button class="btn sm" data-act="taradj" data-id="'+t.id+'">Adjuntos'+((t.adj||[]).length?' ('+t.adj.length+')':'')+'</button> <button class="btn sm" data-act="tarver" data-id="'+t.id+'">Historial</button></td></tr>';});
   return h+'</tbody></table></div>';
 }
 function tarResumen(l){const c=k=>l.filter(t=>tarEst(t)[0]===k).length;
   return '<div class="grid" style="margin-bottom:12px"><div class="card"><span class="muted">Vencidas</span><br><b style="font-size:26px;color:#C62828">'+c('VENCIDO')+'</b></div><div class="card"><span class="muted">Vigentes</span><br><b style="font-size:26px">'+c('VIGENTE')+'</b></div><div class="card"><span class="muted">Detenidas</span><br><b style="font-size:26px">'+l.filter(t=>t.estado==='detenida'&&t.estado!=='terminada').length+'</b></div><div class="card"><span class="muted">Terminadas</span><br><b style="font-size:26px">'+l.filter(t=>t.estado==='terminada').length+'</b></div><div class="card"><span class="muted">Con solicitud de modificación</span><br><b style="font-size:26px">'+l.filter(t=>t.mod).length+'</b></div></div>';}
+function tarElimHtml(){
+  const l=(S.tareas||[]).filter(t=>t.cancelada).sort((a,b)=>(b.canceladaT||0)-(a.canceladaT||0));if(!l.length||!tarAdm())return '';
+  return '<div class="card" style="margin-top:14px"><b>Registro de tareas eliminadas ('+l.length+')</b><div class="tw"><table><thead><tr><th>Folio</th><th>Tarea</th><th>Responsable</th><th>Eliminada por</th><th>Fecha</th><th>Motivo</th></tr></thead><tbody>'+l.map(t=>'<tr><td class="mono">'+esc(t.folio)+'</td><td>'+esc(t.titulo)+'<div class="sub">'+esc(t.proyecto||'')+'</div></td><td>'+esc(t.asigNom||'—')+'</td><td>'+esc(t.canceladaNom||'')+'</td><td>'+(t.canceladaT?fstamp(t.canceladaT):'')+'</td><td>'+esc(t.canceladaMotivo||'')+'</td></tr>').join('')+'</tbody></table></div></div>';
+}
 function tareasHtml(){
   const adm=tarAdm(),all=tarVis();
   const proy=[...new Set(all.map(t=>t.proyecto).filter(Boolean))].sort(),resp=[...new Set(all.map(t=>t.asigNom||t.asigPerfil).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es'));
   let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>'+(adm?'Tareas asignadas':'Seguimiento de tareas (consulta)')+'</b><div class="muted" style="font-size:13px">'+(adm?'Cree la tarea y asígnela a cualquier usuario; a él le aparece en «Tareas asignadas». El usuario puede marcarla terminada o solicitar una modificación de fecha.':'Vista de solo lectura.')+'</div></div>'+(adm?'<button class="btn primary" data-act="tarnew">Nueva tarea</button>':'')+'</div></div>';
   h+=tarResumen(all);
   h+='<div class="card"><div class="grid"><div class="f"><label for="tq">Buscar</label><input id="tq" type="search" placeholder="Tarea, folio, proyecto…" value="'+esc(S.tq)+'" autocomplete="off"></div><div class="f"><label for="tp">Proyecto</label><select id="tp"><option value="">Todos</option>'+proy.map(x=>'<option'+(S.tp===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div><div class="f"><label for="tr">Responsable</label><select id="tr"><option value="">Todos</option>'+resp.map(x=>'<option'+(S.tr===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div><div class="f"><label for="te">Estado</label><select id="te">'+[['','Todos'],['VENCIDO','Vencidas'],['VIGENTE','Vigentes'],['TERMINADO','Terminadas'],['TERMINADO EN DESTIEMPO','Terminadas en destiempo'],['SOL','Con solicitud de modificación']].map(o=>'<option value="'+o[0]+'"'+(S.te===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></div></div></div>';
-  return h+tarTabla(tarFiltradas(),adm);
+  return h+tarTabla(tarFiltradas(),adm)+tarElimHtml();
 }
 function tareasMiasHtml(){
   const mias=(S.tareas||[]).filter(tarMine).sort((a,b)=>{const ea=a.estado==='terminada'?1:0,eb=b.estado==='terminada'?1:0;if(ea!==eb)return ea-eb;return String(a.fEnt||'9999').localeCompare(String(b.fEnt||'9999'));});
@@ -4523,6 +4528,14 @@ function tarForm(t){
 }
 Object.assign(A,{
   tarnew(){if(tarAdm())tarForm(null);},
+  tarelim(el){const t=(S.tareas||[]).find(x=>x.id===el.dataset.id);if(!t||!tarEsCreador(t))return;
+    modal({title:'Eliminar tarea · '+t.folio,ok:'Eliminar tarea',html:'<p style="margin-top:0">La tarea «<b>'+esc(t.titulo)+'</b>» asignada a <b>'+esc(t.asigNom||'—')+'</b> dejará de aparecer en las listas y en el calendario. <b>Solo quedará su registro</b> (quién la eliminó, cuándo y por qué).</p><div class="f"><label for="te-m">Motivo (obligatorio)</label><textarea id="te-m" rows="2" maxlength="300"></textarea></div><div id="m-err" class="err" role="alert"></div>',
+     onOk:async root=>{const m=root.querySelector('#te-m').value.trim();if(m.length<3)return 'Escriba el motivo de la eliminación.';
+      const x=clone((S.tareas||[]).find(z=>z.id===t.id)||t);if(x.cancelada)return 'La tarea ya fue eliminada.';
+      const nom=(S.me&&(S.me.nombre||S.me.email))||ROLES[S.role]||'';x.cancelada=true;x.canceladaPor=myId;x.canceladaNom=nom;x.canceladaT=Date.now();x.canceladaMotivo=m;tarTh(x,'Tarea eliminada · '+m);
+      await tarSave(x);const i=S.tareas.findIndex(z=>z.id===x.id);if(i>=0)S.tareas[i]=x;
+      try{bitWrite({accion:'tarea_eliminada',txt:'Eliminó la tarea '+x.folio+' «'+x.titulo+'» (responsable '+(x.asigNom||'—')+') · '+m});}catch(e){}
+      tarNotif(x,'tarea_cambio','Tarea eliminada',x.titulo+' · '+m,true,S.mode==='local'?[x.asigPerfil]:[]);toast('Tarea eliminada. Queda el registro.');render();return true;}});},
   taredit(el){const t=(S.tareas||[]).find(x=>x.id===el.dataset.id);if(t&&tarAdm())tarForm(t);},
   taradj(el){const t=(S.tareas||[]).find(x=>x.id===el.dataset.id);if(!t)return;const can=tarCanAdj(t);
     modal({title:'Documentos · '+t.folio,wide:true,ok:can?'Subir documentos':'Cerrar',html:'<p class="muted" style="margin-top:0">'+esc(t.titulo)+'</p>'+tarAdjHtml(t)+(can?'<div class="f" style="margin-top:12px"><label for="ta-f">Agregar documentos</label><input type="file" id="ta-f" multiple accept="'+DOC_ACCEPT+'"><div class="muted" style="font-size:12px">PDF, imágenes, Word, Excel, PowerPoint, texto o planos (DWG…). Máx. 20 MB por archivo (planos 50 MB).</div></div>':''),

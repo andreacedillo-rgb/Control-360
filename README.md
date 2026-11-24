@@ -215,3 +215,6 @@ El perfil Auditor tiene la pestaña **Calendario** (solo lectura): fechas en que
 Por el momento solo pueden **crear, editar y resolver solicitudes de modificación** de tareas: el perfil **Auditor** y la cuenta **julio.estrada@catraar.com** (pestaña "Tareas (asignar)"). Todos los demás ven únicamente "Tareas asignadas" (marcar terminada, solicitar modificación, adjuntar).
 - En la app: constante `TAR_ASIGNA` en `index.html`.
 - En la base de datos: función `c360_asigna_tareas()` en `supabase/migrations/010_tareas.sql` (agregue ahí otros correos en minúsculas). Si ya ejecutó la 010, vuelva a ejecutarla completa; es segura de repetir.
+
+## Eliminar tareas
+Quien **crea** una tarea (Auditor o julio.estrada@catraar.com) puede eliminarla con el botón "Eliminar" (pide motivo). La tarea desaparece de las listas, del calendario y del responsable, pero **solo queda el registro**: aparece en "Registro de tareas eliminadas" (quién, cuándo, motivo), en su historial y en la Bitácora de Sistemas. No requiere migración nueva.
