@@ -1,6 +1,6 @@
 /* Service worker: funcionamiento sin conexión. Suba VERSION al publicar cambios. */
-const VERSION = 'vanos-v2';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './lib/jszip.min.js', './lib/jspdf.umd.min.js',
+const VERSION = 'vanos-v3';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './lib/jszip.min.js', './lib/jspdf.umd.min.js', './lib/supabase.js', './lib/supabase-adapter.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
   './fonts/ibm-plex-sans-latin-400-normal.woff2',
   './fonts/ibm-plex-sans-latin-500-normal.woff2',

@@ -163,7 +163,7 @@
   /* ── archivos ── */
   var assetsApi={upload:async function(file,opts){
     var safe=String(file.name||'archivo').replace(/[^\w.\-]+/g,'_');
-    var path=session.user.id+'/'+(opts&&opts.rh?'rh/':(opts&&opts.tar?'tareas/':''))+Date.now()+'-'+safe;
+    var path=session.user.id+'/'+(opts&&opts.rh?'rh/':(opts&&opts.tar?'tareas/':(opts&&opts.vanos?'vanos/':'')))+Date.now()+'-'+safe;
     var up=await sb.storage.from('comprobantes').upload(path,file,{contentType:file.type||'application/octet-stream'});
     if(up.error)throw up.error;
     var s=await sb.storage.from('comprobantes').createSignedUrl(path,60*60*24*365);

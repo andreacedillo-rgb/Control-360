@@ -227,3 +227,10 @@ Menú **Herramientas** solo para Residente: al elegirlo abre **directamente** la
 - Suba la carpeta `vanos` completa a GitHub (junto a `index.html`), sin cambiar nombres. La app la muestra desde `vanos/index.html`.
 - Las instrucciones propias de la herramienta (Google Drive opcional, instalación en iPad, actualización con `VERSION` en `vanos/sw.js`) están en `vanos/LEEME.md`.
 - Para agregar más herramientas, añádalas a la lista `HERRAMIENTAS` en `index.html`.
+
+## Levantamiento de vanos guardado en Supabase
+Los levantamientos (medidas, croquis, firmas, historial) se guardan en la tabla `docs` (colección `vanos`) y las **fotografías en Storage** (bucket `comprobantes`, carpeta `<usuario>/vanos/`). Proyectos, contadores y datos de empresa van en la colección `vanos_cfg`. **Es privado por usuario**: cada persona ve, edita y elimina solamente lo que ella misma sube; nadie más (ni Dirección ni Sistemas) puede verlo. Proyectos, contadores y datos de empresa también son por usuario.
+- **Sin conexión:** el iPad guarda una copia local temporal y sube lo pendiente automáticamente al volver la señal. Indicador arriba: "Supabase: N en la nube · todo sincronizado".
+- **Requisitos:** ejecutar `supabase/migrations/011_vanos.sql` (después de 009 y 010) y abrir la herramienta con la sesión de CONTROL 360 iniciada (usa el mismo `config.js` de la raíz).
+- Suba también `vercel.json` (ahora con `trailingSlash`, necesario para que `/vanos/` cargue sus archivos).
+- La subida de PDF/ZIP a Google Drive sigue siendo opcional y aparte.

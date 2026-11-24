@@ -4614,7 +4614,7 @@ Object.assign(A,{
   tarrev(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();S.navG='Tareas';S.tab='tareasm';S.navTab='tareasm';S.open=null;render();}
 });
 /* ───────── Herramientas (perfil Residente) ───────── */
-const HERRAMIENTAS=[{id:'vanos',nombre:'Levantamiento de vanos',url:'vanos/index.html'}];
+const HERRAMIENTAS=[{id:'vanos',nombre:'Levantamiento de vanos',url:'vanos/'}];
 function herrHtml(id){
   const x=HERRAMIENTAS.find(z=>z.id===id);if(!x)return '';
   if(S.mode==='local')return '<div class="card"><b>'+esc(x.nombre)+'</b><div class="note warn" style="margin-top:8px">Esta herramienta se abre dentro de la versión publicada (GitHub), donde están sus archivos. En esta vista de prueba no se incluye.</div></div>';

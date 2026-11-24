@@ -170,6 +170,9 @@ label.f>*:not(span){margin-top:4px;color:var(--text);font-weight:400;font-size:1
 canvas.sigpad{width:100%;height:200px;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<script src="../config.js"></script>
+<script src="./lib/supabase.js"></script>
+<script src="./lib/supabase-adapter.js"></script>
 <script src="./lib/jszip.min.js"></script>
 <script src="./lib/jspdf.umd.min.js"></script>
 </head>
@@ -293,8 +296,8 @@ const DB={db:null,ok:false,mem:{levs:new Map(),kv:new Map()},
  async put(store,v){if(!this.ok){this.mem[store].set(store==='kv'?v.k:v.id,v);return}return this.tx(store,'readwrite',s=>s.put(v))},
  async del(store,key){if(!this.ok){this.mem[store].delete(key);return}return this.tx(store,'readwrite',s=>s.delete(key))}};
 const S={levs:[],projects:{},settings:{},counters:{},queue:[],jobs:[],sel:new Set(),f:{q:'',proj:'',nivel:'',dep:'',estado:'',sync:''}};
-async function kvSet(k,v){S[k]=v;try{await DB.put('kv',{k,v})}catch(e){console.error(e)}}
-async function persist(rec,touch=true){if(touch){rec.updatedAt=nowISO();if(rec.sync==='Sincronizado')rec.sync='No sincronizado'}try{await DB.put('levs',rec)}catch(e){toast('No se pudo guardar localmente: '+(e&&e.message||e),5000)}}
+async function kvSet(k,v){S[k]=v;try{await DB.put('kv',{k,v})}catch(e){console.error(e)}if(CLOUD.on&&(k==='projects'||k==='counters'||k==='settings'))cfgQueue()}
+async function persist(rec,touch=true){if(touch){rec.updatedAt=nowISO();rec.sync=CLOUD.on?'Pendiente de subida':'No sincronizado'}try{await DB.put('levs',rec)}catch(e){toast('No se pudo guardar localmente: '+(e&&e.message||e),5000)}if(CLOUD.on&&rec.sync!=='Sincronizado'&&rec.sync!=='Subiendo')cloudQueue(rec.id)}
 
 /* ================= dominio ================= */
 const KINDS={
@@ -471,16 +474,18 @@ function renderChrome(){
  const nOk=c(r=>r.status==='ok'),nObs=c(r=>r.status==='obs'),nNo=c(r=>r.status==='no'),nNone=c(r=>!r.status),nSync=c(r=>r.sync!=='Sincronizado');
  const projs=[...new Set(S.levs.map(r=>r.project))].sort((a,b)=>String(a).localeCompare(String(b),'es'));
  const card=(act,v,l,n,t)=>`<div class="sum"${act?` data-act="${act}" data-v="${v}" role="button"`:''}><div class="l">${l}</div><div class="n">${n}</div><div class="t">${t}</div></div>`;
- $('#summary').innerHTML=card('navest','','Levantamientos',N,projs.length+' proyecto'+(projs.length===1?'':'s'))+card('navest','ok','Liberados',nOk,pct(nOk))+card('navest','obs','Con observaciones',nObs,pct(nObs))+card('navest','no','No liberados',nNo,pct(nNo))+card('','','Sin sincronizar',nSync,'Pendientes de subir a Google Drive');
+ $('#summary').innerHTML=card('navest','','Levantamientos',N,projs.length+' proyecto'+(projs.length===1?'':'s'))+card('navest','ok','Liberados',nOk,pct(nOk))+card('navest','obs','Con observaciones',nObs,pct(nObs))+card('navest','no','No liberados',nNo,pct(nNo))+card('','','Sin sincronizar',nSync,CLOUD.on?'Pendientes de subir a Supabase':'Pendientes de subir');
  const nav=(act,v,label,n,on)=>`<button class="nav ${on?'on':''}" data-act="${act}" data-v="${esc(v)}"><span>${esc(label)}</span><span class="cnt">${n}</span></button>`;
  const q=S.queue.filter(i=>i.state!=='done').length;
  $('#menu').innerHTML=`<div class="grp">Levantamientos</div>${nav('navest','','Todos',N,!S.f.estado)}${nav('navest','ok','Liberados',nOk,S.f.estado==='ok')}${nav('navest','obs','Con observaciones',nObs,S.f.estado==='obs')}${nav('navest','no','No liberados',nNo,S.f.estado==='no')}${nav('navest','none','Sin estado',nNone,S.f.estado==='none')}<div class="grp">Proyectos</div>${projs.length?projs.map(p=>nav('navproj',p,p,c(r=>r.project===p),S.f.proj===p)).join(''):'<p class="small muted" style="padding:4px 28px">Aparecerán al crear el primer levantamiento.</p>'}<div class="grp">Herramientas</div><button class="nav" data-act="queues"><span>Colas de trabajo</span>${q?`<span class="cnt">${q}</span>`:''}</button><button class="nav" data-act="settings"><span>Ajustes</span></button>`;
 }
 async function updateInd(){
- const on=navigator.onLine;$('#netInd').innerHTML=`<span class="dot" style="background:${on?'var(--ok)':'var(--warn)'}"></span>${on?'En línea':'Sin conexión: se guarda en este equipo'}`;
+ const on=navigator.onLine,np=S.levs.filter(r=>r.sync!=='Sincronizado').length;
+ $('#netInd').innerHTML=`<span class="dot" style="background:${on?'var(--ok)':'var(--warn)'}"></span>${on?'En línea':(CLOUD.on?'Sin conexión: se subirá a Supabase al volver la conexión':'Sin conexión: se guarda en este equipo')}`;
+ if(CLOUD.on){$('#stoInd').textContent=CLOUD.err?('Supabase: no se pudo guardar ('+String(CLOUD.err.message||CLOUD.err).slice(0,70)+') · '+np+' pendiente'+(np===1?'':'s')):('Supabase: '+(S.levs.length-np)+' en la nube'+(np?' · '+np+' pendiente'+(np===1?'':'s')+' de subir':' · todo sincronizado'));return}
  const own=S.levs.reduce((a,r)=>a+(r.photo?r.photo.length:0)+(r.photoOrig?r.photoOrig.length:0)+(r.thumb?r.thumb.length:0),0)*.75;let t=mb(own)+' usados';
  try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();if(e.quota)t+=' de '+(e.quota/1073741824>=1?(e.quota/1073741824).toFixed(1)+' GB':mb(e.quota))}}catch(e){}
- $('#stoInd').textContent='Almacenamiento local: '+t+(DB.ok?'':' (temporal)');
+ $('#stoInd').textContent='Almacenamiento local (sin conexión a Supabase): '+t+(DB.ok?'':' (temporal)');
 }
 
 /* ---- nuevo levantamiento ---- */
@@ -523,7 +528,7 @@ function changed(){scheduleSave();refreshAll()}
 function scheduleSave(){$('#saveInd').textContent='Guardando…';clearTimeout(saveT);saveT=setTimeout(flushSave,500)}
 async function flushSave(){clearTimeout(saveT);saveT=null;if(!cur)return;await persist(cur);$('#saveInd').textContent='Guardado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}
 async function openEditor(id,isNew=false){
- cur=S.levs.find(r=>r.id===id);if(!cur)return;undoS=[];redoS=[];tool={mode:'select',code:null,kind:null,pts:[],mark:null};cropR=null;
+ cur=S.levs.find(r=>r.id===id);if(!cur)return;await hydrate(cur);undoS=[];redoS=[];tool={mode:'select',code:null,kind:null,pts:[],mark:null};cropR=null;
  $('#listScreen').hidden=true;$('#editScreen').hidden=false;S.tab='med';
  $('#edFolio').textContent=cur.folio;$('#edSub').textContent=`${cur.project} · ${ubic(cur)} · ${cur.type} · N.º ${pad(cur.seq||0,4)}`;$('#saveInd').textContent='';
  await loadStage(true);renderTab();refreshAll();
@@ -790,6 +795,7 @@ const projDir=p=>(slug(p)||'PROYECTO')+'/';
 function markFile(r,name,key,ok,err){let f=r.files.find(x=>x.name===name);if(!f){f={name,type:key,uploadState:'No subido',driveId:null,link:null};r.files.push(f)}f.generatedAt=nowISO();f.exportState=ok?'ok':'error';f.error=ok?null:err}
 async function runExport(ids,keys,{silent=false}={}){
  const recs=ids.map(id=>S.levs.find(r=>r.id===id)).filter(Boolean);if(!recs.length)return;
+ for(const r of recs)await hydrate(r);
  const job={id:uid(),state:'run',items:[],blobs:new Map(),result:null,zipName:'',label:`${recs.length} levantamiento${recs.length>1?'s':''}`,at:nowISO()};
  const projects=[...new Set(recs.map(r=>r.project))];
  recs.forEach(r=>keys.filter(k=>GEN[k]).forEach(k=>job.items.push({rid:r.id,key:k,state:'pend',name:fname(r,k),path:projDir(r.project)+GEN[k].dir+'/'+fname(r,k)})));
@@ -870,13 +876,13 @@ async function runSync(){
    await kvSet('queue',S.queue);
   }
  }finally{
-  S.levs.forEach(r=>{const its=S.queue.filter(i=>i.rid===r.id);if(!its.length)return;const old=r.sync;
-   r.sync=its.some(i=>i.state==='uploading')?'Subiendo':its.some(i=>i.state==='error')?'Error de sincronización':its.some(i=>i.state==='pending')?'Pendiente de subida':'Sincronizado';
-   if(r.sync==='Sincronizado')r.lastSync=nowISO();persist(r,false)});
+  S.levs.forEach(r=>{const its=S.queue.filter(i=>i.rid===r.id);if(!its.length)return;const old=r[SF()];
+   r[SF()]=its.some(i=>i.state==='uploading')?'Subiendo':its.some(i=>i.state==='error')?'Error de sincronización':its.some(i=>i.state==='pending')?'Pendiente de subida':'Sincronizado';
+   if(r[SF()]==='Sincronizado'&&!CLOUD.on)r.lastSync=nowISO();DB.put('levs',r).catch(()=>{})});
   await kvSet('queue',S.queue);drive.running=false;renderQueueIfOpen();renderList();
  }
 }
-function setRecSync(it,s){const r=S.levs.find(x=>x.id===it.rid);if(r){r.sync=s;persist(r,false)}}
+function setRecSync(it,s){const r=S.levs.find(x=>x.id===it.rid);if(r){r[SF()]=s;DB.put('levs',r).catch(()=>{})}}
 function openDriveDialog(ids){
  const recs=ids.map(id=>S.levs.find(r=>r.id===id)).filter(Boolean);const root=S.settings.root;
  modal(`<h2>Subir a Google Drive</h2><p class="muted small">${recs.length} levantamiento${recs.length===1?'':'s'} · ${projectsOf(recs.map(r=>({rid:r.id}))).length} proyecto(s). Se creará una carpeta por proyecto con LEVANTAMIENTOS_PDF, FOTOGRAFIAS_ORIGINALES, FOTOGRAFIAS_COTADAS, CROQUIS, DXF y RESUMENES.</p>
@@ -917,6 +923,7 @@ function openSettings(){
  <h3>Tolerancias por proyecto</h3>${Object.keys(S.projects).length?Object.keys(S.projects).map(p=>`<div class="jrow"><span>${esc(p)} <small class="muted">${S.projects[p].tol.on?'· tolerancias activas':'· sin tolerancias'}</small></span><button class="btn sm" data-ma="tol" data-p="${esc(p)}">Configurar</button></div>`).join(''):'<p class="muted small">Los proyectos aparecen al crear el primer levantamiento.</p>'}
  <h3>Google Drive</h3><label class="f"><span>Client ID de OAuth (aplicación web)</span><input id="sCid" value="${esc(st.clientId||'')}" placeholder="xxxx.apps.googleusercontent.com"></label><label class="f"><span>API Key (solo para elegir carpetas existentes)</span><input id="sKey" value="${esc(st.apiKey||'')}"></label>
  <div class="note">La subida real a Drive necesita que esta página se aloje en un dominio propio autorizado en Google Cloud (orígenes de JavaScript del Client ID). En la vista de vista previa de Claude el navegador bloquea las conexiones a Google, y la app lo indicará sin simular ninguna subida.</div>
+ <h3>Almacenamiento</h3><p class="small muted" style="margin:0 0 10px">${CLOUD.on?'Los levantamientos, fotografías y firmas se guardan en <b>Supabase</b> (compartidos con su equipo). Este equipo conserva una copia solo para trabajar sin conexión; lo pendiente se sube automáticamente al volver la señal.':'Sin conexión con Supabase: los datos se guardan solo en este equipo. Abra la herramienta desde CONTROL 360 con su sesión iniciada para guardarlos en la nube.'}</p>
  <h3>Datos</h3><button class="btn sm" data-ma="sample">Cargar vano de ejemplo</button>
  <div class="acts"><button class="btn" data-ma="no">Cancelar</button><button class="btn primary" data-ma="ok">Guardar</button></div>`,
  {onMount:(el,close)=>el.addEventListener('click',async e=>{const a=e.target.closest('[data-ma]');if(!a)return;const t=a.dataset.ma;
@@ -978,7 +985,7 @@ document.addEventListener('click',async e=>{
  case'gps':return navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{cur.gps={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};logH('Capturó GPS');scheduleSave();renderTab()},er=>toast('No se pudo obtener el GPS: '+er.message),{enableHighAccuracy:true,timeout:15000}):toast('GPS no disponible');
  case'nogps':cur.gps=null;scheduleSave();return renderTab();
  case'copym':return copyMedidas();case'dup':return duplicate();case'ex':return exportOne(t.dataset.k);
- case'delrec':{if(await confirmBox('Eliminar levantamiento',`Se borrará ${cur.folio} con su historial y archivos. No se puede deshacer.`,'Eliminar',true)){const rid=cur.id;clearTimeout(saveT);cur=null;S.levs=S.levs.filter(r=>r.id!==rid);S.sel.delete(rid);await DB.del('levs',rid);$('#editScreen').hidden=true;$('#listScreen').hidden=false;renderList();toast('Levantamiento eliminado')}return}
+ case'delrec':{if(await confirmBox('Eliminar levantamiento',`Se borrará ${cur.folio} con su historial y archivos. No se puede deshacer.`,'Eliminar',true)){const rid=cur.id;clearTimeout(saveT);cur=null;S.levs=S.levs.filter(r=>r.id!==rid);S.sel.delete(rid);await DB.del('levs',rid);cloudDelete(rid);$('#editScreen').hidden=true;$('#listScreen').hidden=false;renderList();toast('Levantamiento eliminado')}return}
  }
 });
 document.addEventListener('change',e=>{const t=e.target;
@@ -1001,9 +1008,113 @@ function copyMedidas(){const others=S.levs.filter(r=>r.id!==cur.id&&r.dims.some(
 async function duplicate(){await flushSave();const n=await createRec({project:cur.project,tower:cur.tower,level:cur.level,dept:cur.dept,vano:String(nextVano(cur.project,cur.level,cur.dept)),type:cur.type,date:dateStr(),resp:cur.resp,obs:''});
  n.dims=cur.dims.filter(d=>d.value!=null).map(d=>({...d,id:uid(),p1:null,p2:null}));n.nomAncho=cur.nomAncho;n.nomAlto=cur.nomAlto;n.history.push({t:nowISO(),m:'Duplicado de '+cur.folio});await persist(n,false);toast('Duplicado como vano '+n.vano);await closeEditor();openEditor(n.id)}
 
+/* ================= Supabase (fuente de verdad) ================= */
+/* Los levantamientos viven en Supabase (tabla docs, colección "vanos") y las fotos en Storage.
+   IndexedDB queda solo como respaldo para trabajar sin conexión: lo pendiente se sube al volver la señal. */
+const CLOUD={on:false,db:null,assets:null,uid:null,pending:new Set(),busy:false,timer:null,err:null,cfgT:null,live:null};
+const SF=()=>CLOUD.on?'driveSync':'sync';
+const phKey=v=>v?v.length+':'+v.slice(-48):'';
+const cloudData=r=>{const d={...r};delete d.photo;delete d.photoOrig;d.uid=r.uid||CLOUD.uid;return JSON.parse(JSON.stringify(d))};
+async function cloudInit(){
+ if(!window.C360||!window.claude)return;
+ try{
+  CLOUD.db=await window.claude.use('db');CLOUD.assets=await window.claude.use('assets');
+  const u=await window.claude.use('user');CLOUD.uid=await u.id();
+  if(!CLOUD.db||!CLOUD.uid)return;
+  CLOUD.on=true;CLOUD.err=null;
+  await ownerGuard();
+  S.levs.forEach(r=>{if(r.sync==='No sincronizado'||r.sync==='Error de sincronización'||r.sync==='Subiendo'){r.sync='Pendiente de subida'}});
+  CLOUD.live=CLOUD.db.collection('vanos').onSnapshot(snap=>cloudMerge(snap),e=>{CLOUD.err=e;updateInd();console.warn('vanos',e)});
+  CLOUD.db.collection('vanos_cfg').onSnapshot(snap=>{snap.forEach(d=>{const c=d.data();if(c&&c.uid===CLOUD.uid)cfgMerge(c)})},()=>{});
+  S.levs.filter(r=>r.sync!=='Sincronizado').forEach(r=>CLOUD.pending.add(r.id));
+  cloudFlush();cfgQueue();renderList();
+ }catch(e){CLOUD.on=false;console.warn('Supabase no disponible',e);updateInd()}
+}
+function cloudQueue(id){CLOUD.pending.add(id);clearTimeout(CLOUD.timer);CLOUD.timer=setTimeout(cloudFlush,1200);updateInd()}
+async function upPhoto(rec,f,rf){
+ const v=rec[f];if(!v){return}
+ if(f==='photoOrig'&&rec.photoOrig===rec.photo&&rec.photoRef){rec.photoOrigRef=rec.photoRef;return}
+ const k=phKey(v);if(rec[rf]&&rec[rf].k===k)return;
+ const b=dataURLtoBlob(v),file=new File([b],(f==='photo'?'foto':'foto-original')+'.jpg',{type:b.type||'image/jpeg'});
+ const r=await CLOUD.assets.upload(file,{vanos:1});rec[rf]={id:r.id,url:r.url,k};
+}
+async function cloudPush(rec){
+ await upPhoto(rec,'photo','photoRef');await upPhoto(rec,'photoOrig','photoOrigRef');
+ await CLOUD.db.collection('vanos').doc(rec.id).set(cloudData(rec));
+}
+async function cloudFlush(){
+ if(!CLOUD.on||CLOUD.busy||!navigator.onLine)return;CLOUD.busy=true;
+ try{
+  const dq=(S.cloudDel||[]).slice();for(const id of dq){try{await CLOUD.db.collection('vanos').doc(id).delete()}catch(e){if(!/no existe|Sin permiso/i.test(e&&e.message||''))throw e}S.cloudDel=(S.cloudDel||[]).filter(x=>x!==id);await DB.put('kv',{k:'cloudDel',v:S.cloudDel})}
+  while(CLOUD.pending.size){
+   const id=CLOUD.pending.values().next().value;CLOUD.pending.delete(id);
+   const rec=S.levs.find(r=>r.id===id);if(!rec)continue;
+   const stamp=rec.updatedAt;rec.sync='Subiendo';updateInd();
+   try{await cloudPush(rec);CLOUD.err=null;
+    if(rec.updatedAt===stamp){rec.sync='Sincronizado';rec.lastSync=nowISO();rec.syncErr=null}else{rec.sync='Pendiente de subida';CLOUD.pending.add(id)}
+   }catch(e){rec.sync='Error de sincronización';rec.syncErr=e&&e.message||String(e);CLOUD.err=(!navigator.onLine||e instanceof TypeError)?null:e;if(!navigator.onLine||e instanceof TypeError){rec.sync='Pendiente de subida';break}}
+   try{await DB.put('levs',rec)}catch(e){}
+   if(!$('#listScreen').hidden)renderList();
+  }
+ }catch(e){CLOUD.err=e;console.warn(e)}
+ finally{CLOUD.busy=false;updateInd();if(CLOUD.pending.size&&navigator.onLine&&!CLOUD.err){CLOUD.timer=setTimeout(cloudFlush,3000)}}
+}
+async function cloudDelete(id){
+ if(!CLOUD.on)return;S.cloudDel=[...(S.cloudDel||[]),id];try{await DB.put('kv',{k:'cloudDel',v:S.cloudDel})}catch(e){}CLOUD.pending.delete(id);cloudFlush();
+}
+function cloudMerge(snap){
+ let changed=false;const seen=new Set();
+ snap.forEach(d=>{
+  const c=d.data();if(!c||!c.id||c.uid!==CLOUD.uid)return;seen.add(c.id);
+  if((S.cloudDel||[]).includes(c.id))return;
+  const l=S.levs.find(r=>r.id===c.id);
+  const norm=r=>{r.files=r.files||[];r.dims=r.dims||[];r.marks=r.marks||[];r.history=r.history||[];r.signs=r.signs||{};r.adj=r.adj||{b:0,c:0};return r};
+  if(!l){const n=norm({...c,photo:null,photoOrig:null,sync:'Sincronizado'});S.levs.push(n);DB.put('levs',n).catch(()=>{});changed=true;return}
+  if(l.sync==='Sincronizado'&&(c.updatedAt||'')>(l.updatedAt||'')&&!(cur&&cur.id===l.id)){
+   const keepP=l.photo&&l.photoRef&&c.photoRef&&l.photoRef.k===c.photoRef.k?l.photo:null,keepO=l.photoOrig&&l.photoOrigRef&&c.photoOrigRef&&l.photoOrigRef.k===c.photoOrigRef.k?l.photoOrig:null;
+   const n=norm({...c,photo:keepP,photoOrig:keepO,sync:'Sincronizado'});Object.assign(l,n);DB.put('levs',l).catch(()=>{});changed=true;
+  }
+ });
+ const gone=S.levs.filter(r=>r.sync==='Sincronizado'&&!seen.has(r.id)&&!(cur&&cur.id===r.id)&&Date.now()-Date.parse(r.lastSync||0)>90000);
+ if(gone.length){gone.forEach(r=>DB.del('levs',r.id).catch(()=>{}));S.levs=S.levs.filter(r=>!gone.includes(r));changed=true}
+ if(changed&&(!$('#listScreen').hidden))renderList();else updateInd();
+}
+async function hydrate(rec){
+ if(!rec||!CLOUD.on)return;
+ try{
+  for(const [f,rf] of [['photo','photoRef'],['photoOrig','photoOrigRef']]){
+   if(rec[f]||!rec[rf]||!rec[rf].url)continue;
+   if(f==='photoOrig'&&rec.photoRef&&rec.photoRef.url===rec[rf].url&&rec.photo){rec.photoOrig=rec.photo;continue}
+   const r=await fetch(rec[rf].url);if(!r.ok)throw new Error('No se pudo descargar la fotografía');rec[f]=await blobToDataURL(await r.blob());
+  }
+  await DB.put('levs',rec);
+ }catch(e){toast('No se pudo cargar la fotografía de la nube: '+(e&&e.message||e),4000)}
+}
+/* Este equipo puede usarlo más de una persona: los datos locales pertenecen a quien inició sesión.
+   Si entra otra persona, se borra la copia local de la anterior (sus datos siguen en Supabase, solo para ella). */
+async function ownerGuard(){
+ const prev=S.owner;
+ if(prev&&prev!==CLOUD.uid){
+  for(const r of S.levs.slice())await DB.del('levs',r.id).catch(()=>{});
+  S.levs=[];S.projects={};S.counters={};S.queue=[];S.cloudDel=[];S.settings={};
+  for(const k of ['projects','counters','queue','cloudDel','settings'])await DB.put('kv',{k,v:S[k]}).catch(()=>{});
+ }
+ S.owner=CLOUD.uid;await DB.put('kv',{k:'owner',v:CLOUD.uid}).catch(()=>{});
+ S.cloudDel=S.cloudDel||[];
+}
+/* proyectos, contadores y datos de empresa (propios de cada usuario) */
+function cfgQueue(){if(!CLOUD.on)return;clearTimeout(CLOUD.cfgT);CLOUD.cfgT=setTimeout(async()=>{try{if(!navigator.onLine)return;const st=S.settings||{};await CLOUD.db.collection('vanos_cfg').doc('cfg-'+CLOUD.uid).set({id:'cfg-'+CLOUD.uid,uid:CLOUD.uid,projects:S.projects||{},counters:S.counters||{},company:st.company||'',logo:st.logo||null,updatedAt:nowISO()})}catch(e){console.warn('cfg',e)}},1500)}
+function cfgMerge(c){
+ if(!c)return;let ch=false;
+ const pj={...(S.projects||{}),...(c.projects||{})};if(JSON.stringify(pj)!==JSON.stringify(S.projects||{})){S.projects=pj;DB.put('kv',{k:'projects',v:pj}).catch(()=>{});ch=true}
+ const ct={...(S.counters||{})};Object.keys(c.counters||{}).forEach(k=>{ct[k]=Math.max(ct[k]||0,c.counters[k]||0)});if(JSON.stringify(ct)!==JSON.stringify(S.counters||{})){S.counters=ct;DB.put('kv',{k:'counters',v:ct}).catch(()=>{});ch=true}
+ const st={...(S.settings||{})};if(c.company&&c.company!==st.company){st.company=c.company;ch=true}if(c.logo&&c.logo!==st.logo){st.logo=c.logo;ch=true}
+ if(ch){S.settings=st;DB.put('kv',{k:'settings',v:st}).catch(()=>{});if(!$('#listScreen').hidden)renderList()}
+}
+
 /* ================= arranque ================= */
-window.addEventListener('online',()=>{updateInd();toast('Conexión restablecida');if(drive.token&&drive.exp>Date.now()&&S.queue.some(i=>i.state==='pending'))runSync()});
-window.addEventListener('offline',()=>{updateInd();toast('Sin conexión: todo se guarda en este equipo')});
+window.addEventListener('online',()=>{updateInd();toast('Conexión restablecida');cloudFlush();if(drive.token&&drive.exp>Date.now()&&S.queue.some(i=>i.state==='pending'))runSync()});
+window.addEventListener('offline',()=>{updateInd();toast(CLOUD.on?'Sin conexión: se guarda en este equipo y se sube a Supabase al volver la conexión':'Sin conexión: todo se guarda en este equipo')});
 window.addEventListener('resize',()=>{if(cur&&!$('#editScreen').hidden&&imgW)renderOverlay()});
 document.addEventListener('DOMContentLoaded',async()=>{
  await DB.open();
@@ -1012,6 +1123,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
  if(!DB.ok)toast('El navegador no permite almacenamiento persistente: los datos se perderán al cerrar.',6000);
  S.queue=(S.queue||[]).map(i=>i.state==='uploading'?{...i,state:'pending'}:i);
  renderList();
+ cloudInit();
  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 });
 
