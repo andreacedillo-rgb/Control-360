@@ -349,7 +349,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const ROLES={residente:'Residente',auditor:'Auditor',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['anuncios','Anuncios'],['bitacora','Bitácora de seguridad'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
-  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
+  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['tareasm','Tareas asignadas'],['herr_vanos','Levantamiento de vanos'],['notif','Notificaciones']],
   auditor:[['revisar','Por auditar'],['todas','Todas'],['cal','Calendario'],['tareas','Tareas (asignar)'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
   direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['tareas','Seguimiento de tareas'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
@@ -463,7 +463,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Tareas',['tareas','tareasm']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','anuncios','depurar','bitacora']],['Avisos',['notif']]];
+const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Tareas',['tareas','tareasm']],['Herramientas',['herr_vanos']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','anuncios','depurar','bitacora']],['Avisos',['notif']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=tabsOf(S.role).filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -481,6 +481,7 @@ function render(){
   if(S.navTab!==S.tab){S.navTab=S.tab;const g0=gs.find(g=>g.tabs.some(t=>t[0]===S.tab));if(g0)S.navG=g0.name;}
   nav.innerHTML=gs.map(g=>{
     const open=S.navG===g.name,tot=sum(g.tabs.map(t=>tabCount(t[0])));
+    if(g.name==='Herramientas'&&g.tabs.length===1)return '<button class="nav-g" data-act="tab" data-k="'+g.tabs[0][0]+'" aria-current="'+(S.tab===g.tabs[0][0])+'" style="'+(S.tab===g.tabs[0][0]?'color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent)':'')+'"><span>'+esc(g.name)+'</span></button>';
     return '<button class="nav-g" data-act="navg" data-g="'+esc(g.name)+'" aria-expanded="'+open+'"><span>'+(open?'▾':'▸')+' '+esc(g.name)+'</span>'+(tot&&!open?'<span class="badge">'+tot+'</span>':'')+'</button>'+
     (open?g.tabs.map(t=>{
       const n=tabCount(t[0]);
@@ -492,7 +493,7 @@ function render(){
   let h='';
   if(S.mode==='local')h+='<div class="banner">Modo local: lo que capture aquí no se comparte con otras personas hasta que la página se abra desde su enlace publicado.</div>';
   if(!S.ready){h+='<div class="empty"><p>Cargando requisiciones…</p></div>';app.innerHTML=h;return;}
-  if(NOMTABS.indexOf(S.tab)<0&&S.tab!=='notif'&&S.tab!=='repos'&&S.role!=='sistemas')h+=statsHtml();
+  if(NOMTABS.indexOf(S.tab)<0&&S.tab!=='notif'&&S.tab!=='repos'&&S.tab.indexOf('herr_')!==0&&S.role!=='sistemas')h+=statsHtml();
   h+=viewHtml();
   app.innerHTML=h;
   renderDrawer();
@@ -566,6 +567,7 @@ function viewHtml(){
   if(k==='notif')return notifHtml();
   if(k==='tareas')return tareasHtml();
   if(k==='tareasm')return tareasMiasHtml();
+  if(k.indexOf('herr_')===0)return herrHtml(k.slice(5));
   if(k==='repos')return repView();
   if(R==='sistemas'&&k==='anuncios')return anunciosHtml();
   if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
@@ -4611,6 +4613,14 @@ function tareaAviso(){
 Object.assign(A,{
   tarrev(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();S.navG='Tareas';S.tab='tareasm';S.navTab='tareasm';S.open=null;render();}
 });
+/* ───────── Herramientas (perfil Residente) ───────── */
+const HERRAMIENTAS=[{id:'vanos',nombre:'Levantamiento de vanos',url:'vanos/index.html'}];
+function herrHtml(id){
+  const x=HERRAMIENTAS.find(z=>z.id===id);if(!x)return '';
+  if(S.mode==='local')return '<div class="card"><b>'+esc(x.nombre)+'</b><div class="note warn" style="margin-top:8px">Esta herramienta se abre dentro de la versión publicada (GitHub), donde están sus archivos. En esta vista de prueba no se incluye.</div></div>';
+  return '<div class="row" style="justify-content:space-between"><b>'+esc(x.nombre)+'</b><a class="btn sm" href="'+esc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none">Abrir en ventana nueva / instalar en iPad</a></div>'+
+    '<iframe src="'+esc(x.url)+'" title="'+esc(x.nombre)+'" allow="camera; microphone; clipboard-write; fullscreen" style="width:100%;height:calc(100vh - 190px);min-height:560px;border:1px solid var(--line);border-radius:12px;background:var(--surface)"></iframe>';
+}
 /* ───────── eventos ───────── */
 document.addEventListener('click',e=>{
   if(S.nOpen&&!e.target.closest('#npop')&&!e.target.closest('#bell')){S.nOpen=false;bellRender();}

@@ -218,3 +218,12 @@ Por el momento solo pueden **crear, editar y resolver solicitudes de modificaci�
 
 ## Eliminar tareas
 Quien **crea** una tarea (Auditor o julio.estrada@catraar.com) puede eliminarla con el botón "Eliminar" (pide motivo). La tarea desaparece de las listas, del calendario y del responsable, pero **solo queda el registro**: aparece en "Registro de tareas eliminadas" (quién, cuándo, motivo), en su historial y en la Bitácora de Sistemas. No requiere migración nueva.
+
+## Reporte PDF de tareas pendientes
+En Tareas, botones **Reporte PDF por obra** y **Reporte PDF por persona**: descargan todas las tareas pendientes (no terminadas ni eliminadas), agrupadas, con folio, responsable u obra, fechas, estado actual (VENCIDO/VIGENTE) y días de atraso. Disponible para quien ve la pestaña de Tareas (Auditor, Julio y Dirección).
+
+## Herramientas (perfil Residente)
+Menú **Herramientas** solo para Residente: al elegirlo abre **directamente** la herramienta dentro de la app (con un enlace para abrirla en ventana nueva o instalarla en el iPad). Cuando haya 2 o más herramientas, el menú se despliega con una entrada por herramienta. La primera es **Levantamiento de vanos** (PWA independiente, con su propia instalación en el iPad y modo sin conexión), que vive en la carpeta **`vanos/`**.
+- Suba la carpeta `vanos` completa a GitHub (junto a `index.html`), sin cambiar nombres. La app la muestra desde `vanos/index.html`.
+- Las instrucciones propias de la herramienta (Google Drive opcional, instalación en iPad, actualización con `VERSION` en `vanos/sw.js`) están en `vanos/LEEME.md`.
+- Para agregar más herramientas, añádalas a la lista `HERRAMIENTAS` en `index.html`.
