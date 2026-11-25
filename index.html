@@ -36,6 +36,35 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.3);
   color-scheme:dark;
 }
+
+/* Plan de obra · visual */
+.pl-alert{border-radius:10px;padding:9px 12px;background:var(--bad-soft);color:var(--bad);font-weight:600;font-size:13.5px;border:1px solid var(--bad)}
+.pl-bad{border-color:var(--bad)!important;background:var(--bad-soft)!important;outline:2px solid var(--bad)}
+.pl-hero{display:grid;grid-template-columns:minmax(190px,230px) 1fr;gap:16px;align-items:stretch}
+@media(max-width:820px){.pl-hero{grid-template-columns:1fr}}
+.pl-ringbox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.pl-lights{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.pl-light{border-radius:12px;padding:10px 6px;text-align:center;border:1px solid var(--line);background:var(--surface-2)}
+.pl-light b{display:block;font-size:26px;line-height:1.1}
+.pl-light span{font-size:11.5px;letter-spacing:.02em;text-transform:uppercase}
+.pl-light.v{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pl-light.a{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pl-light.r{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pl-light.g{color:var(--muted)}
+.pl-bar{position:relative;height:14px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.pl-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.pl-bar u{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--ink);opacity:.65;text-decoration:none}
+.pl-cardtop{display:flex;gap:14px;align-items:center}
+.pl-cardtop>div:last-child{flex:1;min-width:0}
+.pl-leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
+.pl-leg em{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;font-style:normal}
+.pl-cell{border-radius:8px;padding:6px 8px;min-width:92px}
+.pl-cell .pl-bar{height:8px;margin-top:4px}
+.pl-prow{display:grid;grid-template-columns:minmax(110px,190px) 1fr 54px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.pl-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:6px 0 10px}
+.pl-kpi{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.pl-kpi small{display:block;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.02em}
+.pl-kpi b{font-size:20px}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
@@ -349,10 +378,10 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const ROLES={residente:'Residente',auditor:'Auditor',compras:'Compras',direccion:'Dirección',administracion:'Administración',sistemas:'Sistemas'};
 const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['anuncios','Anuncios'],['bitacora','Bitácora de seguridad'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
-  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['tareasm','Tareas asignadas'],['herr_vanos','Levantamiento de vanos'],['notif','Notificaciones']],
-  auditor:[['revisar','Por auditar'],['todas','Todas'],['cal','Calendario'],['tareas','Tareas (asignar)'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
+  residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['tareasm','Tareas asignadas'],['plan','Plan de obra'],['herr_vanos','Levantamiento de vanos'],['notif','Notificaciones']],
+  auditor:[['revisar','Por auditar'],['todas','Todas'],['cal','Calendario'],['tareas','Tareas (asignar)'],['tareasm','Tareas asignadas'],['plan','Plan de obra'],['rep','Reportes'],['notif','Notificaciones']],
   compras:[['mis','Mis requisiciones'],['nueva','Nueva requisición'],['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
-  direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['tareas','Seguimiento de tareas'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
+  direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['tareas','Seguimiento de tareas'],['tareasm','Tareas asignadas'],['plan','Plan de obra'],['rep','Reportes'],['notif','Notificaciones']],
   administracion:[['proy','Proyectos'],['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']]
 };
 
@@ -463,7 +492,7 @@ function canEdit(r,l){
 }
 
 /* ───────── render general ───────── */
-const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Tareas',['tareas','tareasm']],['Herramientas',['herr_vanos']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','anuncios','depurar','bitacora']],['Avisos',['notif']]];
+const NAV_GROUPS=[['Obras',['proy']],['Gastos',['mis','nueva','revisar','oc','recibir','ocs','autorizar','excep','resueltas','pagar','credito','pagadas','todas','repos']],['Nómina',['nom','nomina','emps','nomaut','altas']],['Tareas',['tareas','tareasm']],['Plan de obra',['plan']],['Herramientas',['herr_vanos']],['Consultas',['cal','prov','rep']],['Seguridad',['usuarios','anuncios','depurar','bitacora']],['Avisos',['notif']]];
 function navGroups(){
   const out=[];
   NAV_GROUPS.forEach(g=>{const tabs=tabsOf(S.role).filter(t=>g[1].indexOf(t[0])>=0);if(tabs.length)out.push({name:g[0],tabs:tabs});});
@@ -481,7 +510,7 @@ function render(){
   if(S.navTab!==S.tab){S.navTab=S.tab;const g0=gs.find(g=>g.tabs.some(t=>t[0]===S.tab));if(g0)S.navG=g0.name;}
   nav.innerHTML=gs.map(g=>{
     const open=S.navG===g.name,tot=sum(g.tabs.map(t=>tabCount(t[0])));
-    if(g.name==='Herramientas'&&g.tabs.length===1)return '<button class="nav-g" data-act="tab" data-k="'+g.tabs[0][0]+'" aria-current="'+(S.tab===g.tabs[0][0])+'" style="'+(S.tab===g.tabs[0][0]?'color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent)':'')+'"><span>'+esc(g.name)+'</span></button>';
+    if((g.name==='Herramientas'||g.name==='Plan de obra')&&g.tabs.length===1)return '<button class="nav-g" data-act="tab" data-k="'+g.tabs[0][0]+'" aria-current="'+(S.tab===g.tabs[0][0])+'" style="'+(S.tab===g.tabs[0][0]?'color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent)':'')+'"><span>'+esc(g.name)+'</span></button>';
     return '<button class="nav-g" data-act="navg" data-g="'+esc(g.name)+'" aria-expanded="'+open+'"><span>'+(open?'▾':'▸')+' '+esc(g.name)+'</span>'+(tot&&!open?'<span class="badge">'+tot+'</span>':'')+'</button>'+
     (open?g.tabs.map(t=>{
       const n=tabCount(t[0]);
@@ -493,7 +522,7 @@ function render(){
   let h='';
   if(S.mode==='local')h+='<div class="banner">Modo local: lo que capture aquí no se comparte con otras personas hasta que la página se abra desde su enlace publicado.</div>';
   if(!S.ready){h+='<div class="empty"><p>Cargando requisiciones…</p></div>';app.innerHTML=h;return;}
-  if(NOMTABS.indexOf(S.tab)<0&&S.tab!=='notif'&&S.tab!=='repos'&&S.tab.indexOf('herr_')!==0&&S.role!=='sistemas')h+=statsHtml();
+  if(NOMTABS.indexOf(S.tab)<0&&S.tab!=='notif'&&S.tab!=='repos'&&S.tab.indexOf('herr_')!==0&&S.tab!=='plan'&&S.role!=='sistemas')h+=statsHtml();
   h+=viewHtml();
   app.innerHTML=h;
   renderDrawer();
@@ -513,6 +542,7 @@ document.addEventListener('focusout',()=>{if(pendingRender){pendingRender=false;
 function tabCount(k){
   const R=S.role;
   if(k==='repos'){try{return Vp().filter(repAtender).length;}catch(e){return 0;}}
+  if(k==='plan'){try{return S.role==='direccion'?(S.plan||[]).filter(m=>!m.cancelada&&m.estado==='pendiente').length:(S.role==='residente'?(S.plan||[]).filter(m=>!m.cancelada&&m.creatorId===myId&&m.estado==='borrador'&&m.devolucion).length:0);}catch(e){return 0;}}
   if(k==='tareasm'){try{return (S.tareas||[]).filter(t=>tarMine(t)&&t.estado!=='terminada'&&(tarEst(t)[0]==='VENCIDO'||t.estado==='asignada')).length;}catch(e){return 0;}}
   if(k==='tareas'){try{return tarAdm()?tarVis().filter(t=>t.mod).length:0;}catch(e){return 0;}}
   if(k==='notif'){try{return nAll().filter(n=>!nRead(n)).length;}catch(e){return 0;}}
@@ -568,6 +598,7 @@ function viewHtml(){
   if(k==='tareas')return tareasHtml();
   if(k==='tareasm')return tareasMiasHtml();
   if(k.indexOf('herr_')===0)return herrHtml(k.slice(5));
+  if(k==='plan')return planHtml();
   if(k==='repos')return repView();
   if(R==='sistemas'&&k==='anuncios')return anunciosHtml();
   if(R==='sistemas')return k==='usuarios'?usersHtml():(k==='bitacora'?bitHtml():(k==='depurar'?depHtml():''));
@@ -1257,6 +1288,8 @@ function startData(R){
   if(docsColl&&R!=='sistemas'){let q=docsColl;if(R==='residente'){try{q=docsColl.where('creatorReqId','==',myId);}catch(e){q=docsColl;}}sub(q,sn=>{if(sn)S.docs=rows(sn);safeRender();});}
   if(notifColl){let q=notifColl;try{if(R==='residente')q=q.where('uid','==',myId);q=q.orderBy('t','desc').limit(400);}catch(e){}sub(q,sn=>{if(sn)S.notifs=rows(sn);safeRender();});}
   if(tarColl){let q=tarColl;try{if(!tarAdm()&&!(R==='direccion'&&!S.viewAs)&&curEmail())q=tarColl.where('asigEmail','==',curEmail());}catch(e){}sub(q,sn=>{if(sn)S.tareas=rows(sn);safeRender();});}
+  if(planColl){let q=planColl;try{if(R==='residente')q=planColl.where('creatorId','==',myId);}catch(e){}sub(q,sn=>{if(sn)S.plan=rows(sn);safeRender();});}
+  if(planCfgColl)sub(planCfgColl,sn=>{if(sn){const a=rows(sn).find(x=>x.id==='semaforo');if(a)S.planCfg=a;}safeRender();});
   if(anColl)sub(anColl,sn=>{if(sn)S.anuncios=rows(sn);safeRender();});
   if(anEntColl){let q=anEntColl;try{if(R!=='sistemas')q=q.where('uid','==',anKey());}catch(e){}sub(q,sn=>{if(sn)S.anEnt=rows(sn);safeRender();});}
   if(lecColl){let q=lecColl;try{q=lecColl.where('uid','==',myId);}catch(e){}sub(q,sn=>{const a=sn?rows(sn):[];const mine=a.find(x=>x.id===myId)||a[0];S.lect=(mine&&mine.m)||{};safeRender();});}
@@ -1775,7 +1808,7 @@ function docFilesCheck(files){
 }
 async function docUpload(f){
   const u=await uploadFile(f);
-  if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))throw new Error('No se pudo subir '+f.name+' al almacenamiento.');
+  if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))throw new Error('No se pudo subir '+f.name+' al almacenamiento.'+(uploadFile.err?' Motivo de Supabase: '+uploadFile.err:''));
   return u;
 }
 async function docSave(d){
@@ -1795,7 +1828,7 @@ function docNotify(r,d,reemplazo){
 }
 /* ───────── notificaciones ───────── */
 const PRIO={critica:['Crítica','bad',0],alta:['Alta','warn',1],media:['Media','info',2],info:['Informativa','mute',3]};
-const NMODS={auditor:['Requisiciones'],residente:['Requisiciones','Gastos','Nómina','Reposiciones'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones','Proyectos'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones'],sistemas:['Sistemas']};
+const NMODS={auditor:['Requisiciones'],residente:['Requisiciones','Gastos','Nómina','Reposiciones','Plan de obra'],compras:['Requisiciones','Compras','Proveedores','Reposiciones'],administracion:['Requisiciones','Gastos','Nómina','Pagos','Proveedores','Reposiciones','Proyectos'],direccion:['Requisiciones','Gastos','Nómina','Proveedores','Pagos','Reposiciones','Plan de obra'],sistemas:['Sistemas']};
 Object.keys(NMODS).forEach(k=>{if(NMODS[k].indexOf('Tareas')<0)NMODS[k].push('Tareas');});
 function nPush(list){
   list.forEach(x=>{
@@ -2680,7 +2713,7 @@ async function modalOk(){
 /* archivos */
 async function uploadFile(file,opts){
   if(!file)return null;
-  if(assets){try{const u=await assets.upload(file,opts);return{name:file.name,id:u.id,url:u.url};}catch(e){}}
+  uploadFile.err='';if(assets){try{const u=await assets.upload(file,opts);return{name:file.name,id:u.id,url:u.url};}catch(e){uploadFile.err=(e&&(e.message||e.error||e.statusCode))||String(e);}}
   return{name:file.name,url:null};
 }
 
@@ -3415,7 +3448,7 @@ function rhLink(f,tag){
 }
 async function rhUpload(f){
   const u=await uploadFile(f,{rh:true});
-  if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))throw new Error('No se pudo subir '+f.name+' al almacenamiento.');
+  if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))throw new Error('No se pudo subir '+f.name+' al almacenamiento.'+(uploadFile.err?' Motivo de Supabase: '+uploadFile.err:''));
   return u;
 }
 const nomPers=uid=>(uid&&nm(uid))||'';
@@ -4619,6 +4652,483 @@ function tareaAviso(){
 Object.assign(A,{
   tarrev(){S.tarAv[anKey()]=true;const e=document.getElementById('tarav');if(e)e.remove();S.navG='Tareas';S.tab='tareasm';S.navTab='tareasm';S.open=null;render();}
 });
+/* ───────── Plan de obra · Metas SMART (Fase 1) ───────── */
+let planColl=null,planCfgColl=null;S.plan=[];S.planCfg={verde:100,amarillo:90};S.pq='';S.pd='';S.ph='';S.ppre='mes';S.plv='res';S.ds='';S.dp='';S.da='';S.db='';S.pr='';S.pp='';
+const PLAN_ST={borrador:'Borrador',pendiente:'Pendiente de autorización',autorizado:'Autorizado',ejecucion:'En ejecución',pcierre:'Pendiente de cierre',cerrado:'Cerrado'};
+const PLAN_VIAB=[['mat','Material disponible en obra'],['tra','Tramos liberados'],['per','Personal suficiente'],['her','Herramientas disponibles'],['ele','Equipos de elevación disponibles'],['ing','Ingeniería y detalles autorizados'],['ter','Interferencias del Cliente',true,'Sí, hay interferencia','No hay interferencia'],['seg','Condiciones de seguridad adecuadas'],['int','Otros',true,'Sí, hay otro impedimento','No hay otro impedimento']];
+const PLAN_UNI=['piezas','m²','metros lineales','módulos','kg','juegos'];
+const PLAN_DN=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const pIso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pAdd=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return pIso(d);};
+const pDow=iso=>(new Date(iso+'T12:00:00').getDay()+6)%7;
+const pMon=iso=>pAdd(iso,-pDow(iso));
+const pnf=n=>(n==null||n===''||isNaN(n))?'—':Number(n).toLocaleString('es-MX',{maximumFractionDigits:2});
+const ppc=n=>(n==null||isNaN(n))?'—':Math.round(n*10)/10+' %';
+const pLast=iso=>{const d=new Date(iso.slice(0,7)+'-01T12:00:00');d.setMonth(d.getMonth()+1);d.setDate(0);return pIso(d);};
+const pDiff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+function planRange(){if(S.ppre==='todo')return null;if(S.pd&&S.ph)return{d:S.pd,h:S.ph};const t=tarHoy();return{d:t.slice(0,7)+'-01',h:pLast(t)};}
+const planRangeLbl=r=>r?fdate(r.d)+' – '+fdate(r.h):'Todo el plan de obra';
+/* Agrupa programado/ejecutado de las metas por día (≤14 días), semana (≤16 semanas) o mes */
+function planBuckets(ms,a,b){
+  if(!ms.length)return[];if(!a||!b){const f=[];ms.forEach(m=>(m.dias||[]).forEach(d=>f.push(d.f)));if(!f.length)return[];f.sort();a=f[0];b=f[f.length-1];}
+  const n=pDiff(a,b)+1,hoy=tarHoy(),MES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  let mode=n<=14?'d':(n<=16*7?'w':'m'),key,lab;
+  if(mode==='d'){key=f=>f;lab=f=>PLAN_DN[pDow(f)].slice(0,3)+' '+f.slice(8);}
+  else if(mode==='w'){key=f=>pMon(f);lab=f=>'S '+fdate(f).slice(0,6);}
+  else{key=f=>f.slice(0,7);lab=f=>MES[+f.slice(5,7)-1]+' '+f.slice(2,4);}
+  const keys=[],map={};for(let f=a;f<=b;f=pAdd(f,1)){const k=key(f);if(!map[k]){map[k]={n:lab(mode==='w'?pMon(f):f),prog:0,ejec:'',cap:false,hoy:false,f1:f,f2:f};keys.push(k);}map[k].f2=f;if(f===hoy)map[k].hoy=true;}
+  ms.forEach(m=>(m.dias||[]).forEach(d=>{if(d.f<a||d.f>b)return;const o=map[key(d.f)];if(!o)return;o.prog+=+d.prog||0;if(d.ejec!==''&&d.ejec!=null){o.ejec=(+o.ejec||0)+(+d.ejec||0);o.cap=true;}}));
+  return keys.map(k=>{const o=map[k];o.prog=Math.round(o.prog*100)/100;if(o.ejec!=='')o.ejec=Math.round(o.ejec*100)/100;return o;});
+}
+const planMe=()=>(S.me&&(S.me.nombre||S.me.email))||ROLES[S.role]||'';
+const planAdm=()=>S.role==='direccion';
+function planVis(){return (S.plan||[]).filter(m=>!m.cancelada&&(S.role==='residente'?m.creatorId===myId:(S.role==='auditor'||S.role==='direccion')));}
+async function planSave(m){const nueva=!(S.plan||[]).some(x=>x.id===m.id);if(nueva)S.plan.push(m);try{if(planColl)await anSave(planColl,m);}catch(e){if(nueva)S.plan=S.plan.filter(x=>x.id!==m.id);throw e;}}
+function planH(m,txt){m.hist=(m.hist||[]).concat([{t:Date.now(),uid:myId,nom:planMe(),txt:txt}]);}
+function planNotif(m,ev,titulo,desc,roles,uid){
+  const o={ev:ev,prio:'media',mod:'Plan de obra',titulo:titulo,desc:desc,folio:m.folio,ref:null,rt:S.role};const out=[];
+  if(roles&&roles.length)out.push(Object.assign({},o,{roles:roles}));
+  if(uid)out.push(Object.assign({},o,{uid:uid}));
+  if(out.length)try{nPush(out);}catch(e){}
+}
+const vBad=(k,v)=>k[2]?v==='si':v==='no',vOk=(k,v)=>k[2]?v==='no':v==='si';
+function planViab(m){const i=(m.viab&&m.viab.i)||{};let si=0,no=0,res=0;PLAN_VIAB.forEach(k=>{const v=i[k[0]];if(vOk(k,v))si++;else if(vBad(k,v))no++;if(v==='si'||v==='no'||v==='na')res++;});
+  return{pct:(si+no)?si/(si+no)*100:null,completa:res===PLAN_VIAB.length,no:no};}
+function planMet(m){
+  const hoy=tarHoy(),d=m.dias||[],cant=+m.cant||0;
+  const prog=sum(d.map(x=>+x.prog||0)),ejec=sum(d.map(x=>+x.ejec||0)),progAc=sum(d.filter(x=>x.f<=hoy).map(x=>+x.prog||0));
+  const cap=d.filter(x=>x.ejec!==''&&x.ejec!=null),jorn=sum(cap.map(x=>+x.pr||0));
+  const rend=+m.rend||0,pers=+m.pers||0,cuad=+m.cuad||0;
+  const rendTrab=jorn>0?ejec/jorn:null,rendCuad=(cap.length&&cuad>0)?ejec/(cap.length*cuad):null;
+  const rest=d.filter(x=>x.f>hoy||(x.f===hoy&&(x.ejec===''||x.ejec==null))).length,pend=Math.max(0,cant-ejec);
+  return{prog:prog,ejec:ejec,progAc:progAc,cant:cant,pend:pend,cumpl:cant>0?ejec/cant*100:null,base:progAc>0?ejec/progAc*100:null,
+    rendTrab:rendTrab,rendCuad:rendCuad,rest:rest,rendNec:(rest>0&&pers>0)?pend/(rest*pers):null,
+    dev:(rendTrab!=null&&rend>0)?(rendTrab-rend)/rend*100:null,viab:planViab(m)};
+}
+const planVencida=m=>(m.estado==='autorizado'||m.estado==='ejecucion')&&m.fFin<tarHoy()&&planMet(m).pend>0.0001;
+function planSem(m){
+  const x=planMet(m),c=S.planCfg||{},v=+c.verde||100,a=+c.amarillo||90;
+  if(m.estado==='borrador'||m.estado==='pendiente'||tarHoy()<m.fIni||x.base==null)return['gris','Pendiente de iniciar','t-mute'];
+  if(x.base>=v)return['verde','Cumple','t-ok'];if(x.base>=a)return['amarillo','En riesgo','t-warn'];return['rojo','Atrasada','t-bad'];
+}
+function planSmart(m){
+  const u=m.uni||'unidades',x=planMet(m),v=x.viab;
+  return[['S · Específica','Ejecutar '+m.act+' en '+(m.ubic||'la ubicación indicada')+' del proyecto '+m.proyecto+'.'],
+   ['M · Medible','Meta cuantificable de '+pnf(m.cant)+' '+u+(m.rend?' (rendimiento esperado: '+pnf(m.rend)+' '+u+' por persona por día)':'')+'.'],
+   ['A · Alcanzable','Con '+pnf(m.pers)+' persona(s) en '+pnf(m.cuad)+' cuadrilla(s)'+(v.pct!=null?'; viabilidad validada: '+ppc(v.pct):'; viabilidad por validar')+'.'],
+   ['R · Relevante','Contribuye al cumplimiento del programa general de obra de '+m.proyecto+'.'+(m.crit?' Criterio de cumplimiento: '+m.crit:'')],
+   ['T · Temporal','Del '+fdate(m.fIni)+' al '+fdate(m.fFin)+' ']];
+}
+function planDistrib(fIni,fFin,cant,pers,dom){
+  const dias=[];for(let f=fIni;f<=fFin;f=pAdd(f,1)){if(pDow(f)<6||dom)dias.push(f);}
+  if(!dias.length)return[];const base=Math.floor(cant/dias.length*100)/100;let acc=0;
+  return dias.map((f,i)=>{const p=i===dias.length-1?Math.round((cant-acc)*100)/100:base;acc+=p;return{f:f,prog:p,pp:pers,ejec:'',pr:'',obs:'',imp:'',evid:[]};});
+}
+function planFiltradas(){
+  const rg=planRange();let l=planVis().filter(m=>!rg||(m.fIni<=rg.h&&m.fFin>=rg.d));
+  if(S.pr)l=l.filter(m=>(m.creatorNom||'')===S.pr);if(S.pp)l=l.filter(m=>m.proyecto===S.pp);
+  const q=normQ(S.pq||'').trim();if(q)l=l.filter(m=>normQ([m.proyecto,m.act,m.folio,m.ubic,m.cuadNom,m.creatorNom,m.resp,m.torre].join(' ')).indexOf(q)>=0);
+  return l.sort((a,b)=>String(a.proyecto).localeCompare(String(b.proyecto),'es')||String(a.fIni).localeCompare(String(b.fIni)));
+}
+function planDrill(l){
+  return l.filter(m=>(!S.ds||planSem(m)[0]===S.ds)&&(!S.dp||m.proyecto===S.dp)&&(!S.da||(m.fIni<=S.db&&m.fFin>=S.da)));
+}
+function planDrillLbl(){
+  const sn={verde:'Cumplen',amarillo:'En riesgo',rojo:'Atrasadas',gris:'Por iniciar'},o=[];
+  if(S.ds)o.push(sn[S.ds]);if(S.dp)o.push(S.dp);if(S.da)o.push(S.da===S.db?fdate(S.da):fdate(S.da)+' – '+fdate(S.db));return o;
+}
+function planPill(m){const e=PLAN_ST[m.estado]||m.estado,c={borrador:'t-mute',pendiente:'t-warn',autorizado:'t-info',ejecucion:'t-ok',pcierre:'t-warn',cerrado:'t-mute'}[m.estado]||'t-mute';return '<span class="pill '+c+'">'+esc(e)+'</span>';}
+
+const PLAN_COL={verde:'var(--ok)',amarillo:'var(--warn)',rojo:'var(--bad)',gris:'var(--line)'};
+function planColPct(c){c=+c;const v=+(S.planCfg||{}).verde||100,a=+(S.planCfg||{}).amarillo||90;return c>=v?'var(--ok)':c>=a?'var(--warn)':'var(--bad)';}
+function planRing(pct,col,size,lbl){
+  size=size||84;const r=size/2-9,c=2*Math.PI*r,p=pct==null?0:Math.max(0,Math.min(100,pct)),sw=size>100?12:9;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" role="img" aria-label="'+(pct==null?'sin dato':Math.round(pct)+' %')+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="var(--line)" stroke-width="'+sw+'"/>'+
+   (p>0?'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+(c*p/100)+' '+c+'" transform="rotate(-90 '+size/2+' '+size/2+')"/>':'')+
+   '<text x="50%" y="'+(lbl?'47%':'53%')+'" text-anchor="middle" dominant-baseline="middle" font-size="'+(size>100?26:size/4.2)+'" font-weight="700" fill="var(--ink)">'+(pct==null?'—':Math.round(pct)+'%')+'</text>'+(lbl?'<text x="50%" y="66%" text-anchor="middle" font-size="'+(size>100?11:9)+'" fill="var(--muted)">'+lbl+'</text>':'')+'</svg>';
+}
+function planBar(pctReal,pctEsp,col){
+  const p=Math.max(0,Math.min(100,pctReal||0));
+  return '<div class="pl-bar" title="Real '+Math.round(pctReal||0)+' %'+(pctEsp!=null?' · esperado a hoy '+Math.round(pctEsp)+' %':'')+'"><i style="width:'+p+'%;background:'+col+'"></i>'+(pctEsp!=null?'<u style="left:calc('+Math.min(100,pctEsp)+'% - 1px)"></u>':'')+'</div>';
+}
+/* Barras por día: programado (gris) vs ejecutado (color). dias = [{n,prog,ejec}] */
+function planDayChart(dias,h,noleg,click){
+  h=h||110;const W=Math.max(300,dias.length*58),mx=Math.max(1,...dias.map(d=>Math.max(+d.prog||0,+d.ejec||0))),bw=16,top=16,base=h-22,hh=base-top;
+  let g='';dias.forEach((d,i)=>{const x=i*(W/dias.length)+(W/dias.length)/2,ph=(+d.prog||0)/mx*hh,hasE=d.ejec!==''&&d.ejec!=null,eh=hasE?(+d.ejec||0)/mx*hh:0,c=hasE&&+d.prog>0?planColPct((+d.ejec)/(+d.prog)*100):'var(--accent)';
+    g+='<rect x="'+(x-bw-1)+'" y="'+(base-ph)+'" width="'+bw+'" height="'+Math.max(ph,1)+'" rx="3" fill="var(--line)"/>'+(hasE?'<rect x="'+(x+1)+'" y="'+(base-eh)+'" width="'+bw+'" height="'+Math.max(eh,1)+'" rx="3" fill="'+c+'"/><text x="'+(x+1+bw/2)+'" y="'+(base-eh-3)+'" text-anchor="middle" font-size="10" fill="var(--ink)">'+pnf(d.ejec)+'</text>':'')+
+     '<text x="'+x+'" y="'+(h-6)+'" text-anchor="middle" font-size="11" fill="'+(d.hoy?'var(--accent)':'var(--muted)')+'" font-weight="'+(d.hoy?700:400)+'">'+d.n+'</text>';});
+  if(click)g+=dias.map((d,i)=>{const sl=W/dias.length;return '<rect x="'+(i*sl)+'" y="0" width="'+sl+'" height="'+h+'" fill="transparent" style="cursor:pointer" role="button" tabindex="0" data-act="plango" data-lv="cal" data-a="'+d.f1+'" data-b="'+d.f2+'"><title>Ver actividades de '+d.n+'</title></rect>';}).join('');
+  return '<svg viewBox="0 0 '+W+' '+h+'" width="100%" style="max-width:'+W+'px;display:block" role="img" aria-label="Programado contra ejecutado"><line x1="0" x2="'+W+'" y1="'+base+'" y2="'+base+'" stroke="var(--line)"/>'+g+'</svg>'+
+   (noleg?'':'<div class="pl-leg"><span><em style="background:var(--line)"></em>Programado</span><span><em style="background:var(--ok)"></em>Ejecutado ≥ meta</span><span><em style="background:var(--warn)"></em>En riesgo</span><span><em style="background:var(--bad)"></em>Atrasado</span></div>');
+}
+function planDiasOf(l){const rg=planRange();return planBuckets(l,rg&&rg.d,rg&&rg.h);}
+function planSemGlobal(l){return l.length}
+
+async function planPdf(){
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No se cargó el generador de PDF. Revise su conexión y recargue la página.');
+  const doc=new J({orientation:'landscape',unit:'mm',format:'letter'});
+  if(typeof doc.autoTable!=='function')throw new Error('No se cargó el generador de tablas del PDF. Recargue la página.');
+  const l=planFiltradas(),res=S.role==='residente',H=doc.internal.pageSize.getHeight(),W=doc.internal.pageSize.getWidth();
+  const tp=sum(l.map(m=>planMet(m).cant)),te=sum(l.map(m=>planMet(m).ejec)),gl=tp>0?te/tp*100:null,cnt=k=>l.filter(m=>planSem(m)[0]===k).length;
+  let y=pdfHead(doc,'Plan de obra - Metas SMART','Periodo: '+planRangeLbl(planRange())+(res?' · '+planMe():'')+' · corte al '+fdate(tarHoy()));
+  // Resumen con tarjetas de semáforo
+  const cards=[['Metas',''+l.length,[11,95,122]],['Cumplimiento',gl==null?'-':Math.round(gl)+' %',[11,95,122]],['Cumplen',''+cnt('verde'),[27,116,71]],['En riesgo',''+cnt('amarillo'),[196,120,10]],['Atrasadas',''+cnt('rojo'),[168,38,31]],['Por iniciar',''+cnt('gris'),[110,120,125]]];
+  const cw=(W-28-5*4)/6;cards.forEach((c,i)=>{const x=14+i*(cw+4);doc.setDrawColor(216,224,227);doc.setFillColor(247,249,250);doc.roundedRect(x,y,cw,18,2,2,'FD');doc.setTextColor(c[2][0],c[2][1],c[2][2]);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(pdfT(c[1]),x+cw/2,y+9,{align:'center'});doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(91,108,116);doc.text(pdfT(c[0]),x+cw/2,y+15,{align:'center'});});
+  y+=26;
+  if(!l.length){doc.setTextColor(20,35,43);doc.setFontSize(11);doc.text('No hay metas en este periodo.',14,y);pdfFoot(doc);return doc;}
+  // Graficas: programado vs ejecutado por dia + avance por proyecto
+  {const dias=planDiasOf(l),mx=Math.max(1,...dias.map(d=>Math.max(+d.prog||0,+d.ejec||0))),cx=14,cwid=(W-28)*0.52,ch=38,base=y+ch;
+   doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Programado vs. ejecutado (todas las metas)',cx,y-1);
+   const sl=cwid/dias.length;doc.setDrawColor(216,224,227);doc.line(cx,base,cx+cwid,base);
+   dias.forEach((d,i)=>{const x=cx+i*sl+sl/2,ph=(+d.prog||0)/mx*(ch-8),hasE=d.ejec!==''&&d.ejec!=null,eh=hasE?(+d.ejec||0)/mx*(ch-8):0,bw=Math.min(8,sl/2-1);
+    doc.setFillColor(205,214,218);if(ph>0)doc.rect(x-bw-.5,base-ph,bw,ph,'F');
+    if(hasE&&eh>0){const p=+d.prog>0?+d.ejec/+d.prog*100:100,cf=S.planCfg||{},c=p>=(+cf.verde||100)?[27,116,71]:p>=(+cf.amarillo||90)?[196,120,10]:[168,38,31];doc.setFillColor(c[0],c[1],c[2]);doc.rect(x+.5,base-eh,bw,eh,'F');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(20,35,43);doc.text(pdfT(pnf(d.ejec)),x+.5+bw/2,base-eh-1,{align:'center'});}
+    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(91,108,116);doc.text(pdfT(d.n),x,base+4,{align:'center'});});
+   doc.setFontSize(7);doc.setFillColor(205,214,218);doc.rect(cx,base+7,3,3,'F');doc.text('Programado',cx+4.5,base+9.5);doc.setFillColor(27,116,71);doc.rect(cx+26,base+7,3,3,'F');doc.text('Ejecutado (verde cumple, naranja en riesgo, rojo atrasado)',cx+30.5,base+9.5);
+   // avance por proyecto
+   const px=cx+cwid+12,pw=W-14-px,pr={};l.forEach(m=>{const k=m.proyecto||'Sin proyecto',x=planMet(m);(pr[k]=pr[k]||{c:0,e:0,a:0});pr[k].c+=x.cant;pr[k].e+=x.ejec;pr[k].a+=x.progAc;});
+   doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Avance por proyecto',px,y-1);let py=y+4;
+   Object.keys(pr).sort().slice(0,6).forEach(k=>{const q=pr[k],p=q.c>0?Math.min(100,q.e/q.c*100):0,ea=q.c>0?Math.min(100,q.a/q.c*100):0,b=q.a>0?q.e/q.a*100:null,cf=S.planCfg||{},c=b==null||q.e<=0?[150,160,165]:b>=(+cf.verde||100)?[27,116,71]:b>=(+cf.amarillo||90)?[196,120,10]:[168,38,31];
+     doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(20,35,43);doc.text(pdfT(k.length>38?k.slice(0,37)+'.':k),px,py);doc.text(Math.round(p)+' %',px+pw,py,{align:'right'});
+     doc.setFillColor(232,237,239);doc.roundedRect(px,py+1.5,pw,3.4,1.5,1.5,'F');if(p>0){doc.setFillColor(c[0],c[1],c[2]);doc.roundedRect(px,py+1.5,Math.max(2,pw*p/100),3.4,1.5,1.5,'F');}
+     if(ea>0){doc.setDrawColor(20,35,43);doc.setLineWidth(.5);doc.line(px+pw*ea/100,py+.8,px+pw*ea/100,py+5.6);doc.setLineWidth(.2);}py+=9;});
+   doc.setFontSize(7);doc.setTextColor(91,108,116);doc.text('La linea negra marca lo programado a la fecha de corte.',px,Math.max(py,y+ch)+3);
+   y=base+20;}
+  const colr={verde:[27,116,71],amarillo:[196,120,10],rojo:[168,38,31],gris:[110,120,125]};
+  const grupos={};l.forEach(m=>{const k=m.proyecto||'Sin proyecto';(grupos[k]=grupos[k]||[]).push(m);});
+  Object.keys(grupos).sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{const g=grupos[n];
+    const c=sum(g.map(m=>planMet(m).cant)),e=sum(g.map(m=>planMet(m).ejec));
+    if(y>H-50){doc.addPage();y=18;}
+    doc.setTextColor(11,95,122);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(pdfT(n+'  ('+g.length+' meta'+(g.length===1?'':'s')+' · '+(c>0?Math.round(e/c*100):0)+' % de avance)'),14,y);doc.setDrawColor(11,95,122);doc.line(14,y+1.5,W-14,y+1.5);y+=4;
+    doc.autoTable({startY:y,head:[['Folio','Actividad / cuadrilla'].concat(res?[]:['Residente']).concat(['Ubicacion','Programado','Ejecutado','Pendiente','Avance','Viab.','Autorizacion','Semaforo'])],
+      body:g.map(m=>{const x=planMet(m),s=planSem(m);return [m.folio,m.act+(m.cuadNom?'\n['+m.cuadNom+']':'')].concat(res?[]:[m.creatorNom||'-']).concat([m.ubic||'-',pnf(x.cant)+' '+(m.uni||''),pnf(x.ejec),pnf(x.pend),x.cumpl==null?'-':Math.round(x.cumpl)+' %',x.viab.pct==null?'-':Math.round(x.viab.pct)+' %',PLAN_ST[m.estado]||m.estado,s[1]]).map(pdfT);}),
+      styles:{fontSize:8,cellPadding:1.8,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[11,95,122],textColor:255},alternateRowStyles:{fillColor:[245,248,249]},margin:{left:14,right:14},
+      didParseCell:d=>{if(d.section==='body'&&d.column.index===d.table.columns.length-1){const m=g[d.row.index],k=planSem(m)[0],cl=colr[k];d.cell.styles.fillColor=cl;d.cell.styles.textColor=255;d.cell.styles.fontStyle='bold';}}});
+    y=doc.lastAutoTable.finalY+8;
+    // Detalle diario
+    if(y>H-40){doc.addPage();y=18;}
+    {const rg=planRange(),bk=planBuckets(g,rg&&rg.d,rg&&rg.h);
+    doc.autoTable({startY:y,head:[['Programado / real'].concat(bk.map(q=>pdfT(q.n)))],
+      body:g.map(m=>[m.act+(m.cuadNom?' ['+m.cuadNom+']':'')].concat(planBuckets([m],rg&&rg.d,rg&&rg.h).map(q=>{if(!q.prog&&q.ejec==='')return '-';return 'P '+pnf(q.prog)+'\nR '+(q.ejec===''?'-':pnf(q.ejec))+((q.ejec!==''&&q.prog>0)?' ('+Math.round(q.ejec/q.prog*100)+'%)':'');})).map(pdfT)),
+      styles:{fontSize:7,cellPadding:1.2,textColor:[20,35,43],overflow:'linebreak',halign:'center'},headStyles:{fillColor:[61,79,163],textColor:255,halign:'center'},columnStyles:{0:{halign:'left',cellWidth:42}},margin:{left:14,right:14},
+      didParseCell:d=>{if(d.section==='body'&&d.column.index>0){const m=g[d.row.index],q=planBuckets([m],rg&&rg.d,rg&&rg.h)[d.column.index-1];if(q&&q.ejec!==''&&q.prog>0){const p=q.ejec/q.prog*100,cf=S.planCfg||{};d.cell.styles.fillColor=p>=(+cf.verde||100)?[224,242,232]:p>=(+cf.amarillo||90)?[252,239,214]:[250,227,225];}}}});}
+    y=doc.lastAutoTable.finalY+10;});
+  // Fichas por meta
+  const kv=(m,x)=>[['Meta total',pnf(x.cant)+' '+(m.uni||'')],['Ejecutado',pnf(x.ejec)],['Pendiente por ejecutar',pnf(x.pend)],['Cumplimiento',x.cumpl==null?'-':Math.round(x.cumpl)+' %'],['Avance acumulado programado',pnf(x.progAc)+' ('+(x.cant>0?Math.round(x.progAc/x.cant*100):0)+' %)'],['Avance acumulado real',pnf(x.ejec)+' ('+(x.cumpl==null?'-':Math.round(x.cumpl)+' %')+')'],['Rendimiento real por trabajador',x.rendTrab==null?'-':pnf(x.rendTrab)+' '+(m.uni||'')+'/persona-dia'],['Rendimiento esperado',m.rend?pnf(m.rend)+' '+(m.uni||'')+'/persona-dia':'-'],['Desviacion vs. esperado',x.dev==null?'-':Math.round(x.dev)+' %'],['Rendimiento necesario para recuperar',x.rendNec==null?'-':pnf(x.rendNec)+' /persona-dia ('+x.rest+' dias)'],['Personal asignado',pnf(m.pers||0)],['Cuadrillas',pnf(m.cuad||0)]];
+  for(const m of l){const x=planMet(m),s=planSem(m),sm=planSmart(m);doc.addPage();y=18;
+    doc.setFillColor(...colr[s[0]]);doc.rect(14,y-5,3,12,'F');doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(pdfT(m.folio+' - '+m.act+(m.cuadNom?' ['+m.cuadNom+']':'')),20,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(91,108,116);doc.text(pdfT(m.proyecto+' · '+(m.ubic||'sin ubicacion')+(res?'':' · '+(m.creatorNom||''))+' · Responsable: '+(m.resp||'-')+' · '+fdate(m.fIni)+' al '+fdate(m.fFin)+' · '+(PLAN_ST[m.estado]||m.estado)+' · Semaforo: '+s[1]),20,y+5.5);y+=11;
+    doc.autoTable({startY:y,head:[['Meta SMART','']],body:sm.map(r=>[pdfT(r[0]),pdfT(r[1])]),styles:{fontSize:8,cellPadding:1.5,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[11,95,122],textColor:255},columnStyles:{0:{cellWidth:36,fontStyle:'bold'}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+5;
+    const k=kv(m,x),rows=[];for(let i=0;i<k.length;i+=2)rows.push([k[i][0],k[i][1],k[i+1]?k[i+1][0]:'',k[i+1]?k[i+1][1]:'']);
+    doc.autoTable({startY:y,head:[['Indicadores','','','']],body:rows.map(r=>r.map(pdfT)),styles:{fontSize:8,cellPadding:1.5,textColor:[20,35,43]},headStyles:{fillColor:[61,79,163],textColor:255},columnStyles:{0:{cellWidth:52,fontStyle:'bold'},2:{cellWidth:52,fontStyle:'bold'}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+5;
+    if(y>H-60){doc.addPage();y=18;}
+    const vi=(m.viab&&m.viab.i)||{},im=(m.viab&&m.viab.imp)||{};
+    doc.autoTable({startY:y,head:[['Viabilidad ('+(x.viab.pct==null?'sin validar':Math.round(x.viab.pct)+' %')+')','Resultado','Impedimento / responsable / fecha compromiso']],
+      body:PLAN_VIAB.map(q=>{const v=vi[q[0]],i=im[q[0]];return [q[1],q[2]?(v==='si'?'SI HAY':v==='no'?'No hay':v==='na'?'No aplica':'Sin validar'):(v==='si'?'Si':v==='no'?'NO':v==='na'?'No aplica':'Sin validar'),vBad(q,v)&&i?(i.imp||'')+' · '+(i.resp||'-')+' · '+(i.fecha?fdate(i.fecha):'-'):''].map(pdfT);}),
+      styles:{fontSize:8,cellPadding:1.4,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[11,95,122],textColor:255},columnStyles:{0:{cellWidth:70},1:{cellWidth:24}},margin:{left:14,right:14},
+      didParseCell:d=>{if(d.section==='body'&&d.column.index===1){if(d.cell.raw==='NO'||d.cell.raw==='SI HAY'){d.cell.styles.fillColor=[250,227,225];d.cell.styles.textColor=[168,38,31];d.cell.styles.fontStyle='bold';}else if(d.cell.raw==='Si'||d.cell.raw==='No hay'){d.cell.styles.textColor=[27,116,71];}}}});y=doc.lastAutoTable.finalY+5;
+    if(y>H-60){doc.addPage();y=18;}
+    doc.autoTable({startY:y,head:[['Dia','Prog.','Ejec.','% dia','Pers. prog./real','Rend. real','Evidencias','Observaciones / impedimentos']],
+      body:(m.dias||[]).map(d=>{const cap=d.ejec!==''&&d.ejec!=null,c=cap&&+d.prog>0?Math.round(+d.ejec/+d.prog*100)+' %':'-',rr=cap&&+d.pr>0?pnf(+d.ejec/+d.pr):'-';return [fdate(d.f),pnf(d.prog),cap?pnf(d.ejec):'-',c,pnf(d.pp!=null?d.pp:m.pers||0)+' / '+(d.pr!==''&&d.pr!=null?pnf(d.pr):'-'),rr,String((d.evid||[]).length),((d.obs||'')+(d.imp?(d.obs?' | ':'')+'Impedimento: '+d.imp:'')) || '-'].map(pdfT);}),
+      styles:{fontSize:8,cellPadding:1.4,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[61,79,163],textColor:255},alternateRowStyles:{fillColor:[245,248,249]},columnStyles:{7:{cellWidth:85}},margin:{left:14,right:14},
+      didParseCell:d=>{if(d.section==='body'&&d.column.index===3&&d.cell.raw!=='-'){const p=parseInt(d.cell.raw,10),cf=S.planCfg||{};d.cell.styles.textColor=p>=(+cf.verde||100)?[27,116,71]:p>=(+cf.amarillo||90)?[196,120,10]:[168,38,31];d.cell.styles.fontStyle='bold';}}});y=doc.lastAutoTable.finalY+5;
+    if(y>H-50){doc.addPage();y=18;}
+    {const evd=(m.dias||[]).filter(z=>(z.evid||[]).length);
+    if(evd.length){
+      if(y>H-70){doc.addPage();y=18;}
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(11,95,122);doc.text('Evidencia fotografica',14,y);y+=5;
+      for(const z of evd){
+        const it=[];for(const f of z.evid)it.push(await planImgData(f));
+        if(y>H-62){doc.addPage();y=18;}
+        doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(20,35,43);doc.text(pdfT(PLAN_DN[pDow(z.f)]+' '+fdate(z.f)+' - '+it.length+' foto'+(it.length===1?'':'s')+(z.obs?' - '+z.obs:'')),14,y,{maxWidth:W-28});y+=3.5;
+        const cw=60,chh=45,gap=3.6;let col=0;
+        for(const im of it){
+          if(col===0&&y+chh>H-14){doc.addPage();y=18;}
+          const x=14+col*(cw+gap);doc.setDrawColor(216,224,227);doc.setFillColor(247,249,250);doc.rect(x,y,cw,chh,'FD');
+          if(im){const k=Math.min((cw-2)/im.w,(chh-2)/im.h),w=im.w*k,h=im.h*k;doc.addImage(im.d,'JPEG',x+(cw-w)/2,y+(chh-h)/2,w,h,undefined,'FAST');}
+          else{doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(110,120,125);doc.text('Foto no disponible',x+cw/2,y+chh/2,{align:'center'});}
+          col++;if(col===4){col=0;y+=chh+gap;}
+        }
+        if(col!==0)y+=chh+gap;y+=3;
+      }
+    }}
+    const extra=[];if(m.aut)extra.push(['Autorizada por',(m.aut.nom||'-')+' · '+fstamp(m.aut.t)]);if(m.devolucion)extra.push(['Devuelta por Direccion',m.devolucion]);if(m.crit)extra.push(['Criterios de cumplimiento',m.crit]);if(m.obs)extra.push(['Observaciones',m.obs]);
+    if(extra.length){doc.autoTable({startY:y,body:extra.map(r=>r.map(pdfT)),styles:{fontSize:8,cellPadding:1.5,textColor:[20,35,43],overflow:'linebreak'},columnStyles:{0:{cellWidth:52,fontStyle:'bold',fillColor:[245,248,249]}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+5;}
+    if((m.reprog||[]).length){if(y>H-50){doc.addPage();y=18;}doc.autoTable({startY:y,head:[['Reprogramacion','Termino','Justificacion','Que se hara diferente']],body:m.reprog.map(r=>[fstamp(r.t)+' '+(r.nom||''),fdate(r.fFinAnt)+' > '+fdate(r.fFin),r.just,r.dif].map(pdfT)),styles:{fontSize:8,cellPadding:1.5,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[196,120,10],textColor:255},columnStyles:{0:{cellWidth:40},1:{cellWidth:36}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+5;}
+    if((m.hist||[]).length){if(y>H-40){doc.addPage();y=18;}doc.autoTable({startY:y,head:[['Historial de cambios','','']],body:(m.hist||[]).map(h=>[fstamp(h.t),h.nom||'',h.txt||''].map(pdfT)),styles:{fontSize:7.5,cellPadding:1.2,textColor:[20,35,43],overflow:'linebreak'},headStyles:{fillColor:[110,120,125],textColor:255},columnStyles:{0:{cellWidth:38},1:{cellWidth:40}},margin:{left:14,right:14}});}
+  }
+  pdfFoot(doc);return doc;
+}
+function planHtml(){
+  const rg=planRange(),all=planVis(),l=planFiltradas(),res=S.role==='residente';
+  const resp=[...new Set(all.map(m=>m.creatorNom).filter(Boolean))].sort(),proy=[...new Set(all.map(m=>m.proyecto).filter(Boolean))].sort();
+  const cnt=k=>l.filter(m=>planSem(m)[0]===k).length,cm=l.map(m=>planMet(m).cumpl).filter(x=>x!=null),prom=cm.length?sum(cm)/cm.length:null;
+  let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>Plan de obra · Metas SMART</b><div class="muted" style="font-size:13px">'+(res?'Planee sus metas por proyecto y por el periodo que necesite, valide su viabilidad, envíelas a autorización y capture el avance diario.':'Consulta del plan de obra de los residentes'+(planAdm()?'. Dirección autoriza los planes y configura la semaforización.':'.'))+'</div></div><div class="row">'+
+    '<button class="btn" data-act="planpdf">Descargar reporte PDF</button>'+(planAdm()?'<button class="btn" data-act="plancfg">Semaforización</button>':'')+(res?'<button class="btn primary" data-act="plannew">Nueva meta SMART</button>':'')+'</div></div></div>';
+  if(res){
+    const vv=planVis().filter(m=>m.creatorId===myId&&planVencida(m));
+    if(vv.length){
+      h+='<div class="card" style="border-left:6px solid var(--bad);background:var(--bad-soft)"><div class="row" style="justify-content:space-between"><b style="font-size:16px;color:var(--bad)">⚠ '+(vv.length===1?'Tiene 1 meta incumplida':'Tiene '+vv.length+' metas incumplidas')+'</b></div><div class="muted" style="font-size:13px;margin:2px 0 8px">El periodo terminó y la meta no se concluyó. Cambie la fecha de término y explique la justificación y qué se hará diferente para cumplirla.</div><div class="stack">'+vv.map(m=>{const x=planMet(m);return '<div class="card" style="margin:0;padding:12px"><div class="row" style="justify-content:space-between;align-items:center"><div style="min-width:0"><div class="req-title">'+esc(m.act)+(m.cuadNom?' <span class="pill t-info">'+esc(m.cuadNom)+'</span>':'')+'</div><div class="req-meta">'+esc(m.proyecto)+' · venció el '+fdate(m.fFin)+' · avance '+ppc(x.cumpl)+' · pendiente <b>'+pnf(x.pend)+' '+esc(m.uni||'')+'</b></div></div><button class="btn sm danger" data-act="planreprog" data-id="'+m.id+'">Reprogramar meta</button></div></div>';}).join('')+'</div></div>';
+      if(!S.plAl)S.plAl={};const nv=vv.filter(m=>!S.plAl[m.id]);
+      if(nv.length){nv.forEach(m=>{S.plAl[m.id]=1;});setTimeout(()=>{try{modal({title:'⚠ Meta incumplida',html:'<p style="margin-top:0">'+(nv.length===1?'La meta <b>'+esc(nv[0].act)+'</b> ('+esc(nv[0].proyecto)+') terminó su periodo el '+fdate(nv[0].fFin)+' sin concluirse.':'Tiene <b>'+nv.length+' metas</b> cuyo periodo terminó sin concluirse.')+'</p><p>Debe cambiar la fecha de término, escribir la justificación y responder <b>¿qué se hará diferente para cumplirla?</b></p>',ok:'Reprogramar ahora',onOk:()=>{setTimeout(()=>planReprogModal(nv[0]),30);return true;}});}catch(e){}},80);}
+    }
+  }
+  if(planAdm()&&S.plv==='res'){
+    const pen=planVis().filter(m=>m.estado==='pendiente').sort((x,y)=>String(x.fIni).localeCompare(String(y.fIni)));
+    h+='<div class="card" style="border-left:6px solid var(--warn)"><div class="row" style="justify-content:space-between"><b style="font-size:16px">Actividades por autorizar</b><span class="pill '+(pen.length?'t-warn':'t-ok')+'">'+(pen.length?pen.length+' pendiente'+(pen.length===1?'':'s'):'Todo al corriente')+'</span></div>'+
+     (pen.length?'<div class="muted" style="font-size:13px;margin:2px 0 8px">Revise cada meta y autorícela o devuélvala al residente con el motivo. No depende del periodo seleccionado.</div><div class="stack">'+pen.map(m=>{const x=planMet(m);return '<div class="card" style="margin:0;padding:12px;background:var(--surface-2)"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div class="muted mono" style="font-size:12px">'+esc(m.folio)+'</div><div class="req-title">'+esc(m.act)+(m.cuadNom?' <span class="pill t-info" style="vertical-align:2px">'+esc(m.cuadNom)+'</span>':'')+'</div><div class="req-meta">'+esc(m.proyecto)+' · '+esc(m.ubic||'—')+' · '+esc(m.creatorNom||'')+'<br>'+fdate(m.fIni)+' – '+fdate(m.fFin)+' · <b>'+pnf(x.cant)+' '+esc(m.uni||'')+'</b> · '+pnf(m.pers||0)+' persona(s) · '+pnf(m.cuad||0)+' cuadrilla(s) · Viabilidad '+ppc(x.viab.pct)+'</div></div><div class="row"><button class="btn sm" data-act="planver" data-id="'+m.id+'">Ver meta</button><button class="btn sm primary" data-act="planaut" data-id="'+m.id+'">Autorizar</button><button class="btn sm danger" data-act="plandev" data-id="'+m.id+'">Devolver</button></div></div></div>';}).join('')+'</div>':'<div class="muted" style="font-size:13px;margin-top:4px">No hay metas esperando autorización.</div>')+'</div>';
+  }
+  const pb=(k,t)=>'<button class="btn sm'+(S.ppre===k?' primary':'')+'" data-act="planper" data-p="'+k+'">'+t+'</button>';
+  h+='<div class="card"><div class="row" style="justify-content:space-between"><div class="row"><button class="btn sm" data-act="planmv" data-d="-1" aria-label="Periodo anterior">◀</button><b style="margin:0 8px">'+planRangeLbl(rg)+'</b><button class="btn sm" data-act="planmv" data-d="1" aria-label="Periodo siguiente">▶</button>'+pb('mes','Este mes')+pb('sem','Esta semana')+pb('30','Próximos 30 días')+pb('todo','Todo el plan')+'</div>'+
+    '</div>'+
+    '<div class="grid" style="margin-top:10px"><div class="f"><label for="pl-d">Del</label><input id="pl-d" type="date" value="'+esc(rg?rg.d:'')+'"'+(rg?'':' disabled')+'></div><div class="f"><label for="pl-h">Al</label><input id="pl-h" type="date" value="'+esc(rg?rg.h:'')+'"'+(rg?'':' disabled')+'></div></div>'+
+    '<div class="grid" style="margin-top:10px"><div class="f" style="grid-column:1/-1"><label for="pl-q">Buscar obra, actividad o folio</label><input id="pl-q" type="search" autocomplete="off" placeholder="Escriba el nombre de la obra, la actividad, la cuadrilla o el folio…" value="'+esc(S.pq||'')+'"></div>'+
+    (res?'':'<div class="f"><label for="pl-r">Residente</label><select id="pl-r"><option value="">Todos</option>'+resp.map(x=>'<option'+(S.pr===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>')+
+    '<div class="f"><label for="pl-p">Obra / proyecto</label><select id="pl-p"><option value="">Todas</option>'+proy.map(x=>'<option'+(S.pp===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>'+
+    ((S.pq||S.pr||S.pp)?'<div class="f" style="align-self:end"><button class="btn sm" data-act="planlimp">Limpiar búsqueda y filtros</button></div>':'')+'</div></div>';
+  const tp=sum(l.map(m=>planMet(m).cant)),te=sum(l.map(m=>planMet(m).ejec)),gl=tp>0?te/tp*100:null,pa=sum(l.map(m=>planMet(m).progAc)),gb=pa>0?te/pa*100:null;
+  const porProy={};l.forEach(m=>{const k=m.proyecto||'—',x=planMet(m);(porProy[k]=porProy[k]||{c:0,e:0,n:0,pa:0});porProy[k].pa+=x.progAc;porProy[k].c+=x.cant;porProy[k].e+=x.ejec;porProy[k].n++;});
+  if(S.plv==='res')h+='<div class="card"><div class="pl-hero"><div class="pl-ringbox"><button type="button" data-act="plango" data-lv="cal" title="Ver el calendario con todas las actividades" style="background:none;border:0;padding:0;cursor:pointer">'+planRing(gl,te>0&&gb!=null?planColPct(gb):'var(--line)',132,'de las metas')+'</button>'+'<b style="font-size:13px">'+l.length+' meta'+(l.length===1?'':'s')+' · '+l.filter(m=>m.estado==='pendiente').length+' por autorizar</b><span class="muted" style="font-size:12px">ejecutado / programado · color según lo programado a hoy</span></div>'+
+   '<div><div class="pl-lights">'+[['v','verde','Cumple'],['a','amarillo','En riesgo'],['r','rojo','Atrasadas'],['g','gris','Por iniciar']].map(t=>'<button type="button" class="pl-light '+t[0]+'" '+(cnt(t[1])?'data-act="plango" data-lv="cal" data-s="'+t[1]+'" title="Ver las actividades: '+t[2]+'"':'disabled style="opacity:.55;cursor:default"')+'><b>'+cnt(t[1])+'</b><span>● '+t[2]+'</span></button>').join('')+'</div>'+
+   '<div style="font-weight:600;font-size:13px;margin-bottom:2px">Programado vs. ejecutado'+'</div>'+planDayChart(planDiasOf(l),110,false,true)+'</div></div>'+
+   (true?'<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px"><div style="font-weight:600;font-size:13px">Avance por proyecto</div>'+Object.keys(porProy).sort().map(k=>{const q=porProy[k],p=q.c>0?q.e/q.c*100:0;return '<div class="pl-prow" role="button" tabindex="0" data-act="plango" data-lv="cal" data-p="'+esc(k)+'" title="Ver las actividades de '+esc(k)+'" style="cursor:pointer"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(k)+' <span class="muted">('+q.n+')</span></span>'+planBar(p,q.pa>0?q.pa/q.c*100:null,q.e>0&&q.pa>0?planColPct(q.e/q.pa*100):'var(--line)')+'<b>'+Math.round(p)+' %</b></div>';}).join('')+'</div>':'')+'</div>';
+  if(!l.length)return h+'<div class="empty"><b>No hay metas en este periodo</b><p>'+(res?'Cree su primera meta SMART con «Nueva meta SMART» o cambie el periodo.':'Los residentes aún no tienen metas en este periodo. Cambie el periodo o elija «Todo el plan».')+'</p></div>';
+  if(S.plv==='res')return h+'<div class="muted" style="text-align:center;font-size:13px;margin:4px 0 12px">Toque un semáforo, un día de la gráfica, un proyecto o el círculo para ver las actividades en el calendario.</div>';
+  const ld=planDrill(l),dl=planDrillLbl();
+  h+='<div class="card"><div class="row" style="justify-content:space-between"><div class="row"><button class="btn sm" data-act="planback">◀ '+(S.plv==='tab'?'Volver al calendario':'Volver al resumen')+'</button><span class="muted" style="font-size:13px">Resumen › <b'+(S.plv==='cal'?'':' style="font-weight:400"')+'>Calendario</b>'+(S.plv==='tab'?' › <b>Actividades</b>':'')+'</span></div><div class="row">'+dl.map(x=>'<span class="pill t-info">'+esc(x)+'</span>').join('')+(dl.length?'<button class="btn sm" data-act="planclear">Quitar filtros</button>':'')+(S.plv==='cal'?'<button class="btn sm primary" data-act="plango" data-lv="tab" data-keep="1">Ver actividades ('+ld.length+')</button>':'')+'</div></div></div>';
+  if(!ld.length)return h+'<div class="empty"><b>No hay actividades con ese filtro</b><p>Quite los filtros o cambie el periodo.</p></div>';
+  if(S.plv==='cal')return h+planCal(ld);
+  h+='<div class="list">';
+  ld.forEach(m=>{const x=planMet(m),s=planSem(m),mine=m.creatorId===myId;
+    const esp=x.cant>0?x.progAc/x.cant*100:null,col=s[0]==='gris'?'var(--line)':PLAN_COL[s[0]],dd=planBuckets([m],m.fIni,m.fFin);
+    const venc=planVencida(m);
+    h+='<div class="card" style="display:flex;flex-direction:column;gap:10px;border-left:6px solid '+PLAN_COL[s[0]]+'">'+
+     (venc?'<div class="pl-alert">⚠ Meta incumplida: el periodo terminó el '+fdate(m.fFin)+' y quedan '+pnf(x.pend)+' '+esc(m.uni||'')+' pendientes.'+(mine&&res?' Reprograme la fecha con su justificación.':'')+'</div>':'')+
+     '<div class="req-top"><span class="folio">'+esc(m.folio)+'</span><span class="chips">'+((m.reprog||[]).length?'<span class="pill t-warn">Reprogramada ×'+m.reprog.length+'</span>':'')+planPill(m)+'<span class="pill '+s[2]+'">● '+s[1]+'</span></span></div>'+
+     '<div class="pl-cardtop"><div>'+planRing(x.cumpl,x.ejec>0?planColPct(x.base!=null?x.base:x.cumpl):'var(--line)',92)+'</div><div><div class="req-title">'+esc(m.act)+(m.cuadNom?' <span class="pill t-info" style="vertical-align:2px">'+esc(m.cuadNom)+'</span>':'')+'</div><div class="req-meta">'+esc(m.proyecto)+' · '+esc(m.ubic||'—')+(res?'':' · '+esc(m.creatorNom||''))+'<br>Responsable: '+esc(m.resp||'—')+' · '+fdate(m.fIni)+' – '+fdate(m.fFin)+'</div></div></div>'+
+     '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span><b>'+pnf(x.ejec)+'</b> de '+pnf(x.cant)+' '+esc(m.uni||'')+'</span><span class="muted">faltan '+pnf(x.pend)+'</span></div>'+planBar(x.cumpl,esp,col)+'<div class="pl-leg"><span>La línea negra marca lo programado a hoy'+(esp!=null?' ('+Math.round(esp)+' %)':'')+'</span></div></div>'+
+     (dd.length?planDayChart(dd,86,true):'')+
+     '<div class="pl-kpis"><div class="pl-kpi"><small>Viabilidad</small><b style="color:'+(x.viab.pct==null?'var(--muted)':planColPct(x.viab.pct))+'">'+ppc(x.viab.pct)+'</b></div><div class="pl-kpi"><small>Rend. real / esperado</small><b>'+(x.rendTrab==null?'—':pnf(x.rendTrab))+' <span class="muted" style="font-size:12px">/ '+pnf(m.rend||0)+'</span></b></div><div class="pl-kpi"><small>Personal · cuadrillas</small><b>'+pnf(m.pers||0)+' · '+pnf(m.cuad||0)+'</b></div></div>'+
+     (m.devolucion&&m.estado==='borrador'?'<div class="note warn"><b>Devuelto por Dirección:</b> '+esc(m.devolucion)+'</div>':'')+
+     '<div class="row">'+
+      '<button class="btn sm" data-act="planver" data-id="'+m.id+'">Ver meta e indicadores</button>'+(mine&&res&&venc?'<button class="btn sm danger" data-act="planreprog" data-id="'+m.id+'">Reprogramar meta</button>':'')+(mine&&res?'<button class="btn sm" data-act="plandup" data-id="'+m.id+'">Duplicar (otra cuadrilla)</button>':'')+
+      (mine&&res&&m.estado==='borrador'?'<button class="btn sm" data-act="planedit" data-id="'+m.id+'">Editar</button><button class="btn sm" data-act="plandist" data-id="'+m.id+'">Distribución diaria</button><button class="btn sm" data-act="planviab" data-id="'+m.id+'">Validar viabilidad</button><button class="btn sm primary" data-act="planenv" data-id="'+m.id+'">Enviar a autorización</button><button class="btn sm danger" data-act="plandel" data-id="'+m.id+'">Eliminar</button>':'')+
+      (mine&&res&&(m.estado==='autorizado'||m.estado==='ejecucion')?'<button class="btn sm primary" data-act="planavance" data-id="'+m.id+'">Avance diario</button>':'')+
+      (planAdm()&&m.estado==='pendiente'?'<button class="btn sm primary" data-act="planaut" data-id="'+m.id+'">Autorizar</button><button class="btn sm danger" data-act="plandev" data-id="'+m.id+'">Devolver</button>':'')+
+     '</div></div>';});
+  return h+'</div>';
+}
+function planCal(l){
+  const rg=planRange(),hoy=tarHoy();let a=rg&&rg.d,b=rg&&rg.h;
+  if(!a){const f=[];l.forEach(m=>f.push(m.fIni,m.fFin));f.sort();a=f[0];b=f[f.length-1];}
+  const cf=S.planCfg||{},v=+cf.verde||100,am=+cf.amarillo||90,agg={};
+  l.forEach(m=>(m.dias||[]).forEach(d=>{if(d.f<a||d.f>b)return;const o=agg[d.f]||(agg[d.f]={p:0,e:0,c:false,n:0});o.p+=+d.prog||0;o.n++;if(d.ejec!==''&&d.ejec!=null){o.e+=+d.ejec||0;o.c=true;}}));
+  const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let h='<div class="muted" style="font-size:13px;margin:0 0 8px">Cada día suma lo programado y lo ejecutado de todas las metas del filtro actual ('+l.length+' meta'+(l.length===1?'':'s')+').</div>';
+  let m0=a.slice(0,7)+'-01',guard=0;
+  while(m0<=b&&guard++<24){
+    const last=pLast(m0),ini=pMon(m0);
+    h+='<div class="card" style="margin-bottom:12px"><b>'+MES[+m0.slice(5,7)-1]+' '+m0.slice(0,4)+'</b><div class="tw"><table><thead><tr>'+PLAN_DN.map(n=>'<th>'+n+'</th>').join('')+'</tr></thead><tbody>';
+    for(let w=ini;w<=last;w=pAdd(w,7)){h+='<tr>';
+      for(let i=0;i<7;i++){const f=pAdd(w,i);
+        if(f<m0||f>last){h+='<td></td>';continue;}
+        const o=agg[f];
+        if(!o||f<a||f>b){h+='<td><div class="pl-cell muted"><b>'+f.slice(8)+'</b></div></td>';continue;}
+        const c=o.c&&o.p>0?o.e/o.p*100:null,cl=c==null?'':(c>=v?'var(--ok)':c>=am?'var(--warn)':'var(--bad)'),bg=c==null?'var(--surface-2)':(c>=v?'var(--ok-soft)':c>=am?'var(--warn-soft)':'var(--bad-soft)');
+        h+='<td><div class="pl-cell" role="button" tabindex="0" data-act="plango" data-lv="tab" data-a="'+f+'" data-b="'+f+'" data-keep="1" title="Ver las actividades del '+fdate(f)+'" style="cursor:pointer;background:'+bg+(f===hoy?';outline:2px solid var(--accent)':'')+'"><b>'+f.slice(8)+'</b> <span class="muted" style="font-size:11px">'+o.n+' meta'+(o.n===1?'':'s')+'</span><div>Prog. <b>'+pnf(o.p)+'</b></div><div'+(cl?' style="color:'+cl+';font-weight:700"':' class="muted"')+'>Real '+(o.c?pnf(o.e):'—')+(c!=null?' · '+Math.round(c)+' %':'')+'</div>'+(c!=null?planBar(c,null,cl):'')+'</div></td>';}
+      h+='</tr>';}
+    h+='</tbody></table></div></div>';
+    const d=new Date(m0+'T12:00:00');d.setMonth(d.getMonth()+1);m0=pIso(d);
+  }
+  return h;
+}
+function planForm(m,dup){
+  const nuevo=!m||!!dup,hoy0=tarHoy();m=m||{};
+  const proy=[...new Set((S.plan||[]).map(x=>x.proyecto).concat((S.proys||[]).map(x=>x.nombre)).filter(Boolean))].sort();
+  const uopts=PLAN_UNI.concat(m.uni&&PLAN_UNI.indexOf(m.uni)<0?[m.uni]:[]);
+  modal({title:nuevo?(dup?'Duplicar meta (otra cuadrilla)':'Nueva meta SMART'):'Editar meta '+m.folio,wide:true,ok:nuevo?'Crear meta (borrador)':'Guardar cambios',html:
+   '<div class="grid" style="align-items:start"><div class="f"><label for="pm-p">Proyecto <i>*</i></label><input id="pm-p" list="pm-pl" maxlength="80" value="'+esc(m.proyecto||'')+'" autocomplete="off"><datalist id="pm-pl">'+proy.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div><div class="f"><label for="pm-r">Responsable de la meta <i>*</i></label><input id="pm-r" maxlength="80" value="'+esc(m.resp||planMe())+'"></div></div>'+
+   '<div class="f"><label for="pm-a">Actividad a ejecutar <i>*</i></label><input id="pm-a" maxlength="200" value="'+esc(m.act||'')+'" placeholder="Ej. Instalación de cancelería fija"></div>'+
+   '<div class="f"><label for="pm-cn">Cuadrilla o frente <span class="muted">(para distinguir varias metas de la misma actividad)</span></label><input id="pm-cn" maxlength="60" value="'+esc(m.cuadNom||'')+'" placeholder="Ej. Cuadrilla 1 · Torre A"></div>'+
+   '<div class="grid" style="align-items:start"><div class="f"><label for="pm-to">Torre</label><input id="pm-to" maxlength="40" value="'+esc(m.torre||'')+'"></div><div class="f"><label for="pm-ni">Nivel</label><input id="pm-ni" maxlength="40" value="'+esc(m.nivel||'')+'"></div><div class="f"><label for="pm-de">Departamento</label><input id="pm-de" maxlength="40" value="'+esc(m.depto||'')+'"></div><div class="f"><label for="pm-ej">Eje / ubicación</label><input id="pm-ej" maxlength="80" value="'+esc(m.eje||'')+'"></div></div>'+
+   '<div class="grid" style="align-items:start"><div class="f"><label for="pm-u">Unidad de medida <i>*</i></label><input id="pm-u" list="pm-ul" maxlength="30" value="'+esc(m.uni||'')+'" autocomplete="off"><datalist id="pm-ul">'+uopts.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div><div class="f"><label for="pm-c">Cantidad programada <i>*</i></label><input id="pm-c" type="number" min="0" step="any" value="'+esc(m.cant!=null?m.cant:'')+'"></div><div class="f"><label for="pm-pe">Personal asignado <i>*</i></label><input id="pm-pe" type="number" min="0" step="1" value="'+esc(m.pers!=null?m.pers:'')+'"></div><div class="f"><label for="pm-cu">Número de cuadrillas <i>*</i></label><input id="pm-cu" type="number" min="0" step="1" value="'+esc(m.cuad!=null?m.cuad:'')+'"></div><div class="f"><label for="pm-re">Rendimiento diario esperado <span class="muted">(unidad por persona por día)</span></label><input id="pm-re" type="number" min="0" step="any" value="'+esc(m.rend!=null?m.rend:'')+'"></div></div>'+
+   '<div class="grid" style="align-items:start"><div class="f"><label for="pm-fi">Fecha de inicio <i>*</i></label><input id="pm-fi" type="date" value="'+esc(m.fIni||hoy0)+'"></div><div class="f"><label for="pm-ff">Fecha de término <i>*</i></label><input id="pm-ff" type="date" value="'+esc(m.fFin||pAdd(hoy0,5))+'"></div><div class="f"><label for="pm-do">Domingo</label><label class="opt" style="padding:8px 10px;font-size:14px"><input type="checkbox" id="pm-do"'+(m.dom?' checked':'')+'><span>Incluir domingo</span></label></div></div>'+
+   '<div class="f"><label for="pm-cr">Criterios de cumplimiento</label><textarea id="pm-cr" rows="2" maxlength="500">'+esc(m.crit||'')+'</textarea></div><div class="f"><label for="pm-ob">Observaciones</label><textarea id="pm-ob" rows="2" maxlength="500">'+esc(m.obs||'')+'</textarea></div>'+
+   '<div class="muted" style="font-size:13px">Al guardar se redacta la meta SMART y se reparte la cantidad en los días del periodo (lunes a sábado; marque «Incluir domingo» si se trabaja). Puede registrar cualquier periodo: una semana, un mes o toda la obra. Después puede ajustar la distribución diaria.</div>',
+   onOk:async root=>{
+    const g=i=>root.querySelector('#'+i),v=i=>g(i).value.trim(),n=i=>parseFloat(g(i).value);
+    const proy=v('pm-p'),act=v('pm-a'),uni=v('pm-u'),cant=n('pm-c'),pers=n('pm-pe'),cuad=n('pm-cu'),rend=n('pm-re')||0,fi=g('pm-fi').value,ff=g('pm-ff').value;
+    root.querySelectorAll('.pl-bad').forEach(e=>e.classList.remove('pl-bad'));
+    const falta=[];const chk=(id,ok,txt)=>{if(!ok){falta.push(txt);g(id).classList.add('pl-bad');}};
+    chk('pm-p',!!proy,'Proyecto');chk('pm-r',!!v('pm-r'),'Responsable de la meta');chk('pm-a',!!act,'Actividad a ejecutar');chk('pm-u',!!uni,'Unidad de medida');
+    chk('pm-c',cant>0,'Cantidad programada (mayor a cero)');chk('pm-pe',pers>=0&&!isNaN(pers),'Personal asignado');chk('pm-cu',cuad>=0&&!isNaN(cuad),'Número de cuadrillas');
+    chk('pm-fi',!!fi,'Fecha de inicio');chk('pm-ff',!!ff,'Fecha de término');
+    const fail=msg=>{const er=root.querySelector('#m-err');if(er)setTimeout(()=>{try{er.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}},30);const bad=root.querySelector('.pl-bad');if(bad)try{bad.focus({preventScroll:true});}catch(e){}return msg;};
+    if(falta.length)return fail('Falta capturar: '+falta.join(', ')+'. Los campos pendientes están marcados en rojo.');
+    if(ff<fi){g('pm-ff').classList.add('pl-bad');return fail('La fecha de término no puede ser anterior al inicio.');}
+    if(pDiff(fi,ff)>365){g('pm-ff').classList.add('pl-bad');return fail('El periodo de una meta no puede ser mayor a un año. Divida la meta en varias.');}
+    const dom=g('pm-do').checked,ub=[v('pm-to')?'Torre '+v('pm-to'):'',v('pm-ni')?'Nivel '+v('pm-ni'):'',v('pm-de')?'Dep. '+v('pm-de'):'',v('pm-ej')?'Eje/ubic. '+v('pm-ej'):''].filter(Boolean).join(' · ');
+    const base={cuadNom:v('pm-cn'),proyecto:proy,resp:v('pm-r'),act:act,torre:v('pm-to'),nivel:v('pm-ni'),depto:v('pm-de'),eje:v('pm-ej'),ubic:ub,uni:uni,cant:cant,pers:pers,cuad:cuad,rend:rend,fIni:fi,fFin:ff,dom:dom,crit:v('pm-cr'),obs:v('pm-ob')};
+    if(nuevo){const x=Object.assign({id:rid(),folio:'MET-'+code(),semana:fi,estado:'borrador',viab:{i:{},imp:{}},hist:[],creatorId:myId,creatorNom:planMe(),creado:Date.now()},base);
+      x.dias=planDistrib(fi,ff,cant,pers,dom);planH(x,'Meta creada · '+pnf(cant)+' '+uni);try{await planSave(x);}catch(e){return 'No se pudo guardar la meta: '+((e&&e.message)||e)+'. Si el mensaje habla de permisos o de que la tabla no existe, falta ejecutar la migración 012_plan_obra.sql en Supabase.';}{const rg=planRange();if(rg&&!(x.fIni<=rg.h&&x.fFin>=rg.d)){S.ppre='todo';S.pd='';S.ph='';}S.ds='';S.dp='';S.da='';S.db='';S.plv='tab';}toast('Meta creada en borrador. Si trabaja otra cuadrilla, use «Duplicar» para agregar otra meta.');render();return true;}
+    const x=clone(m),cambia=['cant','pers','fIni','fFin','dom'].some(k=>String(x[k])!==String(base[k]));Object.assign(x,base);
+    if(cambia){x.dias=planDistrib(fi,ff,cant,pers,dom);}planH(x,'Meta editada'+(cambia?' (distribución diaria regenerada)':''));x.devolucion='';
+    try{await planSave(x);}catch(e){return 'No se pudo guardar la meta: '+((e&&e.message)||e)+'. Si habla de permisos o de que la tabla no existe, falta ejecutar la migración 012_plan_obra.sql en Supabase.';}const i=S.plan.findIndex(z=>z.id===x.id);if(i>=0)S.plan[i]=x;render();return true;}});
+}
+function planDistModal(m){
+  const d=m.dias||[];
+  modal({title:'Distribución diaria · '+m.folio,wide:true,ok:'Guardar distribución',html:'<p style="margin-top:0"><b>'+esc(m.act)+'</b> · meta <b>'+pnf(m.cant)+' '+esc(m.uni)+'</b>. La suma de lo programado por día debe coincidir con la meta.</p><div class="tw"><table><thead><tr><th>Día</th><th>Cantidad programada</th><th>Personal programado</th></tr></thead><tbody>'+
+    d.map((x,i)=>'<tr><td>'+PLAN_DN[pDow(x.f)]+' '+fdate(x.f)+'</td><td><input type="number" min="0" step="any" data-pd="'+i+'" value="'+esc(x.prog)+'" style="width:120px"></td><td><input type="number" min="0" step="1" data-pp="'+i+'" value="'+esc(x.pp)+'" style="width:100px"></td></tr>').join('')+'</tbody></table></div><div id="pd-sum" class="muted" style="margin-top:8px"></div>',
+   onOk:async root=>{const pr=[...root.querySelectorAll('[data-pd]')].map(e=>parseFloat(e.value)||0),pp=[...root.querySelectorAll('[data-pp]')].map(e=>parseFloat(e.value)||0);
+    if(pr.some(x=>x<0)||pp.some(x=>x<0))return 'No se permiten valores negativos.';
+    const t=Math.round(sum(pr)*1000)/1000;if(Math.abs(t-m.cant)>0.001)return 'La suma diaria ('+pnf(t)+') debe ser igual a la meta ('+pnf(m.cant)+').';
+    const x=clone(m);x.dias.forEach((z,i)=>{z.prog=pr[i];z.pp=pp[i];});planH(x,'Distribución diaria ajustada');await planSave(x);const k=S.plan.findIndex(z=>z.id===x.id);if(k>=0)S.plan[k]=x;render();return true;}});
+}
+function planViabModal(m){
+  const v=m.viab||{i:{},imp:{}};
+  modal({title:'Validación de viabilidad · '+m.folio,wide:true,ok:'Guardar validación',html:'<p style="margin-top:0">Responda cada punto. En «Interferencias del Cliente» y «Otros», «Sí» significa que SÍ existe el problema. Siempre que haya un impedimento debe indicar el impedimento, quién lo soluciona y la fecha compromiso. «No aplica» no cuenta en el porcentaje.</p>'+
+   PLAN_VIAB.map(k=>{const val=(v.i||{})[k[0]]||'',im=(v.imp||{})[k[0]]||{};
+    return '<div class="card" style="margin-bottom:8px;padding:10px"><div class="row" style="justify-content:space-between"><b>'+esc(k[1])+'</b><select data-pv="'+k[0]+'"><option value="">— Seleccione —</option><option value="si"'+(val==='si'?' selected':'')+'>'+(k[3]||'Sí')+'</option><option value="no"'+(val==='no'?' selected':'')+'>'+(k[4]||'No')+'</option><option value="na"'+(val==='na'?' selected':'')+'>No aplica</option></select></div>'+
+     '<div class="grid" data-pvb="'+k[0]+'" style="margin-top:8px;'+(vBad(k,val)?'':'display:none')+'"><div class="f"><label>Impedimento <i>*</i></label><input data-pvi="'+k[0]+'" maxlength="200" value="'+esc(im.imp||'')+'"></div><div class="f"><label>Responsable de solucionarlo <i>*</i></label><input data-pvr="'+k[0]+'" maxlength="80" value="'+esc(im.resp||'')+'"></div><div class="f"><label>Fecha compromiso <i>*</i></label><input type="date" data-pvf="'+k[0]+'" value="'+esc(im.fecha||'')+'"></div></div></div>';}).join(''),
+   onOk:async root=>{const i={},imp={};
+    for(const k of PLAN_VIAB){const val=root.querySelector('[data-pv="'+k[0]+'"]').value;if(!val)return 'Responda «'+k[1]+'».';i[k[0]]=val;
+      if(vBad(k,val)){const a=root.querySelector('[data-pvi="'+k[0]+'"]').value.trim(),b=root.querySelector('[data-pvr="'+k[0]+'"]').value.trim(),c=root.querySelector('[data-pvf="'+k[0]+'"]').value;if(!a||!b||!c)return 'En «'+k[1]+'» capture el impedimento, el responsable y la fecha compromiso.';imp[k[0]]={imp:a,resp:b,fecha:c};}}
+    const x=clone(m);x.viab={i:i,imp:imp};const p=planViab(x);planH(x,'Validación de viabilidad: '+ppc(p.pct));await planSave(x);const k=S.plan.findIndex(z=>z.id===x.id);if(k>=0)S.plan[k]=x;render();return true;}});
+}
+const PLAN_MAXFOTOS=10;
+async function planDecode(bl){
+  if(window.createImageBitmap){try{return await createImageBitmap(bl);}catch(e){}}
+  return await new Promise((ok,no)=>{const u=URL.createObjectURL(bl),im=new Image();im.onload=()=>{ok(im);};im.onerror=()=>{no(new Error('img'));};im.src=u;});
+}
+/* Reduce una foto a un JPEG ligero (máx. px por lado) */
+async function planImgScale(bl,max,q){
+  const im=await planDecode(bl),w0=im.width||im.naturalWidth,h0=im.height||im.naturalHeight,k=Math.min(1,max/Math.max(w0,h0)),w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(im,0,0,w,h);
+  return{canvas:c,w:w,h:h,q:q};
+}
+async function planImgPrep(file){
+  try{const r=await planImgScale(file,1600,.82);const bl=await new Promise(ok=>r.canvas.toBlob(ok,'image/jpeg',r.q));if(!bl)return file;
+    return new File([bl],(file.name||'foto').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});}catch(e){return file;}
+}
+const _pimg={};
+async function planImgData(f){
+  const u=fileHref(f);if(!u)return null;if(_pimg[u]!==undefined)return _pimg[u];
+  let r=null;try{const res=await fetch(u);if(!res.ok)throw new Error('http');const bl=await res.blob(),o=await planImgScale(bl,1000,.72);r={d:o.canvas.toDataURL('image/jpeg',o.q),w:o.w,h:o.h};}catch(e){r=null;}
+  return _pimg[u]=r;
+}
+
+function planReprogModal(m){
+  const x=planMet(m),hoy=tarHoy();
+  modal({title:'Reprogramar meta incumplida · '+m.folio,wide:true,ok:'Guardar reprogramación',html:
+   '<div class="pl-alert" style="margin-bottom:10px">'+esc(m.act)+' · '+esc(m.proyecto)+'<br>Venció el '+fdate(m.fFin)+' · ejecutado '+pnf(x.ejec)+' de '+pnf(x.cant)+' '+esc(m.uni||'')+' ('+ppc(x.cumpl)+') · pendiente <b>'+pnf(x.pend)+'</b></div>'+
+   '<div class="grid"><div class="f"><label for="rp-f">Nueva fecha de término <i>*</i></label><input id="rp-f" type="date" min="'+hoy+'" value=""></div><div class="f"><label for="rp-p">Personal para lo que falta</label><input id="rp-p" type="number" min="1" step="1" value="'+esc(m.pers||'')+'"></div></div>'+
+   '<div class="f"><label for="rp-j">Justificación: ¿por qué no se cumplió? <i>*</i></label><textarea id="rp-j" rows="3" maxlength="600" placeholder="Describa las causas reales (material, personal, clima, interferencias del Cliente, etc.)"></textarea></div>'+
+   '<div class="f"><label for="rp-d">¿Qué se hará diferente para cumplirla? <i>*</i></label><textarea id="rp-d" rows="3" maxlength="600" placeholder="Acciones concretas: más personal, otro turno, material anticipado, etc."></textarea></div>'+
+   '<p class="muted" style="font-size:13px">Lo pendiente se redistribuye en los días hábiles entre hoy y la nueva fecha. Lo ya ejecutado se conserva. La reprogramación queda en el historial y se avisa a Dirección y Auditoría.</p>',
+   onOk:async root=>{
+     const g=id=>root.querySelector('#'+id),ff=g('rp-f').value,j=g('rp-j').value.trim(),d=g('rp-d').value.trim(),pe=parseInt(g('rp-p').value,10);
+     root.querySelectorAll('.pl-bad').forEach(e=>e.classList.remove('pl-bad'));const falta=[];
+     if(!ff){falta.push('Nueva fecha de término');g('rp-f').classList.add('pl-bad');}if(!j){falta.push('Justificación');g('rp-j').classList.add('pl-bad');}if(!d){falta.push('¿Qué se hará diferente?');g('rp-d').classList.add('pl-bad');}
+     if(falta.length)return 'Falta capturar: '+falta.join(', ')+'.';
+     if(ff<hoy)return 'La nueva fecha de término no puede ser anterior a hoy.';if(ff<=m.fFin)return 'La nueva fecha debe ser posterior a la fecha vencida ('+fdate(m.fFin)+').';
+     if(pDiff(m.fIni,ff)>365)return 'El periodo de una meta no puede ser mayor a un año.';
+     if(j.length<15||d.length<15)return 'Explique con más detalle la justificación y lo que se hará diferente.';
+     const x2=clone(m),cerr=z=>z.f<hoy||(z.f===hoy&&z.ejec!==''&&z.ejec!=null);
+     const snap=(x2.dias||[]).map(z=>({f:z.f,prog:z.prog}));
+     const keep=(x2.dias||[]).filter(cerr).map(z=>Object.assign({},z,{progOrig:z.progOrig!=null?z.progOrig:z.prog,prog:+z.ejec||0}));
+     const pend=Math.max(0,Math.round((x2.cant-sum(keep.map(z=>+z.ejec||0)))*100)/100);
+     const ini=(keep.length&&keep[keep.length-1].f>=hoy)?pAdd(hoy,1):hoy;
+     const nuevos=planDistrib(ini,ff,pend,pe>0?pe:(x2.pers||0),!!x2.dom);
+     if(!nuevos.length)return 'La nueva fecha no incluye días hábiles. Elija otra fecha.';
+     x2.dias=keep.concat(nuevos);x2.fFin=ff;if(pe>0)x2.pers=pe;
+     x2.reprog=(x2.reprog||[]).concat([{t:Date.now(),uid:myId,nom:planMe(),fFinAnt:m.fFin,fFin:ff,just:j,dif:d,pend:pend,snap:snap}]);
+     planH(x2,'Meta reprogramada: término '+fdate(m.fFin)+' → '+fdate(ff)+'. Justificación: '+j+' · Qué se hará diferente: '+d);
+     try{await planSave(x2);}catch(e){return 'No se pudo guardar: '+((e&&e.message)||e);}
+     const k=S.plan.findIndex(z=>z.id===x2.id);if(k>=0)S.plan[k]=x2;
+     planNotif(x2,'plan_reprog','Meta reprogramada · '+x2.folio,planMe()+' reprogramó «'+x2.act+'» ('+x2.proyecto+') al '+fdate(ff)+'. Justificación: '+j,['direccion','auditor']);
+     render();return true;}});
+}
+function planAvanceModal(m){
+  const hoy=tarHoy(),d=m.dias||[];
+  modal({title:'Avance diario · '+m.folio,wide:true,ok:'Guardar avance',html:'<p style="margin-top:0"><b>'+esc(m.act)+'</b> · '+esc(m.proyecto)+' · unidad: '+esc(m.uni)+'. Capture lo ejecutado y el personal real de cada día (hasta hoy).</p>'+
+   d.map((x,i)=>{const ok=x.f<=hoy,c=(x.ejec===''||x.ejec==null)?null:(+x.prog>0?(+x.ejec)/(+x.prog)*100:null),rr=(+x.pr>0&&x.ejec!=='')?(+x.ejec)/(+x.pr):null;
+    return '<div class="card" style="margin-bottom:10px;padding:10px'+(ok?'':';opacity:.55')+'"><div class="row" style="justify-content:space-between"><b>'+PLAN_DN[pDow(x.f)]+' '+fdate(x.f)+'</b><span class="muted">Programado: '+pnf(x.prog)+' · personal prog.: '+pnf(x.pp)+(c!=null?' · cumplimiento '+Math.round(c)+' %':'')+(rr!=null?' · rend. real '+pnf(rr)+'/persona':'')+(m.rend?' · esperado '+pnf(m.rend):'')+'</span></div>'+
+     (ok?'<div class="grid" style="margin-top:8px"><div class="f"><label>Cantidad ejecutada</label><input type="number" min="0" step="any" data-ae="'+i+'" value="'+esc(x.ejec)+'"></div><div class="f"><label>Personal real</label><input type="number" min="0" step="1" data-ap="'+i+'" value="'+esc(x.pr)+'"></div></div><div class="grid"><div class="f"><label>Observaciones</label><input data-ao="'+i+'" maxlength="300" value="'+esc(x.obs||'')+'"></div><div class="f"><label>Impedimentos</label><input data-ai="'+i+'" maxlength="300" value="'+esc(x.imp||'')+'"></div></div><div class="f"><label>Evidencia fotográfica <span class="muted">(hasta '+PLAN_MAXFOTOS+' fotos por día · '+(x.evid||[]).length+' cargada'+((x.evid||[]).length===1?'':'s')+')</span></label><input type="file" data-af="'+i+'" multiple accept="image/*">'+((x.evid||[]).length?'<div style="margin-top:6px;display:grid;gap:4px">'+x.evid.map((a,j)=>'<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" data-ar="'+i+'" value="'+j+'"> <span>'+fileLink(a)+'</span> <span class="muted" style="font-size:12px">marcar para quitar</span></label>').join('')+'</div>':'')+'</div>':'<div class="muted" style="margin-top:6px">Aún no llega este día.</div>')+'</div>';}).join(''),
+   onOk:async root=>{const x=clone(m);
+    for(let i=0;i<x.dias.length;i++){const e=root.querySelector('[data-ae="'+i+'"]');if(!e)continue;const ev=e.value.trim(),pr=root.querySelector('[data-ap="'+i+'"]').value.trim();
+      if(ev!==''&&(isNaN(+ev)||+ev<0))return 'Cantidad ejecutada inválida el '+fdate(x.dias[i].f)+'.';if(pr!==''&&(isNaN(+pr)||+pr<0))return 'Personal real inválido el '+fdate(x.dias[i].f)+'.';
+      if(ev!==''&&pr==='')return 'Capture el personal real del '+fdate(x.dias[i].f)+'.';
+      x.dias[i].ejec=ev===''?'':+ev;x.dias[i].pr=pr===''?'':+pr;x.dias[i].obs=root.querySelector('[data-ao="'+i+'"]').value.trim();x.dias[i].imp=root.querySelector('[data-ai="'+i+'"]').value.trim();
+      const rem=[...root.querySelectorAll('[data-ar="'+i+'"]:checked')].map(c=>+c.value);if(rem.length)x.dias[i].evid=(x.dias[i].evid||[]).filter((e,j)=>rem.indexOf(j)<0);
+      const fi=root.querySelector('[data-af="'+i+'"]');if(fi&&fi.files&&fi.files.length){const fl=[...fi.files];
+        const bad=fl.find(f=>!(/^image\//.test(f.type||'')||/\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(f.name)));if(bad)return 'La evidencia debe ser fotografía (imagen): '+bad.name+'.';
+        if((x.dias[i].evid||[]).length+fl.length>PLAN_MAXFOTOS)return 'Máximo '+PLAN_MAXFOTOS+' fotos por día. El '+fdate(x.dias[i].f)+' ya tiene '+(x.dias[i].evid||[]).length+' y está intentando agregar '+fl.length+'. Quite alguna o seleccione menos.';
+        const big=fl.find(f=>f.size>30*1024*1024);if(big)return 'La foto '+big.name+' excede 30 MB.';
+        for(const f0 of fl){const f=await planImgPrep(f0);let u;try{u=await uploadFile(f,{plan:true});}catch(e2){return (e2&&e2.message)||('No se pudo subir '+f0.name+'.');}if(S.mode==='cloud'&&(!u||(!u.id&&!u.url)))return 'No se pudo subir '+f0.name+'.';x.dias[i].evid=(x.dias[i].evid||[]).concat([{name:f.name,id:u&&u.id,url:u&&u.url}]);}}}
+    if(x.estado==='autorizado'&&x.dias.some(z=>z.ejec!==''&&+z.ejec>0)){x.estado='ejecucion';}
+    planH(x,'Avance diario actualizado · ejecutado '+pnf(sum(x.dias.map(z=>+z.ejec||0)))+' / '+pnf(x.cant)+' '+x.uni);await planSave(x);const k=S.plan.findIndex(z=>z.id===x.id);if(k>=0)S.plan[k]=x;render();return true;}});
+}
+function planVerModal(m){
+  const x=planMet(m),s=planSem(m),sm=planSmart(m);
+  modal({title:m.folio+' · '+m.act,wide:true,ok:'Cerrar',html:'<div class="chips" style="margin-bottom:8px">'+planPill(m)+'<span class="pill '+s[2]+'">'+s[1]+'</span></div>'+
+   '<div class="pl-hero" style="margin:6px 0 10px"><div class="pl-ringbox">'+planRing(x.cumpl,x.ejec>0?planColPct(x.base!=null?x.base:x.cumpl):'var(--line)',120,'cumplimiento')+'</div><div>'+planBar(x.cumpl,x.cant>0?x.progAc/x.cant*100:null,s[0]==='gris'?'var(--line)':PLAN_COL[s[0]])+'<div style="margin-top:8px">'+planDayChart(planBuckets([m],m.fIni,m.fFin),120)+'</div></div></div>'+
+   '<h3 style="margin:8px 0 4px">Meta SMART</h3>'+sm.map(r=>'<p style="margin:3px 0"><b>'+r[0]+':</b> '+esc(r[1])+'</p>').join('')+
+   '<h3 style="margin:12px 0 4px">Indicadores</h3><div class="grid">'+[['Meta total',pnf(x.cant)+' '+m.uni],['Ejecutado',pnf(x.ejec)],['Pendiente por ejecutar',pnf(x.pend)],['Cumplimiento',ppc(x.cumpl)],['Avance acumulado programado',pnf(x.progAc)+' ('+ppc(x.cant>0?x.progAc/x.cant*100:null)+')'],['Avance acumulado real',pnf(x.ejec)+' ('+ppc(x.cumpl)+')'],['Rendimiento real por trabajador',x.rendTrab==null?'—':pnf(x.rendTrab)+' '+m.uni+'/persona·día'],['Rendimiento real por cuadrilla',x.rendCuad==null?'—':pnf(x.rendCuad)+' '+m.uni+'/cuadrilla·día'],['Desviación vs. rendimiento esperado',ppc(x.dev)],['Rendimiento necesario para recuperar',x.rendNec==null?'—':pnf(x.rendNec)+' '+m.uni+'/persona·día ('+x.rest+' día'+(x.rest===1?'':'s')+')'],['Viabilidad',ppc(x.viab.pct)]].map(r=>'<div class="card" style="padding:8px"><span class="muted" style="font-size:12px">'+r[0]+'</span><br><b>'+esc(r[1])+'</b></div>').join('')+'</div>'+
+   '<h3 style="margin:12px 0 4px">Días</h3><div class="tw"><table><thead><tr><th>Día</th><th>Prog.</th><th>Ejec.</th><th>%</th><th>Pers. prog./real</th><th>Rend. real</th><th>Observaciones / impedimentos</th></tr></thead><tbody>'+(m.dias||[]).map(d=>{const c=(d.ejec===''||d.ejec==null)?null:(+d.prog>0?(+d.ejec)/(+d.prog)*100:null),rr=(+d.pr>0&&d.ejec!=='')?(+d.ejec)/(+d.pr):null;return '<tr><td>'+PLAN_DN[pDow(d.f)]+' '+fdate(d.f)+'</td><td class="num">'+pnf(d.prog)+'</td><td class="num">'+((d.ejec===''||d.ejec==null)?'—':pnf(d.ejec))+'</td><td class="num">'+(c==null?'—':Math.round(c)+' %')+'</td><td class="num">'+pnf(d.pp)+' / '+((d.pr===''||d.pr==null)?'—':pnf(d.pr))+'</td><td class="num">'+(rr==null?'—':pnf(rr))+'</td><td>'+esc([d.obs,d.imp?'Imped.: '+d.imp:''].filter(Boolean).join(' · '))+((d.evid||[]).length?'<div>'+d.evid.map(a=>fileLink(a)).join('<br>')+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table></div>'+
+   (Object.keys((m.viab&&m.viab.imp)||{}).length?'<h3 style="margin:12px 0 4px">Impedimentos de viabilidad</h3>'+Object.keys(m.viab.imp).map(k=>{const im=m.viab.imp[k],lb=(PLAN_VIAB.find(z=>z[0]===k)||[])[1];return '<p style="margin:3px 0"><b>'+esc(lb)+':</b> '+esc(im.imp)+' · responsable '+esc(im.resp)+' · compromiso '+fdate(im.fecha)+'</p>';}).join(''):'')+
+   ((m.reprog||[]).length?'<h3 style="margin:12px 0 4px">Reprogramaciones</h3>'+m.reprog.map(r=>'<div class="card" style="margin:0 0 8px;padding:10px"><b>'+fstamp(r.t)+' · '+esc(r.nom||'')+'</b><br>Término: '+fdate(r.fFinAnt)+' → <b>'+fdate(r.fFin)+'</b> · pendiente reprogramado: '+pnf(r.pend)+'<br><b>Justificación:</b> '+esc(r.just)+'<br><b>¿Qué se hará diferente?</b> '+esc(r.dif)+'</div>').join(''):'')+
+   '<h3 style="margin:12px 0 4px">Historial</h3><ul class="hist">'+(m.hist||[]).slice().reverse().map(h=>'<li><time>'+fstamp(h.t)+'</time> · '+esc(h.nom||'')+' · '+esc(h.txt)+'</li>').join('')+'</ul>'});
+}
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+  if(t.dataset&&t.dataset.pv){const b=document.querySelector('[data-pvb="'+t.dataset.pv+'"]');if(b){const kk=PLAN_VIAB.find(z=>z[0]===t.dataset.pv)||[];b.style.display=vBad(kk,t.value)?'':'none';}}
+  else if(t.id==='pl-d'||t.id==='pl-h'){const r=planRange()||{d:'',h:''};const d=t.id==='pl-d'?t.value:r.d,h=t.id==='pl-h'?t.value:r.h;if(d&&h&&d<=h){S.pd=d;S.ph=h;S.ppre='pers';render();}else toast('La fecha inicial debe ser anterior o igual a la final.');}else if(t.id==='pl-r'){S.pr=t.value;render();}else if(t.id==='pl-p'){S.pp=t.value;render();}});
+Object.assign(A,{
+  async planpdf(){
+    try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
+      if(!dl){toast('La descarga no está disponible aquí. Abra la app desde su enlace publicado.');return;}
+      const doc=await planPdf();await dl.save({filename:'plan-de-obra-'+todayISO()+'.pdf',data:doc.output('blob')});toast('Reporte generado.');
+    }catch(e){toast('No se pudo generar el PDF: '+((e&&e.message)||e));}},
+  planper(el){const p=el.dataset.p,t=tarHoy();S.ppre=p;S.ds='';S.dp='';S.da='';S.db='';
+    if(p==='mes'){S.pd=t.slice(0,7)+'-01';S.ph=pLast(t);}else if(p==='sem'){S.pd=pMon(t);S.ph=pAdd(pMon(t),6);}else if(p==='30'){S.pd=t;S.ph=pAdd(t,29);}else{S.pd='';S.ph='';}render();},
+  planmv(el){const r=planRange();if(!r)return;const dir=+el.dataset.d;
+    if(S.ppre==='mes'){const d=new Date(r.d+'T12:00:00');d.setMonth(d.getMonth()+dir);const a=pIso(d);S.pd=a;S.ph=pLast(a);}
+    else{const n=pDiff(r.d,r.h)+1;S.pd=pAdd(r.d,dir*n);S.ph=pAdd(r.h,dir*n);if(S.ppre==='sem'||S.ppre==='30')S.ppre='pers';}render();},
+  plango(el){const d=el.dataset;
+    if(!d.keep){S.ds='';S.dp='';S.da='';S.db='';}
+    if(d.s)S.ds=d.s;if(d.p)S.dp=d.p;if(d.a){S.da=d.a;S.db=d.b||d.a;}
+    S.plv=d.lv==='tab'?'tab':'cal';render();window.scrollTo&&window.scrollTo(0,0);},
+  planback(){if(S.plv==='tab'){S.plv='cal';}else{S.plv='res';S.ds='';S.dp='';S.da='';S.db='';}render();window.scrollTo&&window.scrollTo(0,0);},
+  planlimp(){S.pq='';S.pr='';S.pp='';S.ds='';S.dp='';S.da='';S.db='';render();},
+  planclear(){S.ds='';S.dp='';S.da='';S.db='';render();},
+  plannew(){if(S.role==='residente')planForm(null);},
+  planedit(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m&&m.estado==='borrador'&&m.creatorId===myId)planForm(m);},
+  plandist(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m&&m.estado==='borrador'&&m.creatorId===myId)planDistModal(m);},
+  planviab(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m&&m.estado==='borrador'&&m.creatorId===myId)planViabModal(m);},
+  planavance(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m&&(m.estado==='autorizado'||m.estado==='ejecucion')&&m.creatorId===myId)planAvanceModal(m);},
+  planreprog(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m&&m.creatorId===myId&&S.role==='residente'&&planVencida(m))planReprogModal(m);},
+  plandup(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(!m||m.creatorId!==myId||S.role!=='residente')return;const c=clone(m);c.cuadNom='';planForm(c,true);},
+  planver(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(m)planVerModal(m);},
+  planenv(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(!m||m.estado!=='borrador'||m.creatorId!==myId)return;
+    const v=planViab(m);if(!v.completa){toast('Antes de enviar, complete la validación de viabilidad.');return;}
+    const t=Math.round(sum((m.dias||[]).map(d=>+d.prog||0))*1000)/1000;if(Math.abs(t-m.cant)>0.001){toast('La distribución diaria no coincide con la meta.');return;}
+    modal({title:'Enviar a autorización',ok:'Enviar',html:'<p style="margin-top:0">«<b>'+esc(m.act)+'</b>» · viabilidad '+ppc(v.pct)+(v.no?' · <b>'+v.no+' punto(s) con impedimento</b>':'')+'. Una vez autorizada, la meta original no podrá modificarse sin solicitar un cambio.</p>',
+     onOk:async()=>{const x=clone(m);x.estado='pendiente';x.devolucion='';planH(x,'Enviada a autorización');await planSave(x);const i=S.plan.findIndex(z=>z.id===x.id);if(i>=0)S.plan[i]=x;
+      planNotif(x,'plan_pendiente','Plan de obra pendiente de autorización',x.act+' · '+x.proyecto+' · '+planMe(),['direccion']);render();return true;}});},
+  planaut(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(!m||m.estado!=='pendiente'||!planAdm())return;
+    modal({title:'Autorizar meta · '+m.folio,ok:'Autorizar',html:'<p style="margin-top:0"><b>'+esc(m.act)+'</b> · '+esc(m.proyecto)+' · '+pnf(m.cant)+' '+esc(m.uni)+' · viabilidad '+ppc(planViab(m).pct)+'</p>'+planSmart(m).map(r=>'<p style="margin:3px 0"><b>'+r[0]+':</b> '+esc(r[1])+'</p>').join(''),
+     onOk:async()=>{const x=clone(m);x.estado='autorizado';x.aut={uid:myId,nom:planMe(),t:Date.now()};planH(x,'Meta autorizada');await planSave(x);const i=S.plan.findIndex(z=>z.id===x.id);if(i>=0)S.plan[i]=x;
+      planNotif(x,'plan_autorizado','Meta autorizada',x.act+' · '+x.proyecto,null,x.creatorId);render();return true;}});},
+  plandev(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(!m||m.estado!=='pendiente'||!planAdm())return;
+    modal({title:'Devolver meta · '+m.folio,ok:'Devolver',html:'<div class="f"><label for="pd-m">Motivo <i>*</i></label><textarea id="pd-m" rows="3" maxlength="400"></textarea></div>',
+     onOk:async root=>{const mot=root.querySelector('#pd-m').value.trim();if(mot.length<3)return 'Escriba el motivo de la devolución.';const x=clone(m);x.estado='borrador';x.devolucion=mot;planH(x,'Devuelta por Dirección · '+mot);await planSave(x);const i=S.plan.findIndex(z=>z.id===x.id);if(i>=0)S.plan[i]=x;
+      planNotif(x,'plan_devuelto','Meta devuelta por Dirección',x.act+' · '+mot,null,x.creatorId);render();return true;}});},
+  plandel(el){const m=S.plan.find(x=>x.id===el.dataset.id);if(!m||m.estado!=='borrador'||m.creatorId!==myId)return;
+    modal({title:'Eliminar meta',ok:'Eliminar',html:'<p style="margin-top:0">Se eliminará el borrador «<b>'+esc(m.act)+'</b>». Solo queda su registro en el historial.</p>',onOk:async()=>{const x=clone(m);x.cancelada=true;planH(x,'Borrador eliminado');await planSave(x);const i=S.plan.findIndex(z=>z.id===x.id);if(i>=0)S.plan[i]=x;render();return true;}});},
+  plancfg(){if(!planAdm())return;const c=S.planCfg||{};
+    modal({title:'Semaforización del plan de obra',ok:'Guardar',html:'<p style="margin-top:0">Porcentaje de cumplimiento (ejecutado / programado a la fecha) para cada color. Gris = actividad pendiente de iniciar.</p><div class="grid"><div class="f"><label for="pc-v">Verde: igual o mayor a (%)</label><input id="pc-v" type="number" min="1" max="200" value="'+esc(c.verde||100)+'"></div><div class="f"><label for="pc-a">Amarillo: igual o mayor a (%), menor al verde</label><input id="pc-a" type="number" min="1" max="200" value="'+esc(c.amarillo||90)+'"></div></div><p class="muted" style="font-size:13px">Por debajo del amarillo: rojo.</p>',
+     onOk:async root=>{const v=+root.querySelector('#pc-v').value,a=+root.querySelector('#pc-a').value;if(!(v>0)||!(a>0)||a>=v)return 'El porcentaje amarillo debe ser menor que el verde.';S.planCfg={id:'semaforo',verde:v,amarillo:a};if(planCfgColl)await anSave(planCfgColl,S.planCfg);render();return true;}});}
+});
+
 /* ───────── Herramientas (perfil Residente) ───────── */
 const HERRAMIENTAS=[{id:'vanos',nombre:'Levantamiento de vanos',url:'vanos/'}];
 function herrHtml(id){
@@ -4647,7 +5157,7 @@ document.addEventListener('change',e=>{
   if(el.id==='rp-req'){const c=$('rp-lines');if(c)c.innerHTML=el.value?repLinesHtml(el.value,null):'';return;}
   if(el.dataset&&el.dataset.nf){S.nf[el.dataset.nf]=el.value;const b=$('nbody');if(b)b.innerHTML=notifBody();return;}
   if(el.id==='d-tipo'){const f=$('d-otrof');if(f)f.style.display=el.value==='Otro documento'?'':'none';return;}
-  if(el.id==='role-sel'){if(!(S.mode==='local'||S.auth==='owner'))return;let rv=el.value;S.viewAs=null;if(rv.indexOf('u:')===0){const uu=asigUsers().find(x=>x.id===rv.slice(2));if(uu&&ROLES[uu.perfil]){S.viewAs=uu;rv=uu.perfil;}else rv=S.role;}S.role=rv;S.ownerRole=rv;try{localStorage.setItem('gp_role',S.role);}catch(x){}if(S.mode==='cloud'){applyAccess(true);return;}S.tab=TABS[S.role][0][0];S.open=null;S.al.open=null;S.al.exp=null;S.sel.clear();render();return;}
+  if(el.id==='role-sel'){if(!(S.mode==='local'||S.auth==='owner'))return;let rv=el.value;S.viewAs=null;S.pr='';S.pp='';if(rv.indexOf('u:')===0){const uu=asigUsers().find(x=>x.id===rv.slice(2));if(uu&&ROLES[uu.perfil]){S.viewAs=uu;rv=uu.perfil;}else rv=S.role;}S.role=rv;S.ownerRole=rv;try{localStorage.setItem('gp_role',S.role);}catch(x){}if(S.mode==='cloud'){applyAccess(true);return;}S.tab=TABS[S.role][0][0];S.open=null;S.al.open=null;S.al.exp=null;S.sel.clear();render();return;}
   if(el.id==='dep-all'){const its=depItems();if(el.checked)its.forEach(x=>S.dep.sel.add(x.id));else S.dep.sel.clear();const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.dataset&&el.dataset.act==='depsel'){if(el.checked)S.dep.sel.add(el.dataset.k);else S.dep.sel.delete(el.dataset.k);const b=$('dep-body');if(b)b.innerHTML=depBody();return;}
   if(el.dataset&&el.dataset.uf){S.uEst=el.value;const b=$('u-body');if(b)b.innerHTML=usersBody();return;}
@@ -4683,6 +5193,7 @@ document.addEventListener('input',e=>{
   if(el.id==='cr-q'||el.id==='cr-from'||el.id==='cr-to'){const c=S.cr;if(el.id==='cr-q')c.q=el.value;else if(el.id==='cr-from')c.from=el.value;else c.to=el.value;const b=$('cr-body');if(b)b.innerHTML=crBody();return;}
   if(el.id==='tf-q'){S.tf.q=el.value;const b=$('tf-body');if(b)b.innerHTML=todasBody();return;}
   if(el.id&&el.id.indexOf('ct-')===0){ctCalc();return;}
+  if(el.id==='pl-q'){S.pq=el.value;S.ds='';S.dp='';S.da='';S.db='';render();const n=$('pl-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='py-q'){S.py.q=el.value;render();const n=$('py-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='al-q'){S.al.q=el.value;render();const n=$('al-q');if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length);}catch(x){}}return;}
   if(el.id==='emp-q'){S.empQ=el.value;const b=$('emp-body');if(b)b.innerHTML=empBody();return;}
@@ -4730,6 +5241,7 @@ async function boot(){
     try{empColl=db.collection('empleados');}catch(e){empColl=null;}
     try{nomColl=db.collection('nominas');}catch(e){nomColl=null;}
     try{proyColl=db.collection('proyectos');}catch(e){proyColl=null;}
+    try{planColl=db.collection('plan_obra');planCfgColl=db.collection('plan_cfg');}catch(e){planColl=null;planCfgColl=null;}
     try{tarColl=db.collection('tareas');anColl=db.collection('anuncios');anEntColl=db.collection('anuncios_enterados');}catch(e){anColl=null;anEntColl=null;}
     try{altasColl=db.collection('altas_trabajadores');expColl=db.collection('expedientes_trabajadores');}catch(e){altasColl=null;expColl=null;}
     try{repColl=db.collection('reposiciones');}catch(e){repColl=null;}

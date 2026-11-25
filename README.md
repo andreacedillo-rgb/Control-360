@@ -234,3 +234,18 @@ Los levantamientos (medidas, croquis, firmas, historial) se guardan en la tabla 
 - **Requisitos:** ejecutar `supabase/migrations/011_vanos.sql` (después de 009 y 010) y abrir la herramienta con la sesión de CONTROL 360 iniciada (usa el mismo `config.js` de la raíz).
 - Suba también `vercel.json` (ahora con `trailingSlash`, necesario para que `/vanos/` cargue sus archivos).
 - La subida de PDF/ZIP a Google Drive sigue siendo opcional y aparte.
+
+## Plan de obra · Metas SMART (Fase 1)
+Menú **Plan de obra** para Residente (captura), Auditor y Dirección (consulta; Dirección además autoriza o devuelve).
+- Metas SMART por proyecto y por **cualquier periodo** (no están ligadas a una semana; el periodo de una meta puede ser de un día hasta un año). Filtro de periodo: este mes, esta semana, próximos 30 días, todo el plan o fechas personalizadas.
+- Metas SMART por proyecto, con redacción SMART automática, distribución diaria, validación de viabilidad (9 puntos), avance diario con evidencia, indicadores y semáforo (verde ≥100 %, amarillo ≥90 %, rojo menos; configurable por Dirección).
+- Flujo: Borrador → Pendiente de autorización → Autorizado → En ejecución. Vistas: tablero y calendario semanal.
+- Requisito: ejecutar `supabase/migrations/012_plan_obra.sql` (después de 009–011). Fotos de evidencia en Storage (carpeta `plan/`).
+- Vistas: Resumen → Calendario → Tablero (todo filtra por proyecto, residente, periodo y buscador de obra). Reporte **PDF** completo con fichas por meta y fotos (hasta 10 fotos por día).
+- **Meta incumplida:** si vence el periodo con piezas pendientes, el Residente recibe la alerta y debe reprogramar con nueva fecha, justificación y "¿Qué se hará diferente para cumplirla?". Se conserva lo ejecutado, se redistribuye lo pendiente, se avisa a Dirección y Auditor y queda en el historial.
+- Fases siguientes: impedimentos y cierre semanal; control de cambios y notificaciones; tablero de Dirección con reportes PDF/Excel.
+
+## Otros cambios en esta versión
+- **Alta ante el IMSS:** al cargarla Administración, el residente que solicitó el alta recibe aviso y ve el acuse en su solicitud.
+- **Requisiciones de Compras:** Compras puede levantar requisiciones; pasan por Auditor y este las libera a Dirección. Excepciones de proveedor las autoriza Dirección.
+- Los errores de carga de archivos ahora muestran el motivo de Supabase.
