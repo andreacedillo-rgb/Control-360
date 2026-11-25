@@ -252,3 +252,4 @@ Menú **Plan de obra** para Residente (captura), Auditor y Dirección (consulta;
 - **Alta ante el IMSS:** al cargarla Administración, el residente que solicitó el alta recibe aviso y ve el acuse en su solicitud.
 - **Requisiciones de Compras:** Compras puede levantar requisiciones; pasan por Auditor y este las libera a Dirección. Excepciones de proveedor las autoriza Dirección.
 - Los errores de carga de archivos ahora muestran el motivo de Supabase.
+- **Sistemas · Eliminar registros:** ahora también elimina Plan de obra (metas), tareas asignadas, altas y bajas, anuncios y obras/proyectos (confirmación escribiendo ELIMINAR; queda en bitácora). Requiere volver a ejecutar `012_plan_obra.sql`.
