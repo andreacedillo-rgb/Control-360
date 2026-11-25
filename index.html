@@ -351,7 +351,7 @@ const TABS={
   sistemas:[['usuarios','Usuarios y permisos'],['depurar','Eliminar registros'],['anuncios','Anuncios'],['bitacora','Bitácora de seguridad'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
   residente:[['mis','Mis gastos'],['nueva','Nuevo gasto'],['repos','Reposiciones'],['nom','Nómina'],['altas','Altas de personal'],['cal','Calendario'],['rep','Reportes'],['tareasm','Tareas asignadas'],['herr_vanos','Levantamiento de vanos'],['notif','Notificaciones']],
   auditor:[['revisar','Por auditar'],['todas','Todas'],['cal','Calendario'],['tareas','Tareas (asignar)'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
-  compras:[['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
+  compras:[['mis','Mis requisiciones'],['nueva','Nueva requisición'],['revisar','Por revisar'],['excep','Excepciones'],['oc','Por generar OC'],['recibir','Por recibir'],['ocs','OC y entregas'],['todas','Todas'],['repos','Reposiciones'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']],
   direccion:[['autorizar','Por autorizar'],['nomaut','Nómina'],['altas','Altas y bajas'],['resueltas','Resueltas'],['repos','Reposiciones'],['cal','Calendario'],['todas','Todas'],['prov','Proveedores'],['tareas','Seguimiento de tareas'],['tareasm','Tareas asignadas'],['rep','Reportes'],['notif','Notificaciones']],
   administracion:[['proy','Proyectos'],['revisar','Por revisar'],['excep','Excepciones'],['pagar','Por pagar'],['credito','Crédito'],['pagadas','Pagadas'],['repos','Reposiciones'],['nomina','Nómina'],['emps','Empleados'],['altas','Altas y bajas'],['cal','Calendario'],['prov','Proveedores'],['rep','Reportes'],['tareasm','Tareas asignadas'],['notif','Notificaciones']]
 };
@@ -360,7 +360,7 @@ const TABS={
 const S={reqs:[],role:'residente',tab:'mis',open:null,sel:new Set(),cal:new Date(),ready:false,mode:'local',draft:null,tmp:null};
 let db=null,user=null,assets=null,coll=null,myId='local';
 try{const r=localStorage.getItem('gp_role');if(r&&ROLES[r])S.role=r;}catch(e){}
-S.tab=TABS[S.role][0][0];
+S.tab=TABS[S.role][0][0];if(S.role==='compras')S.tab='revisar';
 
 /* ───────── datos ───────── */
 function rows(snap){
@@ -517,7 +517,7 @@ function tabCount(k){
   if(k==='tareas'){try{return tarAdm()?tarVis().filter(t=>t.mod).length:0;}catch(e){return 0;}}
   if(k==='notif'){try{return nAll().filter(n=>!nRead(n)).length;}catch(e){return 0;}}
   if(k==='altas'){try{if(R==='administracion')return S.altas.filter(a=>a.estado==='pendiente').length;if(R==='residente')return S.altas.filter(a=>a.creatorId===myId&&(a.estado==='devuelta'||a.estado==='rechazada')).length;}catch(e){}return 0;}
-  if(R==='residente'&&k==='mis')return V().filter(r=>r.estado==='devuelta'&&isMine(r)).length;
+  if((R==='residente'||R==='compras')&&k==='mis')return V().filter(r=>r.estado==='devuelta'&&isMine(r)).length;
   if(R==='auditor'&&k==='revisar')return V().filter(r=>r.estado==='auditoria').length;
   if(R==='compras'){
     if(k==='revisar')return V().filter(r=>r.estado==='compras').length;
@@ -582,9 +582,9 @@ function viewHtml(){
   if(k==='emps'&&R==='administracion')return empHtml();
   if((R==='compras'||R==='administracion')&&k==='excep')return excHtml();
   if(k==='cal'||(R==='compras'&&k==='ocs'))return calHtml(R==='compras');
-  if(R==='residente'&&k==='mis')return reqList(V().filter(isMine),'Aún no tiene requisiciones','Cree su primera requisición para enviarla a Compras.',true);
+  if((R==='residente'||R==='compras')&&k==='mis')return reqList(V().filter(isMine),'Aún no tiene requisiciones',R==='compras'?'Cree su primera requisición. Pasa por Auditoría, que la libera a Dirección.':'Cree su primera requisición para enviarla a Compras.',true);
   if(R==='administracion'&&k==='revisar')return reqList(V().filter(r=>r.estado==='administracion'),'Nada por revisar','Los gastos que los residentes dirigen a Administración aparecen aquí. Después de revisarlos, usted los libera directo a Dirección.');
-  if(R==='auditor'&&k==='revisar')return reqList(V().filter(r=>r.estado==='auditoria'),'Nada por auditar','Las requisiciones de los residentes dirigidas a Compras llegan primero aquí. Usted valida conceptos, cantidades y justificación, y las libera a Compras.');
+  if(R==='auditor'&&k==='revisar')return reqList(V().filter(r=>r.estado==='auditoria'),'Nada por auditar','Las requisiciones de los residentes dirigidas a Compras llegan primero aquí, y también las que levanta Compras. Usted valida conceptos, cantidades y justificación: las de residentes las libera a Compras y las de Compras las libera a Dirección.');
   if(R==='compras'&&k==='revisar')return reqList(V().filter(r=>r.estado==='compras'),'Nada por revisar','Las requisiciones nuevas de los residentes aparecen aquí.');
   if(R==='compras'&&k==='recibir')return lineTable(allLines(elegRecep),'No hay partidas por recibir','Aparecen aquí las partidas con OC generada que aún no tienen recepción registrada.');
   if(R==='compras'&&k==='oc')return lineTable(allLines(elegCompras),'No hay partidas autorizadas esperando OC','Cuando Dirección autorice partidas, aparecerán aquí para generar la OC o marcar “No aplica OC”.');
@@ -707,12 +707,13 @@ function formHtml(){
   if(!S.draft)S.draft=newDraft();
   const d=S.draft;
   const opt=(v,t,dsc)=>'<label class="opt'+(d.destino===v?' on':'')+'"><input type="radio" name="dest" value="'+v+'"'+(d.destino===v?' checked':'')+'><span><b>'+t+'</b></span></label>';
-  let h='<div class="form"><div class="card"><div class="f"><label>Departamento destinatario <i>*</i></label><div class="dest">'+
+  if(S.role==='compras')d.destino='compras';
+  let h='<div class="form">'+(S.role==='compras'?'<div class="note"><b>Requisición de Compras.</b> Se envía a Auditoría, que la valida y la libera a Dirección para su autorización.</div>':'<div class="card"><div class="f"><label>Departamento destinatario <i>*</i></label><div class="dest">'+
    opt('compras','Compras','Revisión, validación y seguimiento conforme al procedimiento de adquisiciones. Después pasa a Dirección para su autorización.')+
    opt('administracion','Administración','Administración revisa y valida, y libera directo a Dirección para autorización, sin pasar por Compras.')+
-  '</div></div></div><div class="card"><div class="grid">'+
+  '</div></div></div>')+'<div class="card"><div class="grid">'+
    '<div class="f"><label>Obra o proyecto</label><input data-scope="head" data-f="obra" value="'+esc(d.obra)+'" autocomplete="off"></div>'+
-   '<div class="f"><label>Residente que solicita</label><input data-scope="head" data-f="solicitante" value="'+esc(d.solicitante)+'" autocomplete="off"></div>'+
+   '<div class="f"><label>'+(S.role==='compras'?'Solicitante':'Residente que solicita')+'</label><input data-scope="head" data-f="solicitante" value="'+esc(d.solicitante)+'" autocomplete="off"></div>'+
    '<div class="f"><label>Fecha de solicitud</label><input type="date" data-scope="head" data-f="fechaSol" value="'+esc(d.fechaSol)+'"></div>'+
    '<div class="f"><label>Fecha en que requiere el material <i>*</i></label><input type="date" data-scope="head" data-f="fechaReq" value="'+esc(d.fechaReq)+'"></div>'+
   '</div></div>';
@@ -721,7 +722,7 @@ function formHtml(){
   });
   h+='<div class="row"><button class="btn" data-act="addlinea">Agregar partida</button><span class="muted" id="draft-total">Total de la requisición: <b class="mono">'+money(sum(d.lineas.map(lt)))+'</b></span></div>';
   if(d.err)h+='<div class="err" role="alert">'+esc(d.err)+'</div>';
-  h+='<div class="row"><button class="btn primary" data-act="enviar">'+(d.destino==='administracion'?'Enviar a Administración':d.destino==='compras'?'Enviar a Compras':'Enviar')+'</button><button class="btn" data-act="borrador">Guardar como borrador</button><button class="btn" data-act="descartar">Descartar</button></div></div>';
+  h+='<div class="row"><button class="btn primary" data-act="enviar">'+(S.role==='compras'?'Enviar a Auditoría':d.destino==='administracion'?'Enviar a Administración':d.destino==='compras'?'Enviar a Compras':'Enviar')+'</button><button class="btn" data-act="borrador">Guardar como borrador</button><button class="btn" data-act="descartar">Descartar</button></div></div>';
   return h;
 }
 
@@ -806,7 +807,7 @@ function provErr(l,i,legacyOk){
   return n+'seleccione un proveedor activo del catálogo o PROVEEDOR CON EXCEPCIÓN.';
 }
 const excOk=l=>!l.provExc||l.provExc.estado==='autorizada';
-const excRole=r=>destOf(r)==='administracion'?'administracion':'compras';
+const excRole=r=>destOf(r)==='administracion'?'administracion':(r.origen==='compras'?'direccion':'compras');
 const excWho=r=>ROLES[excRole(r)];
 const excCan=(r,l)=>S.role===excRole(r)&&!!l.provExc&&l.provExc.estado==='pendiente'&&r.estado!=='devuelta'&&r.estado!=='elaboracion'&&r.estado!=='auditoria';
 const excPend=r=>L(r).filter(l=>!excOk(l));
@@ -1844,7 +1845,7 @@ function ndiffReq(o,n){
     E({ev:'req_res',prio:pr,titulo:t,desc:dsc,uid:cre});
     E({ev:'req_res',prio:pr,titulo:t,desc:dsc,roles:[adm?'administracion':'compras']});
   }
-  const exTrans=oe==='auditoria'&&n.estado==='compras'&&L(n).some(l=>l.provExc&&l.provExc.estado==='pendiente');
+  const exTrans=oe==='auditoria'&&(n.estado==='compras'||(n.origen==='compras'&&n.estado==='direccion'))&&L(n).some(l=>l.provExc&&l.provExc.estado==='pendiente');
   if((exP&&n.estado!=='auditoria')||exTrans)E({ev:'exc_sol',prio:'alta',mod:'Proveedores',titulo:'Proveedor con excepción por autorizar',desc:dsc,roles:[excRole(n)]});
   if(exA||exR){
     const t=exA?'Excepción de proveedor autorizada':'Excepción de proveedor rechazada',pr=exA?'media':'alta';
@@ -2080,10 +2081,10 @@ function drawerHtml(r){
 function topActions(r){
   const R=S.role;let h='';
   if(R==='residente'&&r.estado==='elaboracion'&&isMine(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Esta solicitud está en elaboración</b><button class="btn primary" data-act="editborrador" data-id="'+r.id+'">Continuar y enviar</button></div></div>';
-  if(okReview(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de '+ROLES[R]+'</b><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="liberar" data-id="'+r.id+'">Liberar a Dirección</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Puede editar partidas si algo no cuadra. Para devolver debe escribir la justificación.'+(R==='administracion'?' Los gastos de Administración pasan directo a Dirección, sin intervención de Compras.':'')+'</p></div>';
+  if(okReview(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de '+ROLES[R]+'</b><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al '+(r.origen==='compras'?'solicitante (Compras)':'residente')+'</button><button class="btn primary" data-act="liberar" data-id="'+r.id+'">Liberar a Dirección</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Puede editar partidas si algo no cuadra. Para devolver debe escribir la justificación.'+(R==='administracion'?' Los gastos de Administración pasan directo a Dirección, sin intervención de Compras.':'')+'</p></div>';
   if(R==='residente'&&r.estado==='devuelta'&&isMine(r))h='<div class="card"><div class="row"><b style="margin-right:auto">Corrija las partidas y reenvíe</b><button class="btn primary" data-act="reenviar" data-id="'+r.id+'">Reenviar a '+DEST[destOf(r)]+'</button></div></div>';
   if(R==='direccion'&&(r.estado==='direccion'||r.estado==='resuelta')&&L(r).some(l=>l.auth==='pendiente'))h='<div class="card"><div class="row"><b style="margin-right:auto">Decisión de Dirección</b><button class="btn danger" data-act="rechall" data-id="'+r.id+'">Rechazar todo lo pendiente</button><button class="btn ok" data-act="autall" data-id="'+r.id+'">Autorizar todo lo pendiente</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Autorice o rechace partida por partida. Lo que no decida queda como Pendiente por autorizar en esta misma requisición.</p></div>';
-  if(okAudit(r)){const pn=L(r).filter(l=>l.auth==='pendiente').length;h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de Auditoría</b><button class="btn danger" data-act="audrechall" data-id="'+r.id+'">Rechazar toda la requisición</button><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="audliberar" data-id="'+r.id+'"'+(pn?'':' disabled')+'>Liberar a Compras</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Valide conceptos, cantidades y justificación. Puede rechazar partidas específicas en la tabla, rechazar toda la requisición o devolverla al residente para que corrija. No cotiza ni edita.</p></div>';}
+  if(okAudit(r)){const pn=L(r).filter(l=>l.auth==='pendiente').length;h='<div class="card"><div class="row"><b style="margin-right:auto">Revisión de Auditoría</b><button class="btn danger" data-act="audrechall" data-id="'+r.id+'">Rechazar toda la requisición</button><button class="btn danger" data-act="devolver" data-id="'+r.id+'">Devolver al residente</button><button class="btn primary" data-act="audliberar" data-id="'+r.id+'"'+(pn?'':' disabled')+'>Liberar a '+(r.origen==='compras'?'Dirección':'Compras')+'</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Valide conceptos, cantidades y justificación. Puede rechazar partidas específicas en la tabla, rechazar toda la requisición o devolverla al residente para que corrija. No cotiza ni edita.</p></div>';}
   if(okReview(r)&&!okAudit(r)&&excPend(r).length){h=h.replace('<button class="btn primary" data-act="liberar"','<button class="btn primary" disabled title="Hay una excepción de proveedor sin autorizar" data-act="liberar"')+'<div class="note warn"><b>No puede liberarse todavía.</b> Hay '+excPend(r).length+' partida(s) con proveedor con excepción sin autorizar: autorícela o recházela en la partida antes de liberar.</div>';}
   return h;
 }
@@ -2796,8 +2797,8 @@ const A={
       else{const pe=provErr(l,i,false);if(pe)err=pe;}
     });
     if(err){d.err=err;render();return;}
-    const r=draftToReq(d,adm?'administracion':'auditoria');
-    hist(r,'envió la solicitud a '+(adm?DEST[d.destino]:'Auditoría (para Compras)')+' (obra: '+(r.obra||'sin obra')+')');
+    const r=draftToReq(d,adm?'administracion':'auditoria');if(S.role==='compras'&&!r.origen)r.origen='compras';
+    hist(r,'envió la solicitud a '+(adm?DEST[d.destino]:(r.origen==='compras'?'Auditoría (para Dirección)':'Auditoría (para Compras)'))+' (obra: '+(r.obra||'sin obra')+')');
     r.lineas.forEach(l=>lh(l,'Solicitada: '+l.cant+' '+(l.unidad||'')+' a '+money(l.pu)+' c/u ('+money(l.total)+'); enviada a '+(adm?DEST[d.destino]:'Auditoría')));
     r.lineas.forEach(l=>{if(l.provExc){l.provExc.estado='pendiente';l.provExc.solT=Date.now();l.provExc.solUid=myId;lh(l,'Proveedor con excepción solicitado a '+excWho(r)+': '+l.provExc.nombre+' — '+l.provExc.just);hist(r,'solicitó autorización de excepción para el proveedor “'+l.provExc.nombre+'” (partida '+l.clave+')');}});
     S.draft=null;S.tab='mis';S.open=r.id;save(r);
@@ -2863,7 +2864,7 @@ const A={
       await save(r);return true;}});
   },
   audliberar(el){const r=reqById(el.dataset.id);if(!okAudit(r))return;if(!L(r).some(l=>l.auth==='pendiente')){toast('No hay partidas pendientes que liberar.');return;}
-    r.estado='compras';mark(r,'auditor');const rc=L(r).filter(l=>l.rechPor==='auditor').length;hist(r,'validó y liberó la solicitud a Compras'+(rc?' ('+rc+' partida(s) rechazada(s) por Auditoría)':''));lhAll(r,'Validada por Auditoría y liberada a Compras');save(r);},
+    const aDir=r.origen==='compras';r.estado=aDir?'direccion':'compras';mark(r,'auditor');const rc=L(r).filter(l=>l.rechPor==='auditor').length;hist(r,'validó y liberó la solicitud a '+(aDir?'Dirección':'Compras')+(rc?' ('+rc+' partida(s) rechazada(s) por Auditoría)':''));lhAll(r,'Validada por Auditoría y liberada a '+(aDir?'Dirección':'Compras'));save(r);},
   audrech(el){
     const r=reqById(el.dataset.id),l=L(r).find(x=>x.id===el.dataset.l);if(!l||!okAudit(r))return;
     modal({title:'Rechazar partida '+l.clave,html:'<div class="f"><label for="m-txt">Motivo <i>*</i></label><textarea id="m-txt" placeholder="Concepto, cantidad o justificación que no procede"></textarea></div>',ok:'Rechazar partida',onOk:async root=>{
