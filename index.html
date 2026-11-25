@@ -1288,7 +1288,7 @@ function startData(R){
   if(docsColl&&R!=='sistemas'){let q=docsColl;if(R==='residente'){try{q=docsColl.where('creatorReqId','==',myId);}catch(e){q=docsColl;}}sub(q,sn=>{if(sn)S.docs=rows(sn);safeRender();});}
   if(notifColl){let q=notifColl;try{if(R==='residente')q=q.where('uid','==',myId);q=q.orderBy('t','desc').limit(400);}catch(e){}sub(q,sn=>{if(sn)S.notifs=rows(sn);safeRender();});}
   if(tarColl){let q=tarColl;try{if(!tarAdm()&&!(R==='direccion'&&!S.viewAs)&&curEmail())q=tarColl.where('asigEmail','==',curEmail());}catch(e){}sub(q,sn=>{if(sn)S.tareas=rows(sn);safeRender();});}
-  if(planColl){let q=planColl;try{if(R==='residente')q=planColl.where('creatorId','==',myId);}catch(e){}sub(q,sn=>{if(sn)S.plan=rows(sn);safeRender();});}
+  if(planColl){let q=planColl;try{if(R==='residente'&&PLAN_LIDERES.indexOf(String(S.myEmail||'').toLowerCase())<0)q=planColl.where('creatorId','==',myId);}catch(e){}sub(q,sn=>{if(sn)S.plan=rows(sn);safeRender();});}
   if(planCfgColl)sub(planCfgColl,sn=>{if(sn){const a=rows(sn).find(x=>x.id==='semaforo');if(a)S.planCfg=a;}safeRender();});
   if(anColl)sub(anColl,sn=>{if(sn)S.anuncios=rows(sn);safeRender();});
   if(anEntColl){let q=anEntColl;try{if(R!=='sistemas')q=q.where('uid','==',anKey());}catch(e){}sub(q,sn=>{if(sn)S.anEnt=rows(sn);safeRender();});}
@@ -4682,7 +4682,9 @@ function planBuckets(ms,a,b){
 }
 const planMe=()=>(S.me&&(S.me.nombre||S.me.email))||ROLES[S.role]||'';
 const planAdm=()=>S.role==='direccion';
-function planVis(){return (S.plan||[]).filter(m=>!m.cancelada&&(S.role==='residente'?m.creatorId===myId:(S.role==='auditor'||S.role==='direccion')));}
+const PLAN_LIDERES=['julio.estrada@catraar.com'];
+const planLider=()=>S.role==='residente'&&PLAN_LIDERES.indexOf(String(S.myEmail||'').toLowerCase())>=0;
+function planVis(){return (S.plan||[]).filter(m=>!m.cancelada&&(S.role==='residente'?(m.creatorId===myId||planLider()):(S.role==='auditor'||S.role==='direccion')));}
 async function planSave(m){const nueva=!(S.plan||[]).some(x=>x.id===m.id);if(nueva)S.plan.push(m);try{if(planColl)await anSave(planColl,m);}catch(e){if(nueva)S.plan=S.plan.filter(x=>x.id!==m.id);throw e;}}
 function planH(m,txt){m.hist=(m.hist||[]).concat([{t:Date.now(),uid:myId,nom:planMe(),txt:txt}]);}
 function planNotif(m,ev,titulo,desc,roles,uid){
@@ -4764,11 +4766,91 @@ function planDayChart(dias,h,noleg,click){
 function planDiasOf(l){const rg=planRange();return planBuckets(l,rg&&rg.d,rg&&rg.h);}
 function planSemGlobal(l){return l.length}
 
+/* Programa de obra (Gantt) por obra */
+const PLAN_GCOL=[[34,43,54],[44,95,138],[224,122,32],[108,120,132],[48,164,201],[22,163,92],[240,185,0],[142,68,173],[192,57,43],[26,140,130]];
+const pWork=(a,b)=>{let n=0;for(let d=a;d<=b;d=pAdd(d,1))if(pDow(d)!==6)n++;return n;};
+async function planGanttPdf(obra){
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No se cargó el generador de PDF. Revise su conexión y recargue la página.');
+  const ms=planVis().filter(m=>m.proyecto===obra&&m.estado!=='borrador').sort((a,b)=>(a.fIni<b.fIni?-1:a.fIni>b.fIni?1:(a.fFin<b.fFin?-1:1)));
+  if(!ms.length)throw new Error('La obra «'+obra+'» no tiene metas enviadas a autorización.');
+  const doc=new J({orientation:'landscape',unit:'mm',format:'letter'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  const ini=ms.reduce((a,m)=>m.fIni<a?m.fIni:a,ms[0].fIni),fin=ms.reduce((a,m)=>m.fFin>a?m.fFin:a,ms[0].fFin);
+  const diff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+  const nD=diff(ini,fin)+1,nSem=Math.floor((diff(pMon(ini),fin))/7)+1;
+  const dHab=pWork(ini,fin),nMes=new Set(Array.from({length:nD},(_,i)=>pAdd(ini,i).slice(0,7))).size;
+  const hoy=tarHoy(),dayIdx=d=>pWork(ini,d),sh=iso=>fdate(iso).replace(/ \d{4}$/,'');
+  const MESN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],DL=['L','M','M','J','V','S','D'];
+  const X0=14,LW=86,GX=X0+LW,GW=W-14-GX,dw=GW/nD,xOf=d=>GX+diff(ini,d)*dw;
+  doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(doc.splitTextToSize(pdfT('PROGRAMA DE OBRA · '+obra.toUpperCase()),W-28-135)[0],X0,17);
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(91,108,116);doc.text(pdfT('Jornada lunes a sabado · Del '+fdate(ini)+' al '+fdate(fin)+' · Corte al '+fdate(hoy)),X0,24,{maxWidth:W-28-135});
+  const kp=[[dHab,'DIAS HABILES'],[nSem,'SEMANAS'],[nMes,nMes===1?'MES':'MESES'],[ms.length,'ACTIVIDADES']];
+  kp.forEach((k,i)=>{const w=30,x=W-14-(kp.length-i)*(w+3)+3;doc.setDrawColor(210,218,222);doc.setFillColor(248,250,251);doc.roundedRect(x,9,w,15,1.5,1.5,'FD');
+    doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(String(k[0]),x+w/2,17,{align:'center'});doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(110,120,125);doc.text(k[1],x+w/2,21.5,{align:'center'});});
+  doc.setDrawColor(20,35,43);doc.setLineWidth(.6);doc.line(X0,28,W-14,28);doc.setLineWidth(.2);
+  const topG=33,hdr=17,rowH=Math.min(12,Math.max(8,(H-topG-hdr-62)/Math.max(ms.length,1)));
+  const perPage=Math.max(1,Math.floor((H-topG-hdr-20)/rowH)),maxRows=Math.floor((H-topG-hdr-62)/8);
+  const drawHdr=yy=>{
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(110,120,125);doc.text('ACTIVIDAD  ·  PERIODO',X0,yy+15);
+    // meses reales
+    let a=0;while(a<nD){const mo=pAdd(ini,a).slice(0,7);let b=a;while(b+1<nD&&pAdd(ini,b+1).slice(0,7)===mo)b++;
+      doc.setFillColor(20,35,43);doc.rect(GX+a*dw,yy,(b-a+1)*dw-.3,4.4,'F');doc.setTextColor(255);doc.setFontSize(6.5);doc.text(MESN[+mo.slice(5)-1].toUpperCase()+' '+mo.slice(0,4),GX+(a+(b-a+1)/2)*dw,yy+3.1,{align:'center'});a=b+1;}
+    // dias
+    const full=dw>=2.7;
+    for(let i=0;i<nD;i++){const d=pAdd(ini,i),dow=pDow(d),x=GX+i*dw;
+      if(dow===6)doc.setFillColor(226,230,233);else doc.setFillColor(238,242,244);doc.rect(x,yy+4.6,dw-.15,full?8.6:4.2,'F');
+      doc.setFont('helvetica','normal');doc.setTextColor(60,72,80);
+      if(full){doc.setFontSize(Math.min(6,dw*1.9));doc.text(String(+d.slice(8)),x+dw/2,yy+8,{align:'center'});doc.setTextColor(110,120,125);doc.text(DL[dow],x+dw/2,yy+12,{align:'center'});}
+      else if(dow===0){doc.setFontSize(5.2);doc.setTextColor(60,72,80);doc.text(String(+d.slice(8)),x+.6,yy+8);}}
+  };
+  const drawPage=(y,from,to)=>{
+    drawHdr(y);const gy=y+hdr,gh=(to-from)*rowH;
+    for(let i=0;i<nD;i++){const d=pAdd(ini,i),dow=pDow(d);if(dow===6){doc.setFillColor(244,246,247);doc.rect(GX+i*dw,gy,dw,gh,'F');}}
+    doc.setDrawColor(228,233,236);for(let i=0;i<=nD;i++){const d=pAdd(ini,i),mon=pDow(d)===0;if(!mon&&dw<2.7)continue;doc.setLineWidth(mon?.3:.08);doc.line(GX+i*dw,gy,GX+i*dw,gy+gh);}doc.setLineWidth(.2);
+    for(let i=from;i<to;i++){const m=ms[i],yy=gy+(i-from)*rowH,x=planMet(m),c=PLAN_GCOL[i%PLAN_GCOL.length];
+      doc.setDrawColor(222,228,231);doc.line(X0,yy+rowH,W-14,yy+rowH);
+      doc.setFillColor(c[0],c[1],c[2]);doc.circle(X0+3,yy+rowH/2,2.6,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.text(String(i+1),X0+3,yy+rowH/2+.9,{align:'center'});
+      doc.setTextColor(20,35,43);doc.setFont('helvetica','bold');doc.setFontSize(7.6);
+      const nl=doc.splitTextToSize(pdfT(m.act+(m.cuadNom?' ['+m.cuadNom+']':'')),LW-10).slice(0,2);
+      const ty=yy+rowH/2-(nl.length===2?3.4:1.6);doc.text(nl,X0+8,ty);
+      doc.setFont('helvetica','normal');doc.setFontSize(6.3);doc.setTextColor(60,72,80);doc.text(pdfT(sh(m.fIni)+' al '+sh(m.fFin)+' · '+pWork(m.fIni,m.fFin)+' dias'+(m.ubic?' · '+m.ubic:'')),X0+8,yy+rowH-1.6,{maxWidth:LW-10});
+      const bx=xOf(m.fIni),bw=Math.max(dw,(diff(m.fIni,m.fFin)+1)*dw),bh=rowH*.5,by=yy+(rowH-bh)/2-.2;
+      doc.setFillColor(c[0],c[1],c[2]);doc.roundedRect(bx,by,bw,bh,.8,.8,'F');
+      const pr=x.cant>0?Math.min(1,x.ejec/x.cant):0;if(pr>0){doc.setFillColor(Math.round(c[0]*.55),Math.round(c[1]*.55),Math.round(c[2]*.55));doc.roundedRect(bx,by,Math.max(1.2,bw*pr),bh,.8,.8,'F');}
+      const lb=sh(m.fIni)+' - '+sh(m.fFin)+' · '+Math.round(pr*100)+'%';doc.setFont('helvetica','bold');doc.setFontSize(6.2);
+      if(doc.getTextWidth(lb)<bw-2){doc.setTextColor(255);doc.text(lb,bx+1.4,by+bh/2+.9);}
+      else{doc.setTextColor(c[0]*.7,c[1]*.7,c[2]*.7);const tw=doc.getTextWidth(lb);if(bx+bw+tw+2<W-14)doc.text(lb,bx+bw+1.2,by+bh/2+.9);else doc.text(lb,bx-1.2,by+bh/2+.9,{align:'right'});}}
+    if(hoy>=ini&&hoy<=fin){const tx=xOf(hoy)+dw/2;doc.setDrawColor(168,38,31);doc.setLineWidth(.4);doc.line(tx,gy,tx,gy+gh);doc.setLineWidth(.2);doc.setFontSize(5.5);doc.setTextColor(168,38,31);doc.setFont('helvetica','bold');doc.text('HOY',tx,gy+gh+2.6,{align:'center'});}
+    return gy+gh;
+  };
+  let end=0;
+  if(ms.length<=maxRows){end=drawPage(topG,0,ms.length);}
+  else{let i=0;while(i<ms.length){if(i>0)doc.addPage();const to=Math.min(ms.length,i+perPage);end=drawPage(i>0?14:topG,i,to);i=to;}}
+  let sy=end+8;const cw=(W-28-6*3)/7,ch=17;
+  if(sy+ch*Math.ceil(ms.length/7)+22>H-12){doc.addPage();sy=16;}
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(91,108,116);doc.text('SECUENCIA DE EJECUCION',X0,sy);sy+=3;
+  ms.forEach((m,i)=>{const col=i%7,row=Math.floor(i/7),x=X0+col*(cw+3),yy=sy+row*(ch+3),c=PLAN_GCOL[i%PLAN_GCOL.length];
+    doc.setFillColor(246,248,249);doc.setDrawColor(228,233,236);doc.roundedRect(x,yy,cw,ch,1,1,'FD');doc.setFillColor(c[0],c[1],c[2]);doc.rect(x,yy,cw,1.2,'F');
+    doc.setTextColor(205,212,216);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text(String(i+1),x+cw-2,yy+8,{align:'right'});
+    doc.setTextColor(20,35,43);doc.setFontSize(6.6);doc.text(doc.splitTextToSize(pdfT(m.act),cw-9).slice(0,2),x+2,yy+5);
+    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(91,108,116);doc.text(pdfT(sh(m.fIni)+' - '+sh(m.fFin)),x+2,yy+ch-2.5);});
+  sy+=Math.ceil(ms.length/7)*(ch+3)+2;
+  const tp=sum(ms.map(m=>planMet(m).cant)),te=sum(ms.map(m=>planMet(m).ejec));
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(91,108,116);
+  doc.text(doc.splitTextToSize(pdfT('Avance real al corte: '+(tp>0?Math.round(te/tp*100):0)+' % de lo programado en el plan. La parte oscura de cada barra es lo ejecutado; la linea roja marca el dia de hoy; los domingos van sombreados (jornada de lunes a sabado). Cada barra va del dia de inicio al dia de termino de la actividad.'),W-28),X0,Math.min(sy+3,H-16));
+  pdfFoot(doc);return doc;
+}
+async function planGanttGo(obra){
+  try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
+    if(!dl){toast('La descarga no está disponible aquí. Abra la app desde su enlace publicado.');return;}
+    const doc=await planGanttPdf(obra);await dl.save({filename:'programa-de-obra-'+obra.replace(/[^\w\-]+/g,'_')+'-'+todayISO()+'.pdf',data:doc.output('blob')});toast('Programa de obra generado: '+obra+'.');
+  }catch(e){toast('No se pudo generar el programa: '+((e&&e.message)||e));}
+}
 async function planPdf(){
   const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No se cargó el generador de PDF. Revise su conexión y recargue la página.');
   const doc=new J({orientation:'landscape',unit:'mm',format:'letter'});
   if(typeof doc.autoTable!=='function')throw new Error('No se cargó el generador de tablas del PDF. Recargue la página.');
-  const l=planFiltradas(),res=S.role==='residente',H=doc.internal.pageSize.getHeight(),W=doc.internal.pageSize.getWidth();
+  const l=planFiltradas(),res=S.role==='residente'&&!planLider(),H=doc.internal.pageSize.getHeight(),W=doc.internal.pageSize.getWidth();
   const tp=sum(l.map(m=>planMet(m).cant)),te=sum(l.map(m=>planMet(m).ejec)),gl=tp>0?te/tp*100:null,cnt=k=>l.filter(m=>planSem(m)[0]===k).length;
   let y=pdfHead(doc,'Plan de obra - Metas SMART','Periodo: '+planRangeLbl(planRange())+(res?' · '+planMe():'')+' · corte al '+fdate(tarHoy()));
   // Resumen con tarjetas de semáforo
@@ -4860,11 +4942,11 @@ async function planPdf(){
   pdfFoot(doc);return doc;
 }
 function planHtml(){
-  const rg=planRange(),all=planVis(),l=planFiltradas(),res=S.role==='residente';
+  const rg=planRange(),all=planVis(),l=planFiltradas(),res=S.role==='residente',solo=res&&!planLider();
   const resp=[...new Set(all.map(m=>m.creatorNom).filter(Boolean))].sort(),proy=[...new Set(all.map(m=>m.proyecto).filter(Boolean))].sort();
   const cnt=k=>l.filter(m=>planSem(m)[0]===k).length,cm=l.map(m=>planMet(m).cumpl).filter(x=>x!=null),prom=cm.length?sum(cm)/cm.length:null;
   let h='<div class="card"><div class="row" style="justify-content:space-between"><div><b>Plan de obra · Metas SMART</b><div class="muted" style="font-size:13px">'+(res?'Planee sus metas por proyecto y por el periodo que necesite, valide su viabilidad, envíelas a autorización y capture el avance diario.':'Consulta del plan de obra de los residentes'+(planAdm()?'. Dirección autoriza los planes y configura la semaforización.':'.'))+'</div></div><div class="row">'+
-    '<button class="btn" data-act="planpdf">Descargar reporte PDF</button>'+(planAdm()?'<button class="btn" data-act="plancfg">Semaforización</button>':'')+(res?'<button class="btn primary" data-act="plannew">Nueva meta SMART</button>':'')+'</div></div></div>';
+    '<button class="btn" data-act="planpdf">Descargar reporte PDF</button>'+'<button class="btn" data-act="plangantt">Programa de obra (PDF por obra)</button>'+(planAdm()?'<button class="btn" data-act="plancfg">Semaforización</button>':'')+(res?'<button class="btn primary" data-act="plannew">Nueva meta SMART</button>':'')+'</div></div></div>';
   if(res){
     const vv=planVis().filter(m=>m.creatorId===myId&&planVencida(m));
     if(vv.length){
@@ -4883,7 +4965,7 @@ function planHtml(){
     '</div>'+
     '<div class="grid" style="margin-top:10px"><div class="f"><label for="pl-d">Del</label><input id="pl-d" type="date" value="'+esc(rg?rg.d:'')+'"'+(rg?'':' disabled')+'></div><div class="f"><label for="pl-h">Al</label><input id="pl-h" type="date" value="'+esc(rg?rg.h:'')+'"'+(rg?'':' disabled')+'></div></div>'+
     '<div class="grid" style="margin-top:10px"><div class="f" style="grid-column:1/-1"><label for="pl-q">Buscar obra, actividad o folio</label><input id="pl-q" type="search" autocomplete="off" placeholder="Escriba el nombre de la obra, la actividad, la cuadrilla o el folio…" value="'+esc(S.pq||'')+'"></div>'+
-    (res?'':'<div class="f"><label for="pl-r">Residente</label><select id="pl-r"><option value="">Todos</option>'+resp.map(x=>'<option'+(S.pr===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>')+
+    (solo?'':'<div class="f"><label for="pl-r">Residente</label><select id="pl-r"><option value="">Todos</option>'+resp.map(x=>'<option'+(S.pr===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>')+
     '<div class="f"><label for="pl-p">Obra / proyecto</label><select id="pl-p"><option value="">Todas</option>'+proy.map(x=>'<option'+(S.pp===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>'+
     ((S.pq||S.pr||S.pp)?'<div class="f" style="align-self:end"><button class="btn sm" data-act="planlimp">Limpiar búsqueda y filtros</button></div>':'')+'</div></div>';
   const tp=sum(l.map(m=>planMet(m).cant)),te=sum(l.map(m=>planMet(m).ejec)),gl=tp>0?te/tp*100:null,pa=sum(l.map(m=>planMet(m).progAc)),gb=pa>0?te/pa*100:null;
@@ -5083,6 +5165,12 @@ document.addEventListener('change',e=>{const t=e.target;if(!t)return;
   if(t.dataset&&t.dataset.pv){const b=document.querySelector('[data-pvb="'+t.dataset.pv+'"]');if(b){const kk=PLAN_VIAB.find(z=>z[0]===t.dataset.pv)||[];b.style.display=vBad(kk,t.value)?'':'none';}}
   else if(t.id==='pl-d'||t.id==='pl-h'){const r=planRange()||{d:'',h:''};const d=t.id==='pl-d'?t.value:r.d,h=t.id==='pl-h'?t.value:r.h;if(d&&h&&d<=h){S.pd=d;S.ph=h;S.ppre='pers';render();}else toast('La fecha inicial debe ser anterior o igual a la final.');}else if(t.id==='pl-r'){S.pr=t.value;render();}else if(t.id==='pl-p'){S.pp=t.value;render();}});
 Object.assign(A,{
+  plangantt(){const obras=[...new Set(planVis().filter(m=>m.estado!=='borrador').map(m=>m.proyecto).filter(Boolean))].sort();
+    if(!obras.length){toast('Aún no hay metas enviadas a autorización para armar un programa de obra.');return;}
+    if(S.pp&&obras.indexOf(S.pp)>=0){planGanttGo(S.pp);return;}
+    if(obras.length===1){planGanttGo(obras[0]);return;}
+    modal({title:'Programa de obra (Gantt)',ok:'Generar PDF',html:'<p style="margin-top:0">El programa se genera <b>por obra</b>. Elija la obra:</p><div class="f"><label for="pg-o">Obra</label><select id="pg-o">'+obras.map(o=>'<option>'+esc(o)+'</option>').join('')+'</select></div>',
+      onOk:root=>{const v=root.querySelector('#pg-o').value;setTimeout(()=>planGanttGo(v),60);return true;}});},
   async planpdf(){
     try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
       if(!dl){toast('La descarga no está disponible aquí. Abra la app desde su enlace publicado.');return;}

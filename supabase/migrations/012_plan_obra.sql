@@ -37,6 +37,7 @@ begin
     when 'vanos'              then p is not null and d->>'uid' = me
     when 'vanos_cfg'          then p is not null and d->>'uid' = me
     when 'plan_obra'          then p in ('auditor','direccion') or (p='residente' and d->>'creatorId' = me)
+      or (p='residente' and lower(coalesce(auth.jwt()->>'email','')) in ('julio.estrada@catraar.com'))
     when 'plan_cfg'           then p is not null
     when 'tareas'             then p in ('auditor','direccion') or public.c360_asigna_tareas() or (p is not null and lower(d->>'asigEmail') = em)
     when 'anuncios_enterados' then p = 'sistemas' or d->>'uid' = me or d->>'uid' like me || ':%'

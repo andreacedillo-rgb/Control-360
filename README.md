@@ -245,6 +245,9 @@ Menú **Plan de obra** para Residente (captura), Auditor y Dirección (consulta;
 - **Meta incumplida:** si vence el periodo con piezas pendientes, el Residente recibe la alerta y debe reprogramar con nueva fecha, justificación y "¿Qué se hará diferente para cumplirla?". Se conserva lo ejecutado, se redistribuye lo pendiente, se avisa a Dirección y Auditor y queda en el historial.
 - Fases siguientes: impedimentos y cierre semanal; control de cambios y notificaciones; tablero de Dirección con reportes PDF/Excel.
 
+- **Programa de obra (PDF por obra):** botón en Plan de obra; diagrama Gantt por días de una sola obra (barra del día de inicio al día de término, ejecutado sombreado, línea de HOY, secuencia de ejecución). Lo generan Dirección, Auditores, el Líder de Proyectos y el residente de sus propias obras.
+- **Líder de Proyectos:** julio.estrada@catraar.com ve las metas de todas las obras (lista `PLAN_LIDERES` en index.html y correo en `012_plan_obra.sql`). Los demás residentes solo ven lo que ellos suben.
+
 ## Otros cambios en esta versión
 - **Alta ante el IMSS:** al cargarla Administración, el residente que solicitó el alta recibe aviso y ve el acuse en su solicitud.
 - **Requisiciones de Compras:** Compras puede levantar requisiciones; pasan por Auditor y este las libera a Dirección. Excepciones de proveedor las autoriza Dirección.
