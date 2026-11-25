@@ -3574,7 +3574,11 @@ function laboralModal(e,tipo){
     (x.laborales=x.laborales||[]).push({id:rid(),tipo:tipo,fMov:fm,fCarga:Date.now(),uid:myId,file:up,obs:n});
     xh(x,(alta?'Alta ante IMSS registrada':'Baja registrada')+' · movimiento '+fdate(fm)+' · '+f.name+(n?' · '+n:''));
     const ne=clone(em);ne.situacion=alta?'activo':'baja';ne.activo=alta;nh(ne,(alta?'Alta ante IMSS (':'Baja (')+fdate(fm)+')');
-    await saveExp(x);await saveEmp(ne);return true;}});
+    await saveExp(x);await saveEmp(ne);
+    if(alta){const sol=S.altas.filter(a=>!esBaja(a)&&a.empId===e.id&&a.estado==='aceptada').sort((p,q)=>(q.creado||0)-(p.creado||0))[0];
+      if(sol&&sol.creatorId){const c=clone(sol);c.imss={fMov:fm,fCarga:Date.now(),uid:myId,file:up,obs:n};ah(c,'Alta ante IMSS registrada por Administración · movimiento '+fdate(fm)+' · '+f.name);
+        try{await saveAlta(c);altaNotify(c,'alta_imss','Alta ante IMSS registrada','alta',false,'Fecha de alta: '+fdate(fm));}catch(er){}}}
+    return true;}});
 }
 /* ── vistas ── */
 function altaRows(){
@@ -3608,6 +3612,7 @@ function altaDetail(a){
   h+='<div class="row" style="margin:12px 0">'+(mine?'<button class="btn primary" data-act="alfix" data-id="'+a.id+'">Corregir y reenviar</button>':'')+(mine&&a.estado==='borrador'?'<button class="btn danger" data-act="aldesc" data-id="'+a.id+'">Eliminar borrador</button>':'')+
    (rhAdm()&&a.estado==='pendiente'?'<button class="btn primary" data-act="aldec" data-k="aceptar" data-id="'+a.id+'">Aceptar solicitud</button><button class="btn" data-act="aldec" data-k="devolver" data-id="'+a.id+'">Devolver para corrección</button><button class="btn danger" data-act="aldec" data-k="rechazar" data-id="'+a.id+'">Rechazar solicitud</button>':'')+
    (rhView()&&a.estado==='aceptada'&&a.empId?'<button class="btn" data-act="alexp" data-id="'+a.empId+'">Ver expediente del trabajador</button>':'')+'</div>';
+  if(a.imss&&!esBaja(a))h+='<div class="note" style="margin:12px 0"><b>Alta ante el IMSS registrada</b> · fecha de alta: <b>'+fdate(a.imss.fMov)+'</b> · cargada el '+fstamp(a.imss.fCarga)+' por '+esc(nm(a.imss.uid)||'Administración')+'<br>Acuse: '+rhLink(a.imss.file,'Alta ante IMSS')+(a.imss.obs?'<div class="sub">'+esc(a.imss.obs)+'</div>':'')+'</div>';
   if(esBaja(a))h+='<div class="card" style="margin-top:12px"><div class="grid"><div><span class="muted">Fecha propuesta de baja</span><br><b>'+fdate(a.fMov)+'</b></div><div class="f span2"><span class="muted">Justificación del residente</span><b style="white-space:pre-wrap">'+esc(a.motivo||'')+'</b></div></div></div>';
   if(!esBaja(a))h+='<h2 class="sec" style="margin:4px 0">Documentos de la solicitud</h2><div class="tw"><table><thead><tr><th>Documento</th><th>Archivo</th><th>Cargado</th></tr></thead><tbody>'+ALTA_DOCS.map(d=>{const x=(a.docs||{})[d[0]];return '<tr><td><b>'+esc(d[1])+'</b></td><td>'+(x?rhLink(x.file,d[1]):'<span class="muted">Falta</span>')+'</td><td>'+(x?fstamp(x.t)+'<div class="sub">'+esc(nm(x.uid)||'')+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table></div>';
   h+='<h2 class="sec" style="margin:12px 0 4px">Historial</h2><ul class="hist">'+(a.hist||[]).slice().reverse().map(m=>'<li><time>'+fstamp(m.t)+'</time><div><b>'+esc(nm(m.uid)||m.rol||'')+'</b> · '+esc(m.txt)+'</div></li>').join('')+'</ul>';
