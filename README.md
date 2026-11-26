@@ -253,3 +253,6 @@ Menú **Plan de obra** para Residente (captura), Auditor y Dirección (consulta;
 - **Requisiciones de Compras:** Compras puede levantar requisiciones; pasan por Auditor y este las libera a Dirección. Excepciones de proveedor las autoriza Dirección.
 - Los errores de carga de archivos ahora muestran el motivo de Supabase.
 - **Sistemas · Eliminar registros:** ahora también elimina Plan de obra (metas), tareas asignadas, altas y bajas, anuncios y obras/proyectos (confirmación escribiendo ELIMINAR; queda en bitácora). Requiere volver a ejecutar `012_plan_obra.sql`.
+
+## Requisiciones de Auditores
+El Auditor tiene pestañas «Mis requisiciones» y «Nueva requisición» (Clave, Descripción, Acabado, Medida, Proveedor, Concepto(s) destino y Porcentaje de pedido; si es menor a 100% exige justificación). Va directo a Compras (cotiza, modifica, devuelve al Auditor) y Compras la libera a Dirección. Re-ejecute `supabase/migrations/012_plan_obra.sql`.

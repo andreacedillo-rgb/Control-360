@@ -28,7 +28,7 @@ begin
     when 'usuarios'           then p in ('sistemas','direccion','administracion','compras','auditor') or public.c360_asigna_tareas() or lower(d->>'email') = em
     when 'bitacora_seguridad' then p = 'sistemas'
     when 'requisiciones'      then p in ('direccion','administracion','compras','sistemas') or (p='residente' and d->>'creatorId' = me)
-      or (p='auditor' and d->>'estado' <> 'elaboracion')
+      or (p='auditor' and (d->>'estado' <> 'elaboracion' or d->>'creatorId' = me))
     when 'nominas'            then p in ('direccion','administracion','sistemas') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente','sistemas')
     when 'empleados'          then p in ('direccion','administracion','residente','sistemas')
@@ -76,7 +76,7 @@ begin
     when 'usuarios'           then p = 'sistemas' or lower(d->>'email') = em
     when 'bitacora_seguridad' then false
     when 'requisiciones'      then p in ('direccion','administracion','compras','sistemas') or (p='residente' and d->>'creatorId' = me)
-      or (p='auditor' and (d->>'estado'='auditoria' or (d->'revision') ? 'auditor'))
+      or (p='auditor' and (d->>'estado'='auditoria' or (d->'revision') ? 'auditor' or d->>'creatorId' = me))
     when 'nominas'            then p in ('direccion','administracion') or (p='residente' and d->>'creatorId' = me)
     when 'proveedores'        then p in ('direccion','administracion','compras','residente')
     when 'empleados'          then p in ('direccion','administracion')
