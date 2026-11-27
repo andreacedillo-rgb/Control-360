@@ -256,3 +256,6 @@ Menú **Plan de obra** para Residente (captura), Auditor y Dirección (consulta;
 
 ## Requisiciones de Auditores
 El Auditor tiene pestañas «Mis requisiciones» y «Nueva requisición» (Clave, Descripción, Acabado, Medida, Proveedor, Concepto(s) destino y Porcentaje de pedido; si es menor a 100% exige justificación). Va directo a Compras (cotiza, modifica, devuelve al Auditor) y Compras la libera a Dirección. Re-ejecute `supabase/migrations/012_plan_obra.sql`.
+
+## Nota de esta entrega
+Esta versión **no incluye el perfil «Proyectos»** (análisis de proyectos, Configurador, reportes PDF/Excel y dashboard de costos); se entregará aparte. Sigue vigente `012_plan_obra.sql` (Plan de obra), que debe ejecutarse en el MISMO proyecto de Supabase que usa Vercel, después de 009–011.

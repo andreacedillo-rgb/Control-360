@@ -39,6 +39,7 @@ begin
     when 'plan_obra'          then p in ('auditor','direccion','sistemas') or (p='residente' and d->>'creatorId' = me)
       or (p='residente' and lower(coalesce(auth.jwt()->>'email','')) in ('julio.estrada@catraar.com'))
     when 'plan_cfg'           then p is not null
+    when 'proy_reg'           then p in ('proyectos','direccion')
     when 'tareas'             then p in ('auditor','direccion','sistemas') or public.c360_asigna_tareas() or (p is not null and lower(d->>'asigEmail') = em)
     when 'anuncios_enterados' then p = 'sistemas' or d->>'uid' = me or d->>'uid' like me || ':%'
     when 'altas_trabajadores' then p in ('direccion','administracion','sistemas') or (p='residente' and d->>'creatorId' = me)
@@ -86,6 +87,7 @@ begin
     when 'vanos_cfg'          then p is not null and d->>'uid' = me
     when 'plan_obra'          then p = 'direccion' or (p='residente' and d->>'creatorId' = me)
     when 'plan_cfg'           then p = 'direccion'
+    when 'proy_reg'           then p = 'proyectos'
     when 'tareas'             then public.c360_asigna_tareas() or (p is not null and lower(d->>'asigEmail') = em)
     when 'anuncios_enterados' then p is not null and (d->>'uid' = me or d->>'uid' like me || ':%')
     when 'altas_trabajadores' then p = 'administracion' or (p='residente' and d->>'creatorId' = me and d->>'estado' <> 'aceptada')
@@ -117,4 +119,5 @@ create policy docs_delete on public.docs for delete to authenticated
   using ( (coll='proveedores' and public.c360_perfil() in ('compras','sistemas'))
        or (coll in ('requisiciones','nominas','empleados','auditoria_reportes','reposiciones','plan_obra','tareas','altas_trabajadores','anuncios','proyectos') and public.c360_perfil()='sistemas')
        or (coll='plan_obra' and public.c360_perfil()='residente' and data->>'creatorId' = auth.uid()::text and data->>'estado'='borrador')
+       or (coll='proy_reg' and public.c360_perfil() in ('proyectos','sistemas'))
        or (coll in ('vanos','vanos_cfg') and public.c360_perfil() is not null and data->>'uid' = auth.uid()::text) );
